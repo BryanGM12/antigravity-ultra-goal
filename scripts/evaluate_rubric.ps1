@@ -1,11 +1,14 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Quality & Anti-Sloth Rubric Evaluator v2.1 (Performance & Interaction Gate)
+    UltraGoal Quality & Anti-Toy Rubric Evaluator v3.0 (Domain Depth & Anti-Toy Gate)
 .DESCRIPTION
     Motor de auditoría rigurosa y evaluación de calidad para proyectos complejos en Antigravity.
-    Escanea código fuente buscando antipatrones funcionales, fugas de rendimiento en bucles de renderizado,
-    desconexión de eventos de interacción (drag-and-drop huérfano) y ausencia de tests.
-    Umbral inquebrantable de aprobación: 95/100 ("No se conforma con cualquier resultado").
+    Incluye:
+    - Análisis de Profundidad de Dominio y Barrera Anti-Juguete (Anti-Toy Pre-Mortem Gate).
+    - Detección de omisión de menús de inicio, falta de mobs/animales, carencia de 3ra persona y crafteo falso.
+    - Detección de fugas de rendimiento en bucles de render (animaciones).
+    - Desconexión de eventos de interacción (drag-and-drop huérfano).
+    - Umbral inquebrantable de aprobación: 95/100 ("No se conforma con cualquier resultado").
 #>
 
 [CmdletBinding()]
@@ -15,6 +18,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$TestCommand = "",
+
+    [Parameter(Mandatory = $false)]
+    [string]$Category = "Auto",
 
     [Parameter(Mandatory = $false)]
     [string[]]$ExcludeDirs = @("node_modules", ".git", "bin", "obj", "venv", ".venv", "dist", "build", ".system_generated", "coverage")
@@ -51,19 +57,20 @@ if ($targetItem.PSIsContainer) {
 }
 
 $scores = [ordered]@{
-    "Functional_Completeness"     = 25
+    "Functional_Completeness"     = 20
+    "Domain_Depth_Anti_Toy"       = 15
     "Performance_Render_Budget"   = 15
     "Interaction_Tracking_UX"     = 10
     "Robustness_Error_Handling"   = 15
-    "Architecture_Cleanliness"    = 15
+    "Architecture_Cleanliness"    = 10
     "Automated_Testing"           = 15
-    "Security_Secrets_Hygiene"    = 5
 }
 
 $violations = [System.Collections.Generic.List[PSCustomObject]]::new()
 $testFilesFound = 0
 $assertionCount = 0
 $totalCodeLines = 0
+$allCodeTextBuilder = [System.Text.StringBuilder]::new()
 
 # Expresiones regulares de detección
 $todoRegex = [regex]'(?i)\b(TODO|FIXME|HACK|XXX|TBD|PLACEHOLDER)\b'
@@ -72,25 +79,25 @@ $emptyCatchRegex = [regex]'(?i)(catch\s*\([^)]*\)\s*\{\s*\}|except:\s*pass|excep
 $debugDebrisRegex = [regex]'(?i)(console\.log\("debug|print\("test|System\.out\.println\("here|Debugger\.Break)'
 $secretRegex = [regex]'(?i)(sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|BEGIN PRIVATE KEY|api_key\s*=\s*["''][a-zA-Z0-9_-]{16,}["''])'
 
-# Expresiones de Rendimiento y Renderizado (Evita stutter, lag y fugas de memoria en juegos y canvas)
+# Rendimiento y bucles de render
 $allocInRenderRegex = [regex]'(?i)(function\s+(animate|render|update|tick|loop)\b|requestAnimationFrame)'
 $naiveLoopMeshRegex = [regex]'(?i)(for\s*\([^)]*\)\s*\{[^}]*for\s*\([^)]*\)\s*\{[^}]*new\s+(THREE\.Mesh|GameObject|MeshRenderer))'
-$unthrottledLoopRegex = [regex]'(?i)requestAnimationFrame\([^)]+\)(?!.*(delta|clock|now|elapsed|dt))'
 
-# Expresiones de Seguimiento de Interacción / UX (Drag-and-Drop, Cursor follow)
+# Seguimiento de interacción
 $orphanDragRegex = [regex]'(?i)(draggedItem|selectedItem|activeSlot)\s*=[^;]+;(?!.*(clientX|clientY|pageX|pageY|cursor\.position|pointer))'
 
 foreach ($file in $files) {
     $lines = @(Get-Content -LiteralPath $file.FullName -ErrorAction SilentlyContinue)
-    if ($null -eq $lines) { continue }
+    if ($null -eq $lines -or $lines.Count -eq 0) { continue }
     $totalCodeLines += $lines.Count
     $fullContent = $lines -join "`n"
+    [void]$allCodeTextBuilder.AppendLine($fullContent)
 
     if ($file.Name -match '(?i)(test|spec|_test|\.test\.|\.spec\.)') {
         $testFilesFound++
     }
 
-    # 1. Chequeos de archivo completo
+    # Bucle de mallas anidadas sin batching
     if ($fullContent -match $naiveLoopMeshRegex) {
         $violations.Add([PSCustomObject]@{
             Category    = "Performance_Render_Budget"
@@ -102,7 +109,7 @@ foreach ($file in $files) {
         })
     }
 
-    # 2. Chequeos línea por línea
+    # Analisis linea por linea
     $inRenderFunc = $false
     $renderBraceCount = 0
 
@@ -110,7 +117,6 @@ foreach ($file in $files) {
         $lineNum = $i + 1
         $line = $lines[$i]
 
-        # Rastrear contexto de función de render
         if ($line -match $allocInRenderRegex) {
             $inRenderFunc = $true
             $renderBraceCount = 0
@@ -122,7 +128,6 @@ foreach ($file in $files) {
                 if ($renderBraceCount -le 0) { $inRenderFunc = $false }
             }
 
-            # Asignación continua de memoria en bucle de animación
             if ($line -match 'new\s+(THREE\.|Vector|Matrix|Object|Array)\b' -and -not ($line -match 'new\s+Promise')) {
                 $violations.Add([PSCustomObject]@{
                     Category    = "Performance_Render_Budget"
@@ -135,7 +140,7 @@ foreach ($file in $files) {
             }
         }
 
-        # TODOs & Stubs
+        # TODOs
         if ($line -match $todoRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Functional_Completeness"
@@ -146,6 +151,7 @@ foreach ($file in $files) {
                 Issue       = "Marcador de trabajo pendiente o incompleto (TODO/FIXME)"
             })
         }
+        # Stubs
         if ($line -match $stubRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Functional_Completeness"
@@ -156,8 +162,7 @@ foreach ($file in $files) {
                 Issue       = "Stub o código sin implementar (NotImplemented / pass)"
             })
         }
-
-        # Catch vacíos
+        # Empty Catch
         if ($line -match $emptyCatchRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Robustness_Error_Handling"
@@ -168,8 +173,7 @@ foreach ($file in $files) {
                 Issue       = "Bloque de excepción vacío o silenciamiento de errores"
             })
         }
-
-        # Debug debris
+        # Debug Debris
         if ($line -match $debugDebrisRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Architecture_Cleanliness"
@@ -180,11 +184,10 @@ foreach ($file in $files) {
                 Issue       = "Residuo de depuración temporal en código de producción"
             })
         }
-
-        # Secretos
+        # Secrets
         if ($line -match $secretRegex) {
             $violations.Add([PSCustomObject]@{
-                Category    = "Security_Secrets_Hygiene"
+                Category    = "Robustness_Error_Handling"
                 Penalty     = 5
                 File        = $file.FullName
                 Line        = $lineNum
@@ -193,9 +196,67 @@ foreach ($file in $files) {
             })
         }
 
-        # Aserciones en tests
+        # Aserciones de tests
         $assertionMatches = [regex]::Matches($line, '(?i)(assert|expect\(|should|Assert\.|AssertTrue|AssertEqual)')
         $assertionCount += $assertionMatches.Count
+    }
+}
+
+# --- EVALUACIÓN DE PROFUNDIDAD DE DOMINIO & BARRERA ANTI-JUGUETE (Anti-Toy Gate) ---
+$totalCodeString = $allCodeTextBuilder.ToString()
+$isGameOrVoxel = ($Category -eq "Interactive_Game") -or ($totalCodeString -match '(?i)(THREE\.|voxel|minecraft|PointerLockControls|raycast|chunk|blockType)')
+
+if ($isGameOrVoxel) {
+    # 1. Chequeo de Menú de Inicio / Shell
+    $hasMenu = ($totalCodeString -match '(?i)(startMenu|titleScreen|mainMenu|menuOverlay|optionsMenu|pauseMenu|settingsScreen)')
+    if (-not $hasMenu) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Domain_Depth_Anti_Toy"
+            Penalty     = 8
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Sin subsistema de menús de inicio/pausa"
+            Issue       = "Trampa de Demo de Juguete: No existe menú de inicio ni pausa con opciones. Se redujo la interfaz a un simple click para continuar."
+        })
+    }
+
+    # 2. Chequeo de Entidades / Mobs / IA
+    $hasMobs = ($totalCodeString -match '(?i)(mob|entity|npc|creature|animal|zombie|cow|pig|sheep|stateMachine|wander|spawnMob)')
+    if (-not $hasMobs) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Domain_Depth_Anti_Toy"
+            Penalty     = 6
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Sin entidades vivas ni mobs"
+            Issue       = "Trampa de Demo de Juguete: Mundo completamente estático y desierto. No se implementaron animales ni criaturas con IA de deambulación."
+        })
+    }
+
+    # 3. Chequeo de Perspectivas Múltiples (1ra y 3ra persona / F5)
+    $hasPerspectives = ($totalCodeString -match '(?i)(thirdPerson|firstPerson|toggleCamera|viewMode|cameraDistance|F5)')
+    if (-not $hasPerspectives) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Domain_Depth_Anti_Toy"
+            Penalty     = 4
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Sin soporte de tercera persona"
+            Issue       = "Trampa de Demo de Juguete: Cámara fija en primera persona sin soporte para alternar a tercera persona (F5)."
+        })
+    }
+
+    # 4. Chequeo de Crafteo Real y Matriz de Recetas
+    $hasCrafting = ($totalCodeString -match '(?i)(craftingTable|recipeGrid|craftRecipe|recipes\s*=|craftingMatrix|recipeBook)')
+    if (-not $hasCrafting) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Domain_Depth_Anti_Toy"
+            Penalty     = 5
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Sin motor de recetas ni crafteo matricial"
+            Issue       = "Trampa de Demo de Juguete: Crafteo inexistente o botón hardcodeado falso en lugar de cuadrícula y motor de recetas."
+        })
     }
 }
 

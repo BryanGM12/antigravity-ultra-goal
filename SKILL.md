@@ -1,97 +1,96 @@
 ﻿---
 name: goal
-description: "Motor Autónomo Perfeccionista v2.1 (UltraGoal Engine). Ejecuta metas complejas mediante una tríada multi-agente con Escrutinio Visual Adversarial (AVS), Recortes de Sector 1:1, Análisis Diferencial de Interacción (compare_visuals), Detección de Fugas de Rendimiento y Rúbrica Inquebrantable >= 95/100."
+description: "Motor Autónomo Perfeccionista v3.0 (UltraGoal Engine - Deep Exhaustive Architecture). Ejecuta metas complejas mediante Investigación Profunda (deep_planner), Mapeo de Superficie de Dominio (FSM), Barrera Anti-Juguete (Anti-Toy Pre-Mortem Gate), Tríada Multi-Agente, Escrutinio Visual Adversarial (AVS 1:1) y Rúbrica Inquebrantable >= 95/100."
 author: BryanGM12 & Antigravity Autonomous Systems
-version: 2.1.0
+version: 3.0.0
 metadata:
   category: orchestration
-  skills: ["goal", "multi-agent", "adversarial-review", "vision", "quality-gate", "performance-profiler"]
+  skills: ["goal", "deep-planning", "domain-expansion", "anti-toy-gate", "multi-agent", "adversarial-vision", "quality-gate"]
 ---
 
-# 🚀 UltraGoal: The Relentless Multi-Agent Perfectionist Engine (v2.1)
+# 🚀 UltraGoal: The Relentless Multi-Agent Perfectionist Engine (v3.0)
 
-Cuando el usuario invoca `/goal <objetivo>`, se activa el **Arnés Autónomo UltraGoal v2.1**. Dejas de operar como un modelo pasivo y asumes el mando como **Director Orquestador** de una tríada de ingeniería de élite: el **Constructor (Worker)**, el **Auditor Crítico (Critic)** y el **Ojo de Gemini con Escrutinio Visual Adversarial (AVS)**.
+Cuando el usuario invoca `/goal <objetivo>`, se activa el **Arnés Autónomo UltraGoal v3.0**. Este sistema erradica de raíz el mayor fallo de los agentes de IA: el **Síndrome de la Demo de Juguete (Toy Demo Syndrome)**, donde una petición ambiciosa (como "haz un clon de Minecraft tal cual" o "un e-commerce completo") se reduce ingenuamente a una maqueta superficial sin menús reales, sin entidades vivas, con solo 2 bloques y con mecánicas rotas.
 
 ---
 
-## 👁️ EL MANDATO DE VISIÓN HOSTIL & DETECCIÓN DE MICRO-DETALLES
+## 🔬 FASE 0: INVESTIGACIÓN PROFUNDA & MAPEO DE DOMINIO CANÓNICO (FSM)
 
-> ⚠️ **REGLA DE ORO CONTRA LA CEGUERA VISUAL:**
-> Está **ESTRICTAMENTE PROHIBIDO** limitarse a tomar una sola captura de pantalla completa, mirarla superficialmente y declarar "se ve bien". Los modelos de visión sufren de sesgo positivo cuando analizan imágenes reducidas.
-> Para evitar errores críticos como **bloques que no se ven en el suelo**, **ítems que no siguen el cursor al arrastrarlos en el inventario**, o **stutter por mala optimización**, el Agente Auditor DEBE seguir este protocolo:
+> 🛑 **PROHIBICIÓN ABSOLUTA DE PLANIFICACIÓN SUPERFICIAL:**
+> Ante cualquier objetivo, está **ESTRICTAMENTE PROHIBIDO** saltar a programar con un plan improvisado de 3 hitos básicos ("Setup, Código, Fin"). El Orquestador DEBE ejecutar primero la descomposición de alcance exhaustiva:
 
-### 1. Descomposición Multi-Sector 1:1 (Sin Reescalado)
-Para auditar la escena, ejecuta:
+### 1. Descomposición con `deep_planner.ps1`
+Antes de inicializar hitos, ejecuta:
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -ConversationId "<ID>" -Mode "MultiSector"
+powershell -ExecutionPolicy Bypass -File scripts/deep_planner.ps1 -GoalObjective "<Objetivo del Usuario>" -OutputPath "SPECIFICATION.json"
 ```
-Esto genera la captura global con cuadrícula de coordenadas `[A1]`..`[C3]` más 3 recortes nativos 1:1:
-1. **`sector_ground.png` (Sector C2):** El 35% inferior donde reposa el suelo.
-   - **Pregunta obligatoria:** ¿Se ven los bloques en el suelo? ¿Hay vacíos, caras culling invertidas o flotación? Si falta el suelo: **VETO INMEDIATO**.
-2. **`sector_hud.png` (Sector C3):** La barra de acceso rápido, inventario y texto.
-   - **Pregunta obligatoria:** ¿Las fuentes y números son 100% nítidos? ¿El slot activo tiene marco selector visible?
-3. **`sector_center.png` (Sector B2):** La mira y el objetivo de raycasting.
-   - **Pregunta obligatoria:** ¿El bloque al que apunta el jugador se resalta con wireframe?
+Este motor clasifica el dominio y genera el desglose de los **6 Pilares Canónicos de Ingeniería**:
+1. **Pilar 1 (Shell, Menús & Audio):** Menú de inicio con título y fondo panorámico/animado, menú de pausa (ESC), pantalla de opciones funcionales (volumen, FOV, render distance) y efectos de sonido. *(Prohibido un mero cartel de 'click para continuar')*.
+2. **Pilar 2 (Perspectiva & Controles Fluidos):** Soporte indispensable para Primera Persona Y Tercera Persona (conmutador con tecla F5), mira con wireframe delimitador y física sólida AABB.
+3. **Pilar 3 (Entidades Vivas & Sistema de IA):** Al menos 2 tipos de animales pasivos (vaca/cerdo/oveja) y 1 criatura hostil con máquina de estados (Wander, Idle, Chase, Attack). *(Prohibido mundos muertos sin vida)*.
+4. **Pilar 4 (Riqueza de Materiales - Zero-Paucity):** Catálogo de mínimo 8 a 12 tipos de bloques/materiales con texturas diferenciadas por cara (pasto, tierra, piedra, madera, hojas, agua, cristal).
+5. **Pilar 5 (Mecánicas & Crafteo Matricial):** Cuadrícula de crafteo real (2x2 en inventario + 3x3 en Mesa de Trabajo), diccionario de recetas extensible, inventario con drag-and-drop verificado y apilamiento (x64).
+6. **Pilar 6 (Ciclo Ambiental & Persistencia):** Ciclo día/noche (sol y luna), partículas al romper bloques y guardado/carga del mundo (LocalStorage/JSON).
 
-### 2. Auditoría Diferencial de Interacción (Drag-and-Drop & Seguimiento)
-Los bugs dinámicos (como un objeto del inventario que no sigue el cursor) **NO se pueden ver en una imagen estática**. Para probar interacciones:
-1. Toma el fotograma inicial:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -OutputPath "frame1.png"
-   ```
-2. Ejecuta la acción (ej. seleccionar ítem y mover cursor / drag).
-3. Toma el fotograma secundario:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -OutputPath "frame2.png"
-   ```
-4. Ejecuta el comparador visual diferencial:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/compare_visuals.ps1 -ImageA "frame1.png" -ImageB "frame2.png" -OutputPath "diff_heatmap.png"
-   ```
-5. Inspecciona `diff_heatmap.png` con `view_file`:
-   - Si el objeto seleccionado **NO** acompaña las coordenadas del puntero, el mapa diferencial mostrará la anomalía o delta 0%. **VETO INMEDIATO**.
+### 2. El Análisis Pre-Mortem Anti-Juguete
+El Agente Orquestador debe plantearse la pregunta destructiva:
+*"¿De qué 5 maneras este proyecto podría parecer una maqueta de juguete mediocre?"*
+Las 5 trampas identificadas se convierten automáticamente en **Cláusulas de Defensa No Negociables** dentro del contrato de hitos.
 
 ---
 
-## ⚡ MANDATO DE RENDIMIENTO & OPTIMIZACIÓN (CERO STUTTER)
+## 👁️ ESCRUTINIO VISUAL ADVERSARIAL (AVS 1:1) & HEATMAP DIFERENCIAL
 
-El arnés ejecuta `scripts/evaluate_rubric.ps1`, el cual audita el código fuente contra las 3 causas principales de lag en proyectos interactivos:
-1. **Prohibición de Asignaciones en Bucles de Render:**
-   - Cero `new THREE.Vector3()`, `new Object()` o matrices dentro de `requestAnimationFrame()`, `animate()`, `update()` o `render()`. Las variables deben reusarse fuera del bucle para evitar pausas del Garbage Collector.
-2. **Batching Obligatorio de Geometría en Terrenos Voxel:**
-   - Prohibido instanciar miles de mallas individuales en bucles `for(x) for(y) for(z) new THREE.Mesh()`. Es obligatorio usar `InstancedMesh` o combinar las geometrías de chunks en un solo `BufferGeometry`.
-3. **Escalado por Tiempo Delta:**
-   - La física y las animaciones deben multiplicarse por `deltaTime` para que la velocidad sea constante independiente de la tasa de refresco.
+Para garantizar que el mundo y la interfaz funcionen a nivel microscópico:
+1. **Recortes Multi-Sector 1:1 (`scripts/capture_vision.ps1 -Mode MultiSector`):**
+   - **`sector_ground.png` (Sector C2):** El auditor inspecciona si los bloques tocan el suelo real (Y=0). Si los bloques no se ven en el suelo o flotan: **VETO INMEDIATO**.
+   - **`sector_hud.png` (Sector C3):** Verifica números de ítems (x64) y marco de selección activa.
+   - **`sector_center.png` (Sector B2):** Verifica la mira y el raycast wireframe.
+2. **Auditoría de Arrastre Dinámico (`scripts/compare_visuals.ps1`):**
+   - Compara el fotograma previo vs posterior a arrastrar un ítem en el inventario. Si el mapa diferencial no detecta desplazamiento acompañando al cursor: **VETO INMEDIATO**.
 
 ---
 
-## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE
+## ⚡ BARRERA DE RENDIMIENTO & ANTI-STUTTER
+
+El escáner de código [evaluate_rubric.ps1](file:///C:/Users/Administrator/.gemini/config/skills/goal/scripts/evaluate_rubric.ps1) audita:
+- Prohibición de `new THREE.Vector3()` o matrices en bucles `animate()` / `requestAnimationFrame()` (Cero GC pauses).
+- Obligatoriedad de `InstancedMesh` o combinación de geometrías de chunks en terrenos vóxel.
+
+---
+
+## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v3.0
 
 ```mermaid
 graph TD
-    User([Usuario: /goal <objetivo>]) --> Orchestrator[Gemini Master Orchestrator]
+    User([Usuario: /goal <objetivo>]) --> Master[Gemini Master Orchestrator]
     
-    subgraph "Bucle UltraGoal Autónomo v2.1"
-        Orchestrator --> State[1. Init Contrato en goal_state.json]
-        State --> Worker[2. Despachar Builder Subagent]
-        Worker --> Code[3. Código Modular, Tests & Optimizaciones]
+    subgraph "Fase 0: Investigación Profunda & Pre-Mortem"
+        Master --> DeepPlan["deep_planner.ps1 (FSM & Anti-Toy Gate)"]
+        DeepPlan --> Spec["SPECIFICATION.json & 6 Pilares Canónicos"]
+    end
+    
+    subgraph "Fase de Ejecución: Tríada Multi-Agente (5-7 Hitos)"
+        Spec --> StateInit[milestone_tracker.ps1 -Action init]
+        StateInit --> Builder[Agente Constructor / Worker]
+        Builder --> Deliverable[Código Modular, Menús, Mobs, Crafteo & Tests]
         
-        Code --> Auditor[4. Despachar Auditor Crítico Adversarial]
-        Code --> Vision[5. Captura MultiSector 1:1 & Heatmap Diff]
+        Deliverable --> Auditor[Agente Auditor Crítico / Red Team]
+        Deliverable --> Vision[GDI MultiSector & Compare Visuals]
         
-        Auditor --> Rubric["6. Escáner de Rúbrica v2.1 (evaluate_rubric.ps1)"]
-        Vision --> SectorInspection["7. Inspección de Sectores con view_file"]
+        Auditor --> Rubric["evaluate_rubric.ps1 v3.0 (Anti-Toy & Perf Scan)"]
+        Vision --> SectorInspection["Auditoría de Sectores 1:1 con view_file"]
         
-        SectorInspection --> QualityGate{¿Supera el Umbral?}
+        SectorInspection --> QualityGate{¿Supera Umbral 95/100?}
         Rubric --> QualityGate
         
-        QualityGate -- "RECHAZADO (< 95 pts)" --> Remediation[Matriz de Corrección Obligatoria]
-        Remediation --> Worker
+        QualityGate -- "RECHAZADO (< 95 pts o Trampa de Juguete)" --> Remediation[Matriz de Corrección Obligatoria]
+        Remediation --> Builder
         
         QualityGate -- "APROBADO (>= 95 pts)" --> Advance[Firma y Avance de Hito]
-        Advance --> More{¿Hay más hitos?}
-        More -- Sí --> Worker
-        More -- No --> EndToEnd[8. Verificación Integral End-to-End]
+        Advance --> Next{¿Quedan más hitos?}
+        Next -- Sí --> Builder
+        Next -- No --> EndToEnd[Verificación Final End-to-End]
     end
     
     EndToEnd --> Complete([<!-- GOAL_COMPLETE -->])
@@ -99,33 +98,18 @@ graph TD
 
 ---
 
-## 📋 FLUJO PASO A PASO POR CADA HITO
+## 📋 PROTOCOLO DE TRABAJO OBLIGATORIO
 
-1. **Inicializar Estado:**
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/milestone_tracker.ps1 -Action init -GoalTitle "<Proyecto>" -Milestones "Hito 1;Hito 2;Hito 3"
-   ```
-2. **El Constructor (Doer Subagent):**
-   - Escribe código real y pruebas unitarias.
-   - Verifica que no haya TODOs ni stubs.
-   - Envía el hito:
+1. **Paso 1: Investigación Profunda:**
+   - Ejecuta `deep_planner.ps1` con el objetivo del usuario.
+   - Crea el artefacto `implementation_plan.md` reflejando los 6 Pilares Canónicos y el Pre-Mortem.
+   - Inicializa el estado con los 6 o 7 hitos sugeridos:
      ```powershell
-     powershell -ExecutionPolicy Bypass -File scripts/milestone_tracker.ps1 -Action submit -MilestoneIndex <N> -Notes "<Detalle>"
+     powershell -ExecutionPolicy Bypass -File scripts/milestone_tracker.ps1 -Action init -GoalTitle "<Título>" -Milestones "<Hitos_del_deep_planner>"
      ```
-3. **El Auditor y el Ojo de Gemini:**
-   - Corre el escáner de código:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File scripts/evaluate_rubric.ps1 -TargetPath "<Directorio>" -TestCommand "<Tests>"
-     ```
-   - Si el proyecto tiene salida visual o UI:
-     1. Genera los recortes multi-sector:
-        ```powershell
-        powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -ConversationId "<ID>" -Mode "MultiSector"
-        ```
-     2. Abre `sector_ground.png` y `sector_hud.png` con `view_file`.
-     3. Si es interactivo, corre `compare_visuals.ps1` y abre `diff_heatmap.png`.
-4. **Veredicto:**
-   - **Score >= 95 y Cero Defectos Visuales:** Se aprueba el hito con `milestone_tracker.ps1 -Action audit -Verdict APPROVED`.
-   - **Score < 95 o Defectos en Suelo/Inventario/Lag:** Se rechaza con `milestone_tracker.ps1 -Action audit -Verdict REJECTED`. El Constructor corrige y reintenta.
-5. **Cierre:**
-   - Al aprobar todos los hitos, se corre `milestone_tracker.ps1 -Action complete` y se emite `<!-- GOAL_COMPLETE -->`.
+2. **Paso 2: Ciclo Constructor -> Auditor -> Visión por cada hito:**
+   - Constructor programa menús, cámaras, entidades y recetas reales sin código falso.
+   - Auditor ejecuta `evaluate_rubric.ps1 -TargetPath <dir> -Category <Cat>` (si falta menú, mobs o crafteo, la rúbrica veta la entrega).
+   - Visión ejecuta `capture_vision.ps1 -Mode MultiSector` e inspecciona los recortes 1:1.
+3. **Paso 3: Cierre:**
+   - Solo cuando todos los hitos estén aprobados con excelencia (>= 95/100) y cero defectos visuales, se emite `<!-- GOAL_COMPLETE -->`.

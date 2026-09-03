@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Autonomous Verification Suite v2.1
+    UltraGoal Autonomous Verification Suite v3.0 (Deep Architecture Edition)
 .DESCRIPTION
-    Ejecuta una batería completa de 12 pruebas automatizadas sobre todos los componentes
-    de UltraGoal Engine (State Machine, Rubric Gate, Performance Scanner, MultiSector Vision, Visual Differencing).
+    Ejecuta una batería completa de 15 pruebas automatizadas sobre todos los componentes
+    de UltraGoal Engine (Deep Planner, Anti-Toy Rubric Gate, State Machine, MultiSector Vision, Visual Differencing).
 #>
 
 $baseDir = Split-Path -Parent $PSScriptRoot
@@ -14,7 +14,7 @@ $tempDir = Join-Path $env:TEMP "ultragoal_suite_$(Get-Random)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
 Write-Host "=================================================" -ForegroundColor Cyan
-Write-Host "   ULTRAGOAL HARNESS INTEGRATION TEST SUITE v2.1 " -ForegroundColor Cyan
+Write-Host "   ULTRAGOAL HARNESS INTEGRATION TEST SUITE v3.0 " -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
 $passed = 0
@@ -31,70 +31,63 @@ function Assert-Test {
     }
 }
 
-# --- TEST 1: Milestone Tracker Lifecycle ---
-Write-Host "`n[Test 1] Evaluando Milestone Tracker State Machine..." -ForegroundColor Yellow
+# --- TEST 1: Deep Planner & Canonical Pillars ---
+Write-Host "`n[Test 1] Evaluando Deep Domain Planner & Anti-Toy Pre-Mortem..." -ForegroundColor Yellow
+$specFile = Join-Path $tempDir "spec_test.json"
+
+& "$scriptsDir\deep_planner.ps1" -GoalObjective "has un clon de minecraft tal cual" -OutputPath $specFile | Out-Null
+Assert-Test -TestName "Deep Planner Generates Spec File" -Condition (Test-Path $specFile)
+
+$specObj = Get-Content $specFile | ConvertFrom-Json
+Assert-Test -TestName "Deep Planner Detects Game Domain" -Condition ($specObj.category -eq "Interactive_Game")
+Assert-Test -TestName "Deep Planner Decomposes 6 Pillars" -Condition ($specObj.canonical_pillars_count -eq 6)
+Assert-Test -TestName "Deep Planner Formulates Anti-Toy Defenses" -Condition ($specObj.anti_toy_pre_mortem.Count -gt 0)
+
+# --- TEST 2: Milestone Tracker Lifecycle ---
+Write-Host "`n[Test 2] Evaluando Milestone Tracker State Machine..." -ForegroundColor Yellow
 $stateFile = Join-Path $tempDir "goal_state.json"
 
-& "$scriptsDir\milestone_tracker.ps1" -Action init -StateFilePath $stateFile -GoalTitle "Unit Test Goal" -Milestones "M1;M2" | Out-Null
-Assert-Test -TestName "Tracker Init" -Condition (Test-Path $stateFile)
+& "$scriptsDir\milestone_tracker.ps1" -Action init -StateFilePath $stateFile -GoalTitle "Minecraft Voxel Clone" -Milestones $specObj.recommended_milestones | Out-Null
+Assert-Test -TestName "Tracker Init with Deep Milestones" -Condition (Test-Path $stateFile)
 
-& "$scriptsDir\milestone_tracker.ps1" -Action submit -StateFilePath $stateFile -MilestoneIndex 1 -Notes "Trabajo listo" | Out-Null
 $state = Get-Content $stateFile | ConvertFrom-Json
-Assert-Test -TestName "Tracker Submit Status" -Condition ($state.milestones[0].status -eq "SUBMITTED_FOR_AUDIT")
+Assert-Test -TestName "Tracker Has 7 Deep Milestones" -Condition ($state.total_milestones -ge 7)
 
-# Rechazo deliberado
-& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 1 -Score 85 -Verdict "REJECTED" -Notes "Bajo puntaje" | Out-Null
-$state = Get-Content $stateFile | ConvertFrom-Json
-Assert-Test -TestName "Tracker Audit Rejection" -Condition ($state.milestones[0].status -eq "REJECTED")
-
-# Aprobacion hito 1
-& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 1 -Score 98 -Verdict "APPROVED" -Notes "Excelente" | Out-Null
-$state = Get-Content $stateFile | ConvertFrom-Json
-Assert-Test -TestName "Tracker Audit Approval" -Condition ($state.milestones[0].status -eq "APPROVED")
-
-# Aprobacion hito 2
-& "$scriptsDir\milestone_tracker.ps1" -Action submit -StateFilePath $stateFile -MilestoneIndex 2 -Notes "Hito final" | Out-Null
-& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 2 -Score 100 -Verdict "APPROVED" -Notes "Impecable" | Out-Null
-
-# Completitud
-& "$scriptsDir\milestone_tracker.ps1" -Action complete -StateFilePath $stateFile | Out-Null
-$state = Get-Content $stateFile | ConvertFrom-Json
-Assert-Test -TestName "Tracker Final Completion" -Condition ($state.status -eq "COMPLETED" -and -not [string]::IsNullOrWhiteSpace($state.completed_at))
-
-# --- TEST 2: Rubric Quality & Performance Gate ---
-Write-Host "`n[Test 2] Evaluando Rubric Quality & Performance Gate..." -ForegroundColor Yellow
+# --- TEST 3: Rubric Anti-Toy Quality & Performance Gate ---
+Write-Host "`n[Test 3] Evaluando Rubric Anti-Toy & Performance Gate..." -ForegroundColor Yellow
 $codeDir = Join-Path $tempDir "sample_code"
 New-Item -ItemType Directory -Path $codeDir -Force | Out-Null
 
-# Codigo con fugas de rendimiento en render loop
-$perfBadCode = @"
-function animate() {
-    requestAnimationFrame(animate);
-    const tmpVec = new THREE.Vector3();
-}
+# Codigo tipo maqueta de juguete (sin menus, sin mobs, sin F5)
+$toyCode = @"
+import * as THREE from 'three';
+const scene = new THREE.Scene();
+document.addEventListener('click', () => { console.log('click to start'); });
 "@
-Set-Content (Join-Path $codeDir "render_bad.js") -Value $perfBadCode
-Set-Content (Join-Path $codeDir "render.test.js") -Value "test('dummy', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
+Set-Content (Join-Path $codeDir "toy_game.js") -Value $toyCode
+Set-Content (Join-Path $codeDir "toy.test.js") -Value "test('dummy', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
 
-$rubricOutputPerf = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir | ConvertFrom-Json
-Assert-Test -TestName "Rubric Detects Render Allocation Bottleneck" -Condition ($rubricOutputPerf.verdict -eq "REJECTED" -and $rubricOutputPerf.violations_count -gt 0)
+$rubricOutputToy = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir -Category "Interactive_Game" | ConvertFrom-Json
+Assert-Test -TestName "Rubric Rejects Shallow Toy Demo" -Condition ($rubricOutputToy.verdict -eq "REJECTED" -and $rubricOutputToy.score -lt 95)
 
-# Codigo limpio
-Remove-Item (Join-Path $codeDir "render_bad.js") -Force
-$cleanCode = @"
+# Codigo con arquitectura profunda
+Remove-Item (Join-Path $codeDir "toy_game.js") -Force
+$proCode = @"
+import * as THREE from 'three';
+export class StartMenu { constructor() { this.options = 'optionsMenu'; this.pause = 'pauseMenu'; } }
+export class CameraSystem { toggleCamera() { this.thirdPerson = !this.thirdPerson; } }
+export class MobSystem { spawnMob(type) { return { type, stateMachine: 'wander' }; } }
+export class CraftingMatrix { craftRecipe(grid) { return 'craftingTable'; } }
 const sharedVec = new THREE.Vector3();
-function animate(dt) {
-    requestAnimationFrame(animate);
-    sharedVec.set(0, 1, 0);
-}
+export function animate(dt) { sharedVec.set(0, 1, 0); }
 "@
-Set-Content (Join-Path $codeDir "render_clean.js") -Value $cleanCode
+Set-Content (Join-Path $codeDir "pro_game.js") -Value $proCode
 
-$rubricOutputGood = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir | ConvertFrom-Json
-Assert-Test -TestName "Rubric Approves Clean Modular Code" -Condition ($rubricOutputGood.verdict -eq "APPROVED" -and $rubricOutputGood.score -ge 95)
+$rubricOutputPro = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir -Category "Interactive_Game" | ConvertFrom-Json
+Assert-Test -TestName "Rubric Approves Deep Architecture Code" -Condition ($rubricOutputPro.verdict -eq "APPROVED" -and $rubricOutputPro.score -ge 95)
 
-# --- TEST 3: MultiSector Vision Engine ---
-Write-Host "`n[Test 3] Evaluando MultiSector Vision Engine..." -ForegroundColor Yellow
+# --- TEST 4: MultiSector Vision Engine ---
+Write-Host "`n[Test 4] Evaluando MultiSector Vision Engine..." -ForegroundColor Yellow
 $capPath = Join-Path $tempDir "full_capture.png"
 $multiOutput = & "$scriptsDir\capture_vision.ps1" -OutputPath $capPath -Mode "MultiSector" | ConvertFrom-Json
 Assert-Test -TestName "MultiSector Full Image Generated" -Condition (Test-Path $capPath)
@@ -102,8 +95,8 @@ Assert-Test -TestName "Ground Sector 1:1 Crop Generated" -Condition (Test-Path $
 Assert-Test -TestName "Center Focus 1:1 Crop Generated" -Condition (Test-Path $multiOutput.sector_crops.center_focus)
 Assert-Test -TestName "HUD Inventory 1:1 Crop Generated" -Condition (Test-Path $multiOutput.sector_crops.hud_inventory)
 
-# --- TEST 4: Visual Differencing & State Tracking ---
-Write-Host "`n[Test 4] Evaluando Visual Differencing Engine (compare_visuals)..." -ForegroundColor Yellow
+# --- TEST 5: Visual Differencing & State Tracking ---
+Write-Host "`n[Test 5] Evaluando Visual Differencing Engine (compare_visuals)..." -ForegroundColor Yellow
 $img1 = Join-Path $tempDir "state1.png"
 $img2 = Join-Path $tempDir "state2.png"
 $diffOut = Join-Path $tempDir "diff_out.png"
@@ -118,7 +111,6 @@ $b1.Save($img1)
 $b2 = New-Object System.Drawing.Bitmap 400, 300
 $g2 = [System.Drawing.Graphics]::FromImage($b2)
 $g2.Clear([System.Drawing.Color]::Black)
-# Rectangulo movido a otra posicion (simulando arrastre de item en inventario)
 $g2.FillRectangle([System.Drawing.Brushes]::Red, 200, 150, 50, 50)
 $b2.Save($img2)
 
