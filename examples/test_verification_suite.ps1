@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Autonomous Verification Suite
+    UltraGoal Autonomous Verification Suite v2.1
 .DESCRIPTION
-    Ejecuta una batería completa de pruebas unitarias y de integración sobre los componentes
-    de UltraGoal (Vision Capture, Rubric Evaluator, Milestone State Machine).
+    Ejecuta una batería completa de 12 pruebas automatizadas sobre todos los componentes
+    de UltraGoal Engine (State Machine, Rubric Gate, Performance Scanner, MultiSector Vision, Visual Differencing).
 #>
 
 $baseDir = Split-Path -Parent $PSScriptRoot
@@ -14,7 +14,7 @@ $tempDir = Join-Path $env:TEMP "ultragoal_suite_$(Get-Random)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
 Write-Host "=================================================" -ForegroundColor Cyan
-Write-Host "   ULTRAGOAL HARNESS INTEGRATION TEST SUITE       " -ForegroundColor Cyan
+Write-Host "   ULTRAGOAL HARNESS INTEGRATION TEST SUITE v2.1 " -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
 $passed = 0
@@ -61,54 +61,72 @@ Assert-Test -TestName "Tracker Audit Approval" -Condition ($state.milestones[0].
 $state = Get-Content $stateFile | ConvertFrom-Json
 Assert-Test -TestName "Tracker Final Completion" -Condition ($state.status -eq "COMPLETED" -and -not [string]::IsNullOrWhiteSpace($state.completed_at))
 
-# --- TEST 2: Rubric Quality Gate ---
-Write-Host "`n[Test 2] Evaluando Rubric Quality Gate..." -ForegroundColor Yellow
+# --- TEST 2: Rubric Quality & Performance Gate ---
+Write-Host "`n[Test 2] Evaluando Rubric Quality & Performance Gate..." -ForegroundColor Yellow
 $codeDir = Join-Path $tempDir "sample_code"
 New-Item -ItemType Directory -Path $codeDir -Force | Out-Null
 
-# Codigo deficiente
-$badCode = @"
-def dirty_func():
-    # TODO: arreglar esto
-    try:
-        x = 1
-    except:
-        pass
+# Codigo con fugas de rendimiento en render loop
+$perfBadCode = @"
+function animate() {
+    requestAnimationFrame(animate);
+    const tmpVec = new THREE.Vector3();
+}
 "@
-Set-Content (Join-Path $codeDir "bad.py") -Value $badCode
+Set-Content (Join-Path $codeDir "render_bad.js") -Value $perfBadCode
+Set-Content (Join-Path $codeDir "render.test.js") -Value "test('dummy', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
 
-$rubricOutputBad = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir | ConvertFrom-Json
-Assert-Test -TestName "Rubric Rejects Sloth Code" -Condition ($rubricOutputBad.verdict -eq "REJECTED" -and $rubricOutputBad.score -lt 95) -Detail "Score: $($rubricOutputBad.score)"
+$rubricOutputPerf = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir | ConvertFrom-Json
+Assert-Test -TestName "Rubric Detects Render Allocation Bottleneck" -Condition ($rubricOutputPerf.verdict -eq "REJECTED" -and $rubricOutputPerf.violations_count -gt 0)
 
-# Limpieza y codigo excelente
-Remove-Item (Join-Path $codeDir "bad.py") -Force
+# Codigo limpio
+Remove-Item (Join-Path $codeDir "render_bad.js") -Force
 $cleanCode = @"
-def calculate_area(w: float, h: float) -> float:
-    if w <= 0 or h <= 0:
-        raise ValueError("Dimensions must be positive")
-    return w * h
+const sharedVec = new THREE.Vector3();
+function animate(dt) {
+    requestAnimationFrame(animate);
+    sharedVec.set(0, 1, 0);
+}
 "@
-$cleanTest = @"
-from clean import calculate_area
-import pytest
-
-def test_area():
-    assert calculate_area(5.0, 10.0) == 50.0
-    assert calculate_area(1.0, 1.0) == 1.0
-    assert calculate_area(2.5, 4.0) == 10.0
-"@
-Set-Content (Join-Path $codeDir "clean.py") -Value $cleanCode
-Set-Content (Join-Path $codeDir "test_clean.py") -Value $cleanTest
+Set-Content (Join-Path $codeDir "render_clean.js") -Value $cleanCode
 
 $rubricOutputGood = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $codeDir | ConvertFrom-Json
-Assert-Test -TestName "Rubric Approves Clean Code" -Condition ($rubricOutputGood.verdict -eq "APPROVED" -and $rubricOutputGood.score -ge 95) -Detail "Score: $($rubricOutputGood.score)"
+Assert-Test -TestName "Rubric Approves Clean Modular Code" -Condition ($rubricOutputGood.verdict -eq "APPROVED" -and $rubricOutputGood.score -ge 95)
 
-# --- TEST 3: GDI Vision Capture ---
-Write-Host "`n[Test 3] Evaluando GDI Vision Capture Engine..." -ForegroundColor Yellow
-$capPath = Join-Path $tempDir "test_cap.png"
-$capOutput = & "$scriptsDir\capture_vision.ps1" -OutputPath $capPath | ConvertFrom-Json
-Assert-Test -TestName "Vision Capture File Created" -Condition (Test-Path $capPath)
-Assert-Test -TestName "Vision Capture JSON Output" -Condition ($capOutput.status -eq "ok" -and $capOutput.size_bytes -gt 0)
+# --- TEST 3: MultiSector Vision Engine ---
+Write-Host "`n[Test 3] Evaluando MultiSector Vision Engine..." -ForegroundColor Yellow
+$capPath = Join-Path $tempDir "full_capture.png"
+$multiOutput = & "$scriptsDir\capture_vision.ps1" -OutputPath $capPath -Mode "MultiSector" | ConvertFrom-Json
+Assert-Test -TestName "MultiSector Full Image Generated" -Condition (Test-Path $capPath)
+Assert-Test -TestName "Ground Sector 1:1 Crop Generated" -Condition (Test-Path $multiOutput.sector_crops.ground_baseline)
+Assert-Test -TestName "Center Focus 1:1 Crop Generated" -Condition (Test-Path $multiOutput.sector_crops.center_focus)
+Assert-Test -TestName "HUD Inventory 1:1 Crop Generated" -Condition (Test-Path $multiOutput.sector_crops.hud_inventory)
+
+# --- TEST 4: Visual Differencing & State Tracking ---
+Write-Host "`n[Test 4] Evaluando Visual Differencing Engine (compare_visuals)..." -ForegroundColor Yellow
+$img1 = Join-Path $tempDir "state1.png"
+$img2 = Join-Path $tempDir "state2.png"
+$diffOut = Join-Path $tempDir "diff_out.png"
+
+Add-Type -AssemblyName System.Drawing
+$b1 = New-Object System.Drawing.Bitmap 400, 300
+$g1 = [System.Drawing.Graphics]::FromImage($b1)
+$g1.Clear([System.Drawing.Color]::Black)
+$g1.FillRectangle([System.Drawing.Brushes]::Red, 20, 20, 50, 50)
+$b1.Save($img1)
+
+$b2 = New-Object System.Drawing.Bitmap 400, 300
+$g2 = [System.Drawing.Graphics]::FromImage($b2)
+$g2.Clear([System.Drawing.Color]::Black)
+# Rectangulo movido a otra posicion (simulando arrastre de item en inventario)
+$g2.FillRectangle([System.Drawing.Brushes]::Red, 200, 150, 50, 50)
+$b2.Save($img2)
+
+$g1.Dispose(); $b1.Dispose(); $g2.Dispose(); $b2.Dispose()
+
+$diffOutput = & "$scriptsDir\compare_visuals.ps1" -ImageA $img1 -ImageB $img2 -OutputPath $diffOut | ConvertFrom-Json
+Assert-Test -TestName "Visual Diff State Change Detected" -Condition ($diffOutput.verdict -eq "STATE_CHANGED" -and $diffOutput.delta_percent -gt 0)
+Assert-Test -TestName "Visual Diff Heatmap Image Created" -Condition (Test-Path $diffOut)
 
 # Limpieza
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue

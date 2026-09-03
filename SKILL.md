@@ -1,128 +1,131 @@
 ﻿---
 name: goal
-description: "Motor Autónomo Perfeccionista v2.0 (UltraGoal Engine). Ejecuta metas complejas de largo aliento mediante una tríada multi-agente: Constructor (Worker), Auditor Crítico (Gemini Critic con umbral >= 95/100) y Motor de Visión Multimodal. Cero conformismo, cero código falso y verificación empírica implacable."
+description: "Motor Autónomo Perfeccionista v2.1 (UltraGoal Engine). Ejecuta metas complejas mediante una tríada multi-agente con Escrutinio Visual Adversarial (AVS), Recortes de Sector 1:1, Análisis Diferencial de Interacción (compare_visuals), Detección de Fugas de Rendimiento y Rúbrica Inquebrantable >= 95/100."
 author: BryanGM12 & Antigravity Autonomous Systems
-version: 2.0.0
+version: 2.1.0
 metadata:
   category: orchestration
-  skills: ["goal", "multi-agent", "adversarial-review", "vision", "quality-gate", "autonomous-coding"]
+  skills: ["goal", "multi-agent", "adversarial-review", "vision", "quality-gate", "performance-profiler"]
 ---
 
-# 🚀 UltraGoal: The Relentless Multi-Agent Perfectionist Engine (v2.0)
+# 🚀 UltraGoal: The Relentless Multi-Agent Perfectionist Engine (v2.1)
 
-Cuando el usuario invoca `/goal <objetivo>`, se activa el **Arnés Multi-Agente UltraGoal**. Dejas de operar como un asistente pasivo y te conviertes en el **Director Orquestador** de un equipo autónomo de ingeniería de software de élite.
-
-Este sistema está diseñado para proyectos complejos (aplicaciones completas, refactorizaciones masivas, mods, motores y sistemas de infraestructura). Su regla fundamental es el **Cero-Conformismo**: **jamás dar por terminada una tarea con soluciones a medias, mocks temporales o sin validación empírica.**
+Cuando el usuario invoca `/goal <objetivo>`, se activa el **Arnés Autónomo UltraGoal v2.1**. Dejas de operar como un modelo pasivo y asumes el mando como **Director Orquestador** de una tríada de ingeniería de élite: el **Constructor (Worker)**, el **Auditor Crítico (Critic)** y el **Ojo de Gemini con Escrutinio Visual Adversarial (AVS)**.
 
 ---
 
-## 🏛️ Arquitectura de la Tríada Multi-Agente
+## 👁️ EL MANDATO DE VISIÓN HOSTIL & DETECCIÓN DE MICRO-DETALLES
+
+> ⚠️ **REGLA DE ORO CONTRA LA CEGUERA VISUAL:**
+> Está **ESTRICTAMENTE PROHIBIDO** limitarse a tomar una sola captura de pantalla completa, mirarla superficialmente y declarar "se ve bien". Los modelos de visión sufren de sesgo positivo cuando analizan imágenes reducidas.
+> Para evitar errores críticos como **bloques que no se ven en el suelo**, **ítems que no siguen el cursor al arrastrarlos en el inventario**, o **stutter por mala optimización**, el Agente Auditor DEBE seguir este protocolo:
+
+### 1. Descomposición Multi-Sector 1:1 (Sin Reescalado)
+Para auditar la escena, ejecuta:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -ConversationId "<ID>" -Mode "MultiSector"
+```
+Esto genera la captura global con cuadrícula de coordenadas `[A1]`..`[C3]` más 3 recortes nativos 1:1:
+1. **`sector_ground.png` (Sector C2):** El 35% inferior donde reposa el suelo.
+   - **Pregunta obligatoria:** ¿Se ven los bloques en el suelo? ¿Hay vacíos, caras culling invertidas o flotación? Si falta el suelo: **VETO INMEDIATO**.
+2. **`sector_hud.png` (Sector C3):** La barra de acceso rápido, inventario y texto.
+   - **Pregunta obligatoria:** ¿Las fuentes y números son 100% nítidos? ¿El slot activo tiene marco selector visible?
+3. **`sector_center.png` (Sector B2):** La mira y el objetivo de raycasting.
+   - **Pregunta obligatoria:** ¿El bloque al que apunta el jugador se resalta con wireframe?
+
+### 2. Auditoría Diferencial de Interacción (Drag-and-Drop & Seguimiento)
+Los bugs dinámicos (como un objeto del inventario que no sigue el cursor) **NO se pueden ver en una imagen estática**. Para probar interacciones:
+1. Toma el fotograma inicial:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -OutputPath "frame1.png"
+   ```
+2. Ejecuta la acción (ej. seleccionar ítem y mover cursor / drag).
+3. Toma el fotograma secundario:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -OutputPath "frame2.png"
+   ```
+4. Ejecuta el comparador visual diferencial:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/compare_visuals.ps1 -ImageA "frame1.png" -ImageB "frame2.png" -OutputPath "diff_heatmap.png"
+   ```
+5. Inspecciona `diff_heatmap.png` con `view_file`:
+   - Si el objeto seleccionado **NO** acompaña las coordenadas del puntero, el mapa diferencial mostrará la anomalía o delta 0%. **VETO INMEDIATO**.
+
+---
+
+## ⚡ MANDATO DE RENDIMIENTO & OPTIMIZACIÓN (CERO STUTTER)
+
+El arnés ejecuta `scripts/evaluate_rubric.ps1`, el cual audita el código fuente contra las 3 causas principales de lag en proyectos interactivos:
+1. **Prohibición de Asignaciones en Bucles de Render:**
+   - Cero `new THREE.Vector3()`, `new Object()` o matrices dentro de `requestAnimationFrame()`, `animate()`, `update()` o `render()`. Las variables deben reusarse fuera del bucle para evitar pausas del Garbage Collector.
+2. **Batching Obligatorio de Geometría en Terrenos Voxel:**
+   - Prohibido instanciar miles de mallas individuales en bucles `for(x) for(y) for(z) new THREE.Mesh()`. Es obligatorio usar `InstancedMesh` o combinar las geometrías de chunks en un solo `BufferGeometry`.
+3. **Escalado por Tiempo Delta:**
+   - La física y las animaciones deben multiplicarse por `deltaTime` para que la velocidad sea constante independiente de la tasa de refresco.
+
+---
+
+## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE
 
 ```mermaid
 graph TD
-    User([Usuario: /goal <objetivo>]) --> Orchestrator[Orquestador Principal - Gemini Master]
+    User([Usuario: /goal <objetivo>]) --> Orchestrator[Gemini Master Orchestrator]
     
-    subgraph "Ciclo de Ejecución Autónoma (UltraGoal Harness)"
-        Orchestrator --> StateInit[1. Inicializar Contrato & Hitos en Disco]
-        StateInit --> Builder[2. Despachar Agente Constructor / Worker Subagent]
-        Builder --> Deliverable[3. Código Implementado, Diffs y Tests]
+    subgraph "Bucle UltraGoal Autónomo v2.1"
+        Orchestrator --> State[1. Init Contrato en goal_state.json]
+        State --> Worker[2. Despachar Builder Subagent]
+        Worker --> Code[3. Código Modular, Tests & Optimizaciones]
         
-        Deliverable --> Auditor[4. Agente Auditor / Gemini Critic]
-        Deliverable --> Vision[5. Motor de Inspección Visual / GDI Capture]
+        Code --> Auditor[4. Despachar Auditor Crítico Adversarial]
+        Code --> Vision[5. Captura MultiSector 1:1 & Heatmap Diff]
         
-        Auditor --> Rubric["6. Evaluar Rúbrica de Calidad (evaluate_rubric.ps1)"]
-        Vision --> Rubric
+        Auditor --> Rubric["6. Escáner de Rúbrica v2.1 (evaluate_rubric.ps1)"]
+        Vision --> SectorInspection["7. Inspección de Sectores con view_file"]
         
-        Rubric -- "RECHAZADO (Score < 95)" --> Remediation[Matriz de Corrección & Remedición Inmediata]
-        Remediation --> Builder
+        SectorInspection --> QualityGate{¿Supera el Umbral?}
+        Rubric --> QualityGate
         
-        Rubric -- "APROBADO (Score >= 95)" --> MilestoneApproval[Firma de Hito & Transición]
-        MilestoneApproval --> NextMilestone{¿Quedan más hitos?}
-        NextMilestone -- Sí --> Builder
-        NextMilestone -- No --> FinalVerification[7. Verificación Integral End-to-End]
+        QualityGate -- "RECHAZADO (< 95 pts)" --> Remediation[Matriz de Corrección Obligatoria]
+        Remediation --> Worker
+        
+        QualityGate -- "APROBADO (>= 95 pts)" --> Advance[Firma y Avance de Hito]
+        Advance --> More{¿Hay más hitos?}
+        More -- Sí --> Worker
+        More -- No --> EndToEnd[8. Verificación Integral End-to-End]
     end
     
-    FinalVerification --> GoalComplete([<!-- GOAL_COMPLETE -->])
+    EndToEnd --> Complete([<!-- GOAL_COMPLETE -->])
 ```
 
 ---
 
-## 🎭 Roles y Responsabilidades
+## 📋 FLUJO PASO A PASO POR CADA HITO
 
-### 1. Director / Orquestador (Agente Principal)
-- **Mantener el Contexto Global:** No satura su ventana de contexto leyendo archivos gigantescos ni ejecutando cientos de comandos triviales de compilación.
-- **Definir el Contrato Inquebrantable:** Desglosa el objetivo en 3 a 5 hitos verificables con criterios empíricos (ej. "el script devuelve exit code 0", "suite de 20 tests en verde", "captura de pantalla muestra UI sin errores").
-- **Gobernanza:** Coordina al Constructor y al Auditor usando `scripts/milestone_tracker.ps1`. Solo él puede emitir `<!-- GOAL_COMPLETE -->`.
-
-### 2. Constructor / Worker (Doer Subagent)
-- **Despacho:** Invocado mediante `invoke_subagent` (TypeName: `self` o subagente especializado de escritura).
-- **Misión:** Escribir código real, modular y tipado. Instalar dependencias, resolver conflictos de librerías y escribir suites de pruebas automatizadas.
-- **Prohibición Absoluta:** Tiene terminantemente prohibido escribir comentarios `# TODO`, `// FIXME`, funciones de relleno con `pass`, o stubs que arrojen `NotImplementedException`. Todo código debe funcionar de verdad.
-
-### 3. Auditor Crítico (Gemini Critic / Adversarial Overseer)
-- **Despacho:** Subagente dedicado o fase de auditoría destructiva ("Red Team").
-- **Misión:** Inspeccionar el código entregado con mentalidad de atacante y evaluador riguroso.
-- **Herramienta:** Ejecuta `scripts/evaluate_rubric.ps1` sobre el código fuente.
-- **Estándar de Aprobación:** **Score mínimo de 95 sobre 100**. Si obtiene 94 o menos, el hito es **RECHAZADO** automáticamente con una lista numerada de fallos que el Constructor debe subsanar de inmediato.
-
-### 4. Inspector de Visión Artificial (Gemini Vision Eye)
-- **Misión:** Verificar el resultado visual cuando el proyecto tenga interfaces gráficas (Web, Desktop, TUI, Juegos, Gráficos o Documentos renderizados).
-- **Herramienta:** Ejecuta `scripts/capture_vision.ps1 -ConversationId <Id>` para capturar la ventana de la aplicación o pantalla.
-- **Inspección Multimodal:** Carga la captura resultante mediante `view_file` para verificar visualmente alineación, legibilidad de fuentes, paleta de colores y responsividad.
-
----
-
-## 📋 Protocolo de Ejecución Paso a Paso
-
-### Fase 1: El Contrato Maestro & Estado
-1. Inicializar el rastreador de hitos:
+1. **Inicializar Estado:**
    ```powershell
-   powershell -ExecutionPolicy Bypass -File "scripts/milestone_tracker.ps1" -Action init -GoalTitle "<Nombre>" -Milestones "Hito 1;Hito 2;Hito 3"
+   powershell -ExecutionPolicy Bypass -File scripts/milestone_tracker.ps1 -Action init -GoalTitle "<Proyecto>" -Milestones "Hito 1;Hito 2;Hito 3"
    ```
-2. Crear el artefacto `implementation_plan.md` reflejando el contrato acordado.
-
-### Fase 2: Ciclo Constructor -> Auditor -> Visión (Por cada hito)
-Para cada hito del proyecto:
-1. **El Constructor ejecuta:**
-   - Escribe el código y las pruebas correspondientes.
-   - Ejecuta los tests locales para validar funcionamiento.
-   - Marca el hito como enviado:
+2. **El Constructor (Doer Subagent):**
+   - Escribe código real y pruebas unitarias.
+   - Verifica que no haya TODOs ni stubs.
+   - Envía el hito:
      ```powershell
-     powershell -ExecutionPolicy Bypass -File "scripts/milestone_tracker.ps1" -Action submit -MilestoneIndex <N> -Notes "<Resumen de cambios>"
+     powershell -ExecutionPolicy Bypass -File scripts/milestone_tracker.ps1 -Action submit -MilestoneIndex <N> -Notes "<Detalle>"
      ```
-2. **El Auditor evalúa:**
-   - Ejecuta el evaluador de rúbrica:
+3. **El Auditor y el Ojo de Gemini:**
+   - Corre el escáner de código:
      ```powershell
-     powershell -ExecutionPolicy Bypass -File "scripts/evaluate_rubric.ps1" -TargetPath "<DirectorioDelProyecto>" -TestCommand "<ComandoDeTests>"
+     powershell -ExecutionPolicy Bypass -File scripts/evaluate_rubric.ps1 -TargetPath "<Directorio>" -TestCommand "<Tests>"
      ```
-   - Si aplica UI, ejecuta la captura visual:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File "scripts/capture_vision.ps1" -ConversationId "<Id>"
-     ```
-     e inspecciona la imagen resultante con `view_file`.
-3. **El Veredicto:**
-   - Si Score >= 95 y Visión es aprobada:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File "scripts/milestone_tracker.ps1" -Action audit -MilestoneIndex <N> -Score <Puntaje> -Verdict "APPROVED" -Notes "Excelente calidad"
-     ```
-   - Si Score < 95 o se detectan defectos visuales/lógicos:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File "scripts/milestone_tracker.ps1" -Action audit -MilestoneIndex <N> -Score <Puntaje> -Verdict "REJECTED" -Notes "<Lista de correcciones>"
-     ```
-     El Constructor retoma el control y corrige las deficiencias antes de reintentar.
-
-### Fase 3: Verificación Final y Cierre
-1. Cuando todos los hitos estén en estado `APPROVED`:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File "scripts/milestone_tracker.ps1" -Action complete
-   ```
-2. Correr una prueba integral final de punta a punta.
-3. Generar el artefacto de cierre `walkthrough.md`.
-4. Incluir `<!-- GOAL_COMPLETE -->` en el mensaje final.
-
----
-
-## 🛡️ Invariantes No Negociables
-1. **Invariante Cero-Texto en Progreso:** Durante la ejecución autónoma, jamás envíes un mensaje de chat vacío o puramente conversacional ("sigo trabajando", "en breve continúo"). Cada turno debe ejecutar herramientas o scripts de verificación reales.
-2. **Invariante de Cero-Falso-Positivo:** Jamás des por terminado un goal porque "parece que funciona". La única prueba válida es la ejecución con código de salida 0 y la rúbrica aprobada por el Auditor.
-3. **Invariante de Protección de Contexto:** Rota los logs extensos y utiliza subagentes para tareas de lectura masiva para preservar la claridad mental del modelo.
+   - Si el proyecto tiene salida visual o UI:
+     1. Genera los recortes multi-sector:
+        ```powershell
+        powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -ConversationId "<ID>" -Mode "MultiSector"
+        ```
+     2. Abre `sector_ground.png` y `sector_hud.png` con `view_file`.
+     3. Si es interactivo, corre `compare_visuals.ps1` y abre `diff_heatmap.png`.
+4. **Veredicto:**
+   - **Score >= 95 y Cero Defectos Visuales:** Se aprueba el hito con `milestone_tracker.ps1 -Action audit -Verdict APPROVED`.
+   - **Score < 95 o Defectos en Suelo/Inventario/Lag:** Se rechaza con `milestone_tracker.ps1 -Action audit -Verdict REJECTED`. El Constructor corrige y reintenta.
+5. **Cierre:**
+   - Al aprobar todos los hitos, se corre `milestone_tracker.ps1 -Action complete` y se emite `<!-- GOAL_COMPLETE -->`.

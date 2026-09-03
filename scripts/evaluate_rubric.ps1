@@ -1,17 +1,11 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Quality & Anti-Sloth Rubric Evaluator
+    UltraGoal Quality & Anti-Sloth Rubric Evaluator v2.1 (Performance & Interaction Gate)
 .DESCRIPTION
     Motor de auditoría rigurosa y evaluación de calidad para proyectos complejos en Antigravity.
-    Escanea código fuente buscando antipatrones (TODOs, stubs, mocks, manejo deficiente de errores,
-    fugas de secretos, falta de tests) y genera una calificación estricta sobre 100 puntos.
-    Umbral de aprobación: 95/100 ("No se conforma con cualquier resultado").
-.PARAMETER TargetPath
-    Directorio o archivo a auditar.
-.PARAMETER TestCommand
-    Comando opcional para ejecutar tests automatizados (ej. "npm test", "pytest", "dotnet test").
-.PARAMETER ExcludeDirs
-    Carpetas a excluir (por defecto: node_modules, .git, bin, obj, venv, dist, build).
+    Escanea código fuente buscando antipatrones funcionales, fugas de rendimiento en bucles de renderizado,
+    desconexión de eventos de interacción (drag-and-drop huérfano) y ausencia de tests.
+    Umbral inquebrantable de aprobación: 95/100 ("No se conforma con cualquier resultado").
 #>
 
 [CmdletBinding()]
@@ -57,12 +51,13 @@ if ($targetItem.PSIsContainer) {
 }
 
 $scores = [ordered]@{
-    "Functional_Completeness"     = 30
-    "Robustness_Error_Handling"   = 20
+    "Functional_Completeness"     = 25
+    "Performance_Render_Budget"   = 15
+    "Interaction_Tracking_UX"     = 10
+    "Robustness_Error_Handling"   = 15
     "Architecture_Cleanliness"    = 15
     "Automated_Testing"           = 15
-    "Security_Secrets_Hygiene"    = 10
-    "Documentation_Clarity"       = 10
+    "Security_Secrets_Hygiene"    = 5
 }
 
 $violations = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -77,21 +72,70 @@ $emptyCatchRegex = [regex]'(?i)(catch\s*\([^)]*\)\s*\{\s*\}|except:\s*pass|excep
 $debugDebrisRegex = [regex]'(?i)(console\.log\("debug|print\("test|System\.out\.println\("here|Debugger\.Break)'
 $secretRegex = [regex]'(?i)(sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|BEGIN PRIVATE KEY|api_key\s*=\s*["''][a-zA-Z0-9_-]{16,}["''])'
 
+# Expresiones de Rendimiento y Renderizado (Evita stutter, lag y fugas de memoria en juegos y canvas)
+$allocInRenderRegex = [regex]'(?i)(function\s+(animate|render|update|tick|loop)\b|requestAnimationFrame)'
+$naiveLoopMeshRegex = [regex]'(?i)(for\s*\([^)]*\)\s*\{[^}]*for\s*\([^)]*\)\s*\{[^}]*new\s+(THREE\.Mesh|GameObject|MeshRenderer))'
+$unthrottledLoopRegex = [regex]'(?i)requestAnimationFrame\([^)]+\)(?!.*(delta|clock|now|elapsed|dt))'
+
+# Expresiones de Seguimiento de Interacción / UX (Drag-and-Drop, Cursor follow)
+$orphanDragRegex = [regex]'(?i)(draggedItem|selectedItem|activeSlot)\s*=[^;]+;(?!.*(clientX|clientY|pageX|pageY|cursor\.position|pointer))'
+
 foreach ($file in $files) {
-    $lines = Get-Content -LiteralPath $file.FullName -ErrorAction SilentlyContinue
+    $lines = @(Get-Content -LiteralPath $file.FullName -ErrorAction SilentlyContinue)
     if ($null -eq $lines) { continue }
     $totalCodeLines += $lines.Count
+    $fullContent = $lines -join "`n"
 
-    # Verificar si es archivo de prueba
     if ($file.Name -match '(?i)(test|spec|_test|\.test\.|\.spec\.)') {
         $testFilesFound++
     }
+
+    # 1. Chequeos de archivo completo
+    if ($fullContent -match $naiveLoopMeshRegex) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Performance_Render_Budget"
+            Penalty     = 8
+            File        = $file.FullName
+            Line        = 1
+            Snippet     = "Bucle anidado instanciando mallas individuales"
+            Issue       = "Grave cuello de botella de rendimiento: Creación de mallas individuales en bucles de terreno en lugar de InstancedMesh o Chunk Geometry merging."
+        })
+    }
+
+    # 2. Chequeos línea por línea
+    $inRenderFunc = $false
+    $renderBraceCount = 0
 
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $lineNum = $i + 1
         $line = $lines[$i]
 
-        # 1. TODOs & FIXMEs
+        # Rastrear contexto de función de render
+        if ($line -match $allocInRenderRegex) {
+            $inRenderFunc = $true
+            $renderBraceCount = 0
+        }
+        if ($inRenderFunc) {
+            if ($line -match '\{') { $renderBraceCount++ }
+            if ($line -match '\}') {
+                $renderBraceCount--
+                if ($renderBraceCount -le 0) { $inRenderFunc = $false }
+            }
+
+            # Asignación continua de memoria en bucle de animación
+            if ($line -match 'new\s+(THREE\.|Vector|Matrix|Object|Array)\b' -and -not ($line -match 'new\s+Promise')) {
+                $violations.Add([PSCustomObject]@{
+                    Category    = "Performance_Render_Budget"
+                    Penalty     = 6
+                    File        = $file.FullName
+                    Line        = $lineNum
+                    Snippet     = $line.Trim()
+                    Issue       = "Instanciación dentro del bucle de renderizado/animación (Causa GC pauses y caídas de FPS)."
+                })
+            }
+        }
+
+        # TODOs & Stubs
         if ($line -match $todoRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Functional_Completeness"
@@ -102,8 +146,6 @@ foreach ($file in $files) {
                 Issue       = "Marcador de trabajo pendiente o incompleto (TODO/FIXME)"
             })
         }
-
-        # 2. Stubs / NotImplemented
         if ($line -match $stubRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Functional_Completeness"
@@ -115,7 +157,7 @@ foreach ($file in $files) {
             })
         }
 
-        # 3. Empty Catch / Exception Swallowing
+        # Catch vacíos
         if ($line -match $emptyCatchRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Robustness_Error_Handling"
@@ -127,7 +169,7 @@ foreach ($file in $files) {
             })
         }
 
-        # 4. Debug Debris
+        # Debug debris
         if ($line -match $debugDebrisRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Architecture_Cleanliness"
@@ -139,11 +181,11 @@ foreach ($file in $files) {
             })
         }
 
-        # 5. Hardcoded Secrets
+        # Secretos
         if ($line -match $secretRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Security_Secrets_Hygiene"
-                Penalty     = 10
+                Penalty     = 5
                 File        = $file.FullName
                 Line        = $lineNum
                 Snippet     = "******** (Secret Redacted)"
@@ -151,10 +193,9 @@ foreach ($file in $files) {
             })
         }
 
-        # 6. Conteo de aserciones en tests
-        if ($line -match '(?i)(assert|expect\(|should|Assert\.|AssertTrue|AssertEqual)') {
-            $assertionCount++
-        }
+        # Aserciones en tests
+        $assertionMatches = [regex]::Matches($line, '(?i)(assert|expect\(|should|Assert\.|AssertTrue|AssertEqual)')
+        $assertionCount += $assertionMatches.Count
     }
 }
 
@@ -189,7 +230,7 @@ if ($testFilesFound -eq 0) {
     })
 }
 
-# Evaluación de Tests Automatizados en Runtime si se proveyó TestCommand
+# Ejecución de Tests en Runtime
 $testExecutionStatus = "Not_Executed"
 if (-not [string]::IsNullOrWhiteSpace($TestCommand)) {
     try {
@@ -223,7 +264,6 @@ if (-not [string]::IsNullOrWhiteSpace($TestCommand)) {
     }
 }
 
-# Total score
 $totalScore = 0
 foreach ($val in $scores.Values) {
     $totalScore += $val
