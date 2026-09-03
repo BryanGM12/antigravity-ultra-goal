@@ -1,0 +1,18 @@
+﻿# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary outputs & caches
+*.tmp
+*.log
+test_state.json
+temp/
+coverage/
+node_modules/
+__pycache__/
+*.pyc
+
+# Local screenshots during tests
+*.png
+!assets/*.png
