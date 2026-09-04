@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal OmniThink Hyper-Cognition & Multi-Perspective Reasoner v4.0
 .DESCRIPTION
@@ -93,19 +93,32 @@ $perfAnalysis = [ordered]@{
     )
 }
 
+# 5. Perspectiva 5: Arquitecto Sensorial, Audio & Orquestación de Assets (The Anti-Toy Multi-Media Invariant)
+$sensoryAssetAnalysis = [ordered]@{
+    perspective = "Sensory_Asset_Orchestrator"
+    mandatory_asset_rules = @(
+        "Prohibido usar primitivas geométricas desnudas (cilindros o conos planos solitarios). Vehículos, naves o maquinaria deben construirse con mallas compuestas detalladas (etapas desacoplables, toberas F-1/Raptor, aletas, cápsula, anillo interetapas) con materiales PBR (metalness >= 0.7, roughness <= 0.4)",
+        "Diseño sonoro obligatorio (Web Audio API): Ninguna animación o simulación puede ser muda. Debe integrarse síntesis de audio procedural (rugido de cohete pink noise + biquad lowpass, beeps de cuenta atrás, explosión de desacople y ráfagas RCS)",
+        "Director cinematográfico con interpolación suave: Prohibidos los saltos bruscos entre fases de vuelo o cámaras. La transición de vista (pad tracking, booster cam, chase cam, cockpit) debe usar lerp/slerp continuo con amortiguación (damping)",
+        "Efectos visuales volumétricos & Post-Processing: Integrar partículas con gradiente térmico de escape (ignición a humo blanco) y fulgor emissive o UnrealBloomPass para motores al 100% de empuje",
+        "Orquestación y búsqueda de recursos: Emplear 'asset_orchestrator.ps1' o búsqueda web (search_web) para enlazar texturas 4K de la NASA (Tierra, Luna, Vía Láctea) o modelos GLTF oficiales"
+    )
+}
+
 # Consolidación del Hyper-Cognition Spec
 $hyperSpec = [ordered]@{
     goal_objective          = $GoalObjective
     detected_category       = $Category
-    analysis_framework      = "UltraGoal OmniThink System 2 Hyper-Cognition v4.0"
+    analysis_framework      = "UltraGoal OmniThink System 2 Hyper-Cognition v5.0"
     created_at              = (Get-Date -Format "o")
     perspectives            = [ordered]@{
         "1_Architecture"      = $archAnalysis
         "2_RedTeam_Adversary" = $redTeamAnalysis
         "3_Visual_Kinetic"    = $uxKineticAnalysis
         "4_Performance"       = $perfAnalysis
+        "5_Sensory_Assets"    = $sensoryAssetAnalysis
     }
-    omnithink_mandate       = "Queda terminantemente prohibido escribir una sola línea de código sin haber diseñado previamente las defensas para cada uno de los vectores de fallo identificados por el Red Team y el Especialista Cinético."
+    omnithink_mandate       = "Queda terminantemente prohibido escribir una sola línea de código sin haber diseñado previamente las defensas para cada uno de los vectores de fallo identificados por el Red Team, el Especialista Cinético y el Arquitecto Sensorial de Assets."
 }
 
 $json = $hyperSpec | ConvertTo-Json -Depth 10

@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal Rigorous Autonomous Test Harness v4.0 (The 5-Phase Deep Quality Engine)
 .DESCRIPTION
@@ -197,18 +197,20 @@ $kineticPassed = $true
 $isInteractive3D = ($allCodeText -match '(?i)(THREE\.|camera\.|controls\.|PointerLock|mousemove|keydown)')
 
 if ($isInteractive3D) {
-    # 1. Pitch clamp
-    $hasPitchClamp = ($allCodeText -match '(?i)(Math\.(max|min)\s*\([^)]*(-1\.5|-Math\.PI|clamp|maxPolarAngle|minPolarAngle)|\.clamp|\bpolarAngle\b)')
-    if (-not $hasPitchClamp) {
-        $kineticPassed = $false
-        $fatalDefects.Add("Fase 4 (Cámara): Falta Pitch Clamping (-1.5 a 1.5 rad). La cámara gira sin límite y se invierte boca abajo.")
-    }
+    # 1. Pitch clamp & dir.y=0 en controles de primera persona / ratón
+    $isFirstPersonOrMouseLook = ($allCodeText -match '(?i)(PointerLock|mousemove|controls\.isLocked|onMouseMove|mouseLook)')
+    if ($isFirstPersonOrMouseLook) {
+        $hasPitchClamp = ($allCodeText -match '(?i)(Math\.(max|min)\s*\([^)]*(-1\.5|-Math\.PI|clamp|maxPolarAngle|minPolarAngle)|\.clamp|\bpolarAngle\b)')
+        if (-not $hasPitchClamp) {
+            $kineticPassed = $false
+            $fatalDefects.Add("Fase 4 (Cámara): Falta Pitch Clamping (-1.5 a 1.5 rad). La cámara gira sin límite y se invierte boca abajo.")
+        }
 
-    # 2. dir.y = 0
-    $hasYFlattening = ($allCodeText -match '(?i)(direction\.y\s*=\s*0|dir\.y\s*=\s*0|moveForward|moveRight|\.setFromAxisAngle)')
-    if (-not $hasYFlattening) {
-        $kineticPassed = $false
-        $fatalDefects.Add("Fase 4 (Movimiento): La dirección de avance no neutraliza el eje Y (dir.y = 0). El personaje vuela al mirar arriba o se hunde al mirar abajo.")
+        $hasYFlattening = ($allCodeText -match '(?i)(direction\.y\s*=\s*0|dir\.y\s*=\s*0|moveForward|moveRight|\.setFromAxisAngle)')
+        if (-not $hasYFlattening) {
+            $kineticPassed = $false
+            $fatalDefects.Add("Fase 4 (Movimiento): La dirección de avance no neutraliza el eje Y (dir.y = 0). El personaje vuela al mirar arriba o se hunde al mirar abajo.")
+        }
     }
 
     # 3. DeltaTime
@@ -217,6 +219,26 @@ if ($isInteractive3D) {
         $kineticPassed = $false
         $fatalDefects.Add("Fase 4 (Física): Desplazamiento sin DeltaTime. Velocidad errática dependiente de la tasa de refresco.")
     }
+
+    # 4. Verificación de Audio, Mallas Compuestas & Transición Suave en Simulaciones Espaciales/Vuelo
+    $isSimOrFlightOrSpace = ($allCodeText -match '(?i)(rocket|cohete|space\b|luna\b|moon\b|flight\b|launch\b|alunizaje)')
+    if ($isSimOrFlightOrSpace) {
+        $hasAudio = ($allCodeText -match '(?i)(AudioContext|webkitAudioContext|createOscillator|createBufferSource|new\s+Audio\b|sound|audioEngine|playAudio|playCountdown|startRocketRoar|SpaceAudioEngine|ProceduralAudioEngine)')
+        if (-not $hasAudio) {
+            $kineticPassed = $false
+            $fatalDefects.Add("Fase 4 (Sensorial): Simulación o animación de vuelo muda. Se exige integrar síntesis de audio procedural Web Audio API (AudioContext) para rugido de motores, cuenta atrás y efectos de vuelo.")
+        }
+        $hasCompositeModel = ($allCodeText -match '(?i)(new\s+THREE\.Group|createHighFidelity|GLTFLoader|\.add\(|MeshStandardMaterial|MeshPhysicalMaterial|emissive)')
+        if (-not $hasCompositeModel) {
+            $kineticPassed = $false
+            $fatalDefects.Add("Fase 4 (Mallas 3D): Modelo 3D primitivo (trampa del cilindro plano). Se exige ensamblaje jerárquico compuesto con toberas, etapas desacoplables y materiales PBR.")
+        }
+        $hasSmoothCam = ($allCodeText -match '(?i)(\.lerp\(|\.slerp\(|TWEEN|damping|smoothstep|CinematicFlightDirector|interpolate)')
+        if (-not $hasSmoothCam) {
+            $kineticPassed = $false
+            $fatalDefects.Add("Fase 4 (Cámara): Falta interpolación suave (lerp/slerp) en transiciones de vuelo o cámara cinematográfica.")
+        }
+    }
 }
 
 $phaseResults["Phase_4_Kinetic_Stability"] = [PSCustomObject]@{
@@ -224,6 +246,8 @@ $phaseResults["Phase_4_Kinetic_Stability"] = [PSCustomObject]@{
     pitch_clamp_ok    = if ($isInteractive3D) { $hasPitchClamp } else { "N/A" }
     dir_y_flatten_ok  = if ($isInteractive3D) { $hasYFlattening } else { "N/A" }
     delta_time_ok     = if ($isInteractive3D) { $hasDeltaTime } else { "N/A" }
+    audio_sensory_ok  = if ($isSimOrFlightOrSpace) { $hasAudio } else { "N/A" }
+    composite_mesh_ok = if ($isSimOrFlightOrSpace) { $hasCompositeModel } else { "N/A" }
 }
 
 # =========================================================================

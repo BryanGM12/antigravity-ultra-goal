@@ -1,54 +1,70 @@
-﻿<div align="center">
+<div align="center">
 
-# ⚡ UltraGoal Universal Engine v4.0
+# ⚡ UltraGoal Universal Engine v5.0
 ### The Autonomous Software Engineering Triad for Google Antigravity & OpenClaw
-**OmniThink System 2 Hyper-Cognition • 5-Phase Rigorous Test Harness • Kinetic & Texture Gate • Score ≥ 95**
+**OmniThink 5-Perspective Hyper-Cognition • Asset & Sensory Orchestrator • Procedural Web Audio • Cinematic Flight Director • 5-Phase Rigorous Test Harness**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Antigravity](https://img.shields.io/badge/Antigravity-2.0%20Ready-blue.svg)](https://deepmind.google/technologies/gemini/)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Compatible-purple.svg)](https://github.com/openclaw)
-[![Cognition](https://img.shields.io/badge/Hyper--Cognition-OmniThink%20System%202-red.svg)](#-fase-0-omnithink-hyper-cognition)
+[![Cognition](https://img.shields.io/badge/Hyper--Cognition-OmniThink%205--Perspective-red.svg)](#-fase-0-omnithink-hyper-cognition-5-perspectivas)
+[![Assets](https://img.shields.io/badge/Assets-NASA%20%26%20Procedural%20PBR-blueviolet.svg)](#-orquestador-de-assets-y-paisaje-sonoro)
+[![Audio](https://img.shields.io/badge/Audio-Procedural%20Web%20Audio-orange.svg)](#-motor-de-audio-procedural)
 [![Harness](https://img.shields.io/badge/Test%20Harness-5--Phase%20Rigorous-brightgreen.svg)](#-la-batería-de-pruebas-rigurosa-de-5-fases)
-[![Kinetic Gate](https://img.shields.io/badge/Controls-Kinetic%20Stability%20Enforced-orange.svg)](#-el-invariante-cinético-y-de-texturas)
-[![Tests](https://img.shields.io/badge/Tests-16%2F16%20Passing-brightgreen.svg)](#-verification-suite)
+[![Tests](https://img.shields.io/badge/Tests-23%2F23%20Passing-brightgreen.svg)](#-verification-suite-2323-passing)
 
-**Autonomous engineering harness that "thinks through absolutely everything" before coding, tests through 5 relentless phases, and delivers zero-bug software.**
+**Autonomous engineering harness that "thinks through absolutely everything" before coding, sources high-fidelity assets, synthesizes procedural audio, and tests through 5 relentless phases.**
 
-[Español](#-visión-general-en-español-v40) • [English](#-english-overview-v40) • [OmniThink](#-fase-0-omnithink-hyper-cognition) • [5-Phase Harness](#-la-batería-de-pruebas-rigurosa-de-5-fases) • [Cinética & Texturas](#-el-invariante-cinético-y-de-texturas) • [Installation](#-quick-installation)
+[Español](#-visión-general-en-español-v50) • [English](#-english-overview-v50) • [OmniThink](#-fase-0-omnithink-hyper-cognition-5-perspectivas) • [Asset Orchestrator](#-orquestador-de-assets-y-paisaje-sonoro) • [5-Phase Harness](#-la-batería-de-pruebas-rigurosa-de-5-fases) • [Verification Suite](#-verification-suite-2323-passing)
 
 ---
 
 </div>
 
-## 🇪🇸 Visión General en Español (v4.0)
+## 🇪🇸 Visión General en Español (v5.0)
 
-**UltraGoal Universal v4.0** eleva la autonomía de la IA al estándar de **Hiper-Cognición (System 2 Thinking)**. Responde a la máxima exigencia: **que la IA piense en todo, absolutamente en todo antes de programar, anticipe cada posible fallo y ejecute una batería de pruebas de 5 fases sumamente rigurosa**.
+**UltraGoal Universal v5.0** erradica el "Síndrome de la Demo de Juguete" no solo en la lógica de negocio, sino también en la **fidelidad visual, sonora y cinética**. Resuelve los problemas clásicos de simulaciones y animaciones generadas por IA:
+1. **Modelos 3D de baja calidad:** Mallas primitivas básicas (un cilindro o caja desnuda) reemplazadas por **mallas compuestas jerárquicas con materiales PBR** y toberas detalladas.
+2. **Simulaciones mudas:** Integración obligatoria de **síntesis procedural de audio con Web Audio API** (rugido de cohetes con pink noise, beeps de cuenta atrás, desacople y RCS).
+3. **Cámaras y movimientos con tirones/bugs:** Implementación de un **Director de Vuelo Cinematográfico** con interpolación suave (`lerp`/`slerp`) entre ángulos de cámara y fases de vuelo.
+4. **Obtención activa de recursos externos:** El agente consulta `asset_orchestrator.ps1` y realiza búsquedas web para enlazar texturas 4K de la NASA, skyboxes estelares y modelos GLTF.
 
 ---
 
-## 🧠 Fase 0: OmniThink Hyper-Cognition
+## 🧠 Fase 0: OmniThink Hyper-Cognition (5 Perspectivas)
 
-Antes de escribir una sola línea de código, `scripts/omnithink_analyzer.ps1` analiza la meta a través de **4 Perspectivas Críticas**:
+Antes de escribir una sola línea de código, `scripts/omnithink_analyzer.ps1` analiza la meta a través de **5 Perspectivas Críticas**:
 
 ```mermaid
 graph TD
     Goal[Usuario: /goal <objetivo>] --> OmniThink[omnithink_analyzer.ps1]
     
-    subgraph "Las 4 Perspectivas de Hiper-Cognición"
+    subgraph "Las 5 Perspectivas de Hiper-Cognición v5.0"
         OmniThink --> P1[1. Arquitecto de Sistemas: FSM, Modelos Inmutables, Unidireccionalidad]
         OmniThink --> P2[2. Red Team Adversarial: Pantallazo Negro, Imports Rotos, Window Blur]
         OmniThink --> P3[3. Especialista Cinético: Pitch Clamp, dir.y = 0, DeltaTime, NearestFilter]
         OmniThink --> P4[4. Perfilador de Rendimiento: Presupuesto 60 FPS, 0 Allocations en animate]
+        OmniThink --> P5[5. Arquitecto Sensorial & Assets: PBR Compuesto, Web Audio, Director Suave]
     end
     
-    P1 & P2 & P3 & P4 --> Spec[HYPER_COGNITION_SPEC.json]
+    P1 & P2 & P3 & P4 & P5 --> Spec[HYPER_COGNITION_SPEC.json]
     Spec --> Execution[Bucle Autónomo Constructor-Auditor-Harness]
 ```
 
-1. **Arquitecto de Sistemas:** Define máquinas de estados finitos (Init, Loading, Ready, Active, Paused, Error), separación estricta de la vista y contratos de datos inmutables.
-2. **Red Team Adversarial:** ¿Dónde fallará si tomamos atajos? Anticipa scripts rotos sin `type="module"`, pantallazos negros (BSOD), caídas por 404 de assets, teclas pegadas en `window.blur` y fugas de memoria.
-3. **Especialista Cinético & Visual:** Exige limitación de cabeceo de cámara (-1.5 a 1.5 rad), avance horizontal neutralizado (`dir.y = 0`), física escalada con `DeltaTime`, texturas con `NearestFilter` y mapeo por caras.
-4. **Perfilador de Rendimiento:** Fija un presupuesto de 60 FPS estables sin pausas de GC, CERO allocations en bucles `animate()` y tiempos de respuesta < 100ms.
+---
+
+## 🚀 Orquestador de Assets y Paisaje Sonoro (`asset_orchestrator.ps1`)
+
+Para erradicar primitivas desnudas y simulaciones silenciosas:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/asset_orchestrator.ps1 -Domain "Space_Rocket"
+```
+
+Ofrece:
+- **Catálogo de Texturas Planetarias:** Texturas oficiales de la NASA (Tierra día/noche 2048, specular/normal maps, nubes, Luna 1024/4K, Vía Láctea).
+- **Generador de Mallas Compuestas 3D:** `createHighFidelityMultiStageRocket` con etapas desacoplables (Booster Stage 1, Orbital Stage 2, Apollo Capsule), cluster de 5 toberas F-1 con fulgor térmico emisivo y aletas estabilizadoras.
+- **Motor de Audio Procedural Web Audio API:** Rugido pink noise + low-pass resonante biquad con modulación de empuje, beeps de cuenta regresiva, impacto de desacople de pernos explosivos y ráfagas RCS.
+- **Director de Vuelo Cinematográfico:** Modos multicámara (plataforma Pad Tracking, Booster Cam mirando a la Tierra, Chase Cam orbital, vista de cabina) con amortiguación `lerp` que previene sacudidas.
 
 ---
 
@@ -61,37 +77,19 @@ Ningún proyecto puede ser entregado sin haber aprobado el arnés [rigorous_test
 | **Fase 1: Estático & AST** | Sintaxis, compatibilidad ES modules y ausencia total de stubs | Declaraciones `import` sin `type="module"`, TODOs, FIXMEs o catch vacíos. |
 | **Fase 2: Arranque en Vivo** | Ejecución real en Chrome Headless (`verify_runtime_boot.ps1`) | Si la app no arranca, crashea o genera errores de consola. |
 | **Fase 3: Escrutinio Visual** | Varianza de luminancia de píxeles y filtrado de texturas | Desviación estándar < 3.0 (pantallazo negro/blanco) o texturas vóxel sin `NearestFilter`. |
-| **Fase 4: Estabilidad Cinética** | Cámara de 360°, vector de avance y escala temporal | Cámara sin pitch clamp (se da vuelta), vector de avance volador o falta de `DeltaTime`. |
+| **Fase 4: Estabilidad Cinética & Sensorial** | Cámara, física DeltaTime, audio procedural y mallas compuestas | Volteos de cámara en primera persona, simulaciones mudas o cohetes modelados con un cilindro simple. |
 | **Fase 5: Pruebas Automatizadas** | Ejecución de suite de tests con aserciones formales | Exit code distinto de 0 o menos de 3 aserciones verificadas. |
 
 ---
 
-## 🕹️ El Invariante Cinético y de Texturas
+## 🇺🇸 English Overview (v5.0)
 
-- **Pitch Clamping Obligatorio:** `Math.max(-1.5, Math.min(1.5, pitch))` para evitar que la cámara se invierta boca abajo.
-- **Neutralización del Eje Y (`dir.y = 0`):** El avance en el plano horizontal neutraliza el componente Y para que el jugador nunca vuele ni se hunda al mover la mirada.
-- **Física con DeltaTime:** `camera.position.addScaledVector(moveDir, speed * dt);`.
-- **Texturas con NearestFilter:** `magFilter = THREE.NearestFilter; minFilter = THREE.NearestFilter; texture.generateMipmaps = false;` para nitidez de píxel art absoluta sin difuminados.
-
----
-
-## 📸 Protocolo de Auditoría Multi-Foto
-
-El Auditor ejecuta `capture_vision.ps1 -Mode MultiStateAudit` y examina con `view_file`:
-1. `1_overview_grid.png`: Vista panorámica con cuadrícula `[A1]..[C3]`.
-2. `2_sector_center.png`: Recorte 1:1 del centro (mira, wireframe del bloque y horizonte).
-3. `3_sector_ground.png`: Recorte 1:1 del suelo (para verificar que los bloques toquen el piso Y=0 y que las texturas sean nítidas).
-4. `4_sector_hud.png`: Recorte 1:1 del inventario y números de ítems.
-
----
-
-## 🇺🇸 English Overview (v4.0)
-
-**UltraGoal Universal v4.0** implements **System 2 Hyper-Cognition**:
-- **OmniThink Pre-Mortem (`omnithink_analyzer.ps1`):** Analyzes the project from 4 critical perspectives (Architect, Adversarial Red Team, Visual/Kinetic Ergonomics, Performance Profiler) before writing a single line of code.
-- **5-Phase Rigorous Test Harness (`rigorous_test_harness.ps1`):** Audits AST syntax, live headless boot, visual luminance/textures, camera kinetic stability, and automated test assertions.
-- **Kinetic & Texture Stability:** Mandates pitch clamping ($-1.5$ to $1.5$ rad), zeroed Y-vector horizontal movement, DeltaTime scaling, and `THREE.NearestFilter` textures.
-- **Multi-Photo AVS Audit:** 4-photo inspection gallery of overview, ground 1:1, HUD 1:1, and focal center 1:1.
+**UltraGoal Universal v5.0** sets a new benchmark for autonomous software creation:
+- **OmniThink Pre-Mortem (5 Perspectives):** Analyzes architecture, adversarial vectors, kinetic ergonomics, performance budgets, and **sensory asset orchestration** before coding.
+- **Asset & Resource Orchestrator (`asset_orchestrator.ps1`):** Supplies verified NASA planetary textures, procedural multi-stage PBR rocket meshes, and smooth cinematic camera rigs.
+- **Procedural Web Audio Engine:** Web Audio API sound synthesis (rocket pink noise rumble, countdown quindar beeps, staging separation thuds, RCS thruster puffs) with zero broken link risks.
+- **Cinematic Camera Director:** Multi-view tracking with smooth `lerp`/`slerp` interpolation preventing jerky camera jumps and trajectory glitches.
+- **5-Phase Rigorous Test Harness:** Rejects silent simulations, bare single-cylinder toy models, black screens, and unhandled exceptions.
 
 ---
 
@@ -99,17 +97,20 @@ El Auditor ejecuta `capture_vision.ps1 -Mode MultiStateAudit` y examina con `vie
 
 ```text
 antigravity-ultra-goal/
-├── SKILL.md                          # Skill Definition v4.0 (OmniThink & 5-Phase Harness)
+├── SKILL.md                          # Skill Definition v5.0 (OmniThink & Asset Orchestrator)
 ├── LICENSE                           # MIT License
 ├── README.md                         # Bilingual Documentation & Benchmarks
 ├── CONTRIBUTING.md                   # Contribution Guidelines
+├── resources/
+│   └── procedural_audio_engine.js    # Drop-in Web Audio API synthesizer module
 ├── scripts/
-│   ├── omnithink_analyzer.ps1        # System 2 Hyper-Cognition & 4-Perspective Reasoner (NEW)
-│   ├── rigorous_test_harness.ps1     # 5-Phase Deep Autonomous Test Harness (NEW)
+│   ├── asset_orchestrator.ps1        # High-Fidelity 3D Assets, Shaders & Soundscapes (NEW)
+│   ├── omnithink_analyzer.ps1        # System 2 Hyper-Cognition & 5-Perspective Reasoner (UPDATED)
+│   ├── rigorous_test_harness.ps1     # 5-Phase Deep Autonomous Test Harness (UPDATED)
 │   ├── verify_runtime_boot.ps1       # Live headless boot & black screen detector
 │   ├── capture_vision.ps1            # Multi-State 4-photo gallery & luminance analyzer
 │   ├── compare_visuals.ps1           # Differential heatmap & interaction tracker
-│   ├── deep_planner.ps1              # Universal 7-Tier planner with kinetic mandates
+│   ├── deep_planner.ps1              # Universal 7-Tier planner with sensory mandates
 │   ├── evaluate_rubric.ps1           # 100-point rubric with Kinetic_Asset_Integrity gate
 │   └── milestone_tracker.ps1         # State machine & auditable milestone ledger
 ├── templates/
@@ -119,12 +120,12 @@ antigravity-ultra-goal/
 │   └── VISION_AUDIT_TEMPLATE.md      # 7-Vector visual scrutiny checklist
 └── examples/
     ├── demo_workflow.md              # Real-world walkthrough scenario
-    └── test_verification_suite.ps1   # 16/16 automated integration test suite
+    └── test_verification_suite.ps1   # 23/23 automated integration test suite
 ```
 
 ---
 
-## 🧪 Verification Suite (16/16 Passing)
+## 🧪 Verification Suite (23/23 Passing)
 
 Run the full integration test suite:
 ```powershell
@@ -133,11 +134,12 @@ powershell -ExecutionPolicy Bypass -File examples/test_verification_suite.ps1
 Output:
 ```text
 =================================================
-   ULTRAGOAL HARNESS TEST SUITE v4.0 (OMNITHINK) 
+   ULTRAGOAL HARNESS TEST SUITE v5.0 (ASSETS & AUDIO) 
 =================================================
-  [PASS] OmniThink Analyzes 4 Perspectives
+  [PASS] OmniThink Analyzes 5 Perspectives
   [PASS] OmniThink Red Team Identifies Critical Vectors
   [PASS] OmniThink Visual/Kinetic Mandates Exist
+  [PASS] OmniThink Sensory & Asset Orchestrator Rules Exist
   [PASS] Planner Identifies Game Domain
   [PASS] Planner Enforces Kinetic & NearestFilter Defenses
   [PASS] Tracker Init with Deep Milestones
@@ -151,8 +153,14 @@ Output:
   [PASS] Center Focus 1:1 Generated
   [PASS] HUD Inventory 1:1 Generated
   [PASS] Visual Diff State Change Detected
+  [PASS] Orchestrator Supplies Space Texture Catalog
+  [PASS] Orchestrator Exports Composite Rocket Mesh Code
+  [PASS] Orchestrator Exports Procedural Web Audio Engine
+  [PASS] Orchestrator Exports Cinematic Flight Director
+  [PASS] Harness Rejects Silent & Flat-Cylinder Rocket Simulation
+  [PASS] Harness Approves High-Fidelity Rocket with Web Audio & Smooth Camera
 =================================================
-   RESULTADOS: 16 PASADAS, 0 FALLIDAS (100%)
+   RESULTADOS: 23 PASADAS, 0 FALLIDAS (100%)
 =================================================
 ```
 

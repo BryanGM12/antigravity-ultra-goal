@@ -14,7 +14,7 @@ $tempDir = Join-Path $env:TEMP "ultragoal_suite_$(Get-Random)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
 Write-Host "=================================================" -ForegroundColor Cyan
-Write-Host "   ULTRAGOAL HARNESS TEST SUITE v4.0 (OMNITHINK) " -ForegroundColor Cyan
+Write-Host "   ULTRAGOAL HARNESS TEST SUITE v5.0 (ASSETS & AUDIO) " -ForegroundColor Cyan
 Write-Host "=================================================" -ForegroundColor Cyan
 
 $passed = 0
@@ -32,14 +32,15 @@ function Assert-Test {
 }
 
 # --- TEST 1: OmniThink System 2 Hyper-Cognition ---
-Write-Host "`n[Test 1] Evaluando OmniThink Hyper-Cognition (4 Perspectivas)..." -ForegroundColor Yellow
+Write-Host "`n[Test 1] Evaluando OmniThink Hyper-Cognition (5 Perspectivas)..." -ForegroundColor Yellow
 $specOmni = Join-Path $tempDir "omni_spec.json"
-& "$scriptsDir\omnithink_analyzer.ps1" -GoalObjective "clon de minecraft con bloques y animales" -OutputPath $specOmni | Out-Null
+& "$scriptsDir\omnithink_analyzer.ps1" -GoalObjective "animacion de un lanzamiento de cohete a la luna" -OutputPath $specOmni | Out-Null
 $omniObj = Get-Content $specOmni | ConvertFrom-Json
 $propsCount = @($omniObj.perspectives.PSObject.Properties).Count
-Assert-Test -TestName "OmniThink Analyzes 4 Perspectives" -Condition ([bool]($propsCount -ge 4))
+Assert-Test -TestName "OmniThink Analyzes 5 Perspectives" -Condition ([bool]($propsCount -ge 5))
 Assert-Test -TestName "OmniThink Red Team Identifies Critical Vectors" -Condition ($omniObj.perspectives.'2_RedTeam_Adversary'.critical_failure_vectors.Count -ge 5)
 Assert-Test -TestName "OmniThink Visual/Kinetic Mandates Exist" -Condition ($omniObj.perspectives.'3_Visual_Kinetic'.sensory_requirements.Count -ge 5)
+Assert-Test -TestName "OmniThink Sensory & Asset Orchestrator Rules Exist" -Condition ($omniObj.perspectives.'5_Sensory_Assets'.mandatory_asset_rules.Count -ge 4)
 
 # --- TEST 2: Universal Deep Domain Planner ---
 Write-Host "`n[Test 2] Evaluando Universal Deep Domain Planner..." -ForegroundColor Yellow
@@ -155,6 +156,70 @@ $g1.Dispose(); $b1.Dispose(); $g2.Dispose(); $b2.Dispose()
 
 $diffOutput = & "$scriptsDir\compare_visuals.ps1" -ImageA $img1 -ImageB $img2 -OutputPath $diffOut | ConvertFrom-Json
 Assert-Test -TestName "Visual Diff State Change Detected" -Condition ($diffOutput.verdict -eq "STATE_CHANGED" -and $diffOutput.delta_percent -gt 0)
+
+# --- TEST 9: Asset & Sensory Resource Orchestrator ---
+Write-Host "`n[Test 9] Evaluando Asset & Sensory Resource Orchestrator..." -ForegroundColor Yellow
+$orchestratorOut = & "$scriptsDir\asset_orchestrator.ps1" -Domain "Space_Rocket" | ConvertFrom-Json
+Assert-Test -TestName "Orchestrator Supplies Space Texture Catalog" -Condition ($orchestratorOut.catalog.Space_Solar_System.Earth_Day_Texture -match 'http')
+Assert-Test -TestName "Orchestrator Exports Composite Rocket Mesh Code" -Condition ($orchestratorOut.procedural_mesh_js -match 'createHighFidelityMultiStageRocket')
+Assert-Test -TestName "Orchestrator Exports Procedural Web Audio Engine" -Condition ($orchestratorOut.audio_synth_js -match 'SpaceAudioEngine')
+Assert-Test -TestName "Orchestrator Exports Cinematic Flight Director" -Condition ($orchestratorOut.camera_director_js -match 'CinematicFlightDirector')
+
+# --- TEST 10: Space Flight Simulation Sensory & Composite Mesh Gates ---
+Write-Host "`n[Test 10] Evaluando Space Flight Sensory & Composite Mesh Gates..." -ForegroundColor Yellow
+$rocketBrokenDir = Join-Path $tempDir "rocket_broken"
+New-Item -ItemType Directory -Path $rocketBrokenDir -Force | Out-Null
+$brokenRocketCode = @"
+import * as THREE from 'three';
+// Trampa: simulacion muda y cilindro plano solitario sin audio ni director de camaras
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera();
+const rocket = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 10), new THREE.MeshBasicMaterial());
+scene.add(rocket);
+function animate() {
+    requestAnimationFrame(animate);
+    rocket.position.y += 1;
+}
+"@
+Set-Content (Join-Path $rocketBrokenDir "main.js") -Value $brokenRocketCode
+Set-Content (Join-Path $rocketBrokenDir "index.html") -Value "<html><body><canvas></canvas></body></html>"
+Set-Content (Join-Path $rocketBrokenDir "rocket.test.js") -Value "test('dummy', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
+
+$harnessRocketBroken = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $rocketBrokenDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Silent & Flat-Cylinder Rocket Simulation" -Condition ($harnessRocketBroken.verdict -eq "RIGOROUS_TEST_FAILED" -and $harnessRocketBroken.fatal_defects_count -ge 1)
+
+$rocketCleanDir = Join-Path $tempDir "rocket_clean"
+New-Item -ItemType Directory -Path $rocketCleanDir -Force | Out-Null
+$cleanRocketCode = @"
+import * as THREE from 'three';
+export class SpaceMission {
+    constructor() {
+        this.clock = new THREE.Clock();
+        this.audio = new AudioContext();
+        this.camera = new THREE.PerspectiveCamera();
+        this.rocket = new THREE.Group();
+        this.rocket.name = 'Saturn_V';
+        const stage1 = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 10), new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.8 }));
+        this.rocket.add(stage1);
+        this.director = {
+            update: (dt) => {
+                this.camera.position.lerp(new THREE.Vector3(0, 10, 30), 0.05);
+            }
+        };
+    }
+    update() {
+        const dt = this.clock.getDelta();
+        this.director.update(dt);
+    }
+}
+export class ShellMenu { constructor() { this.routes = new Map(); } }
+"@
+Set-Content (Join-Path $rocketCleanDir "main.js") -Value $cleanRocketCode
+Set-Content (Join-Path $rocketCleanDir "index.html") -Value "<html><body style='margin:0;background:#050510;'><h1 style='color:white;'>Apollo Mission Simulation</h1><div style='height:300px;background:linear-gradient(to top, #ff6600, #000);'></div></body></html>"
+Set-Content (Join-Path $rocketCleanDir "rocket.test.js") -Value "test('mission', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
+
+$harnessRocketClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $rocketCleanDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Approves High-Fidelity Rocket with Web Audio & Smooth Camera" -Condition ($harnessRocketClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessRocketClean.fatal_defects_count -eq 0)
 
 # Limpieza
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue

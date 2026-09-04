@@ -295,30 +295,33 @@ if ($LiveBootCheck -and ($targetItem.PSIsContainer)) {
 $is3DOrGameOrCanvas = ($totalCodeString -match '(?i)(THREE\.|PointerLock|camera\.|controls\.|voxel|canvas|keydown|keyup)')
 
 if ($is3DOrGameOrCanvas) {
-    # A. Comprobación de Bloqueo de Cabeceo de Cámara (Evita que la cámara se invierta boca abajo)
-    $hasPitchClamp = ($totalCodeString -match '(?i)(Math\.(max|min)\s*\([^)]*(-1\.5|-Math\.PI|clamp|maxPolarAngle|minPolarAngle)|\.clamp|\bpolarAngle\b)')
-    if (-not $hasPitchClamp) {
-        $violations.Add([PSCustomObject]@{
-            Category    = "Kinetic_Asset_Integrity"
-            Penalty     = 6
-            File        = $TargetPath
-            Line        = 0
-            Snippet     = "Sin limitación de cabeceo de cámara"
-            Issue       = "Fallo Crítico de Cámara: Falta limitación de ángulo vertical (Pitch Clamping). La cámara gira sin límite y se invierte de cabeza (flip upside down), arruinando la vista."
-        })
-    }
+    # A. Comprobación de Bloqueo de Cabeceo de Cámara en controles de primera persona / ratón
+    $isFirstPersonOrMouseLook = ($totalCodeString -match '(?i)(PointerLock|mousemove|controls\.isLocked|onMouseMove|mouseLook)')
+    if ($isFirstPersonOrMouseLook) {
+        $hasPitchClamp = ($totalCodeString -match '(?i)(Math\.(max|min)\s*\([^)]*(-1\.5|-Math\.PI|clamp|maxPolarAngle|minPolarAngle)|\.clamp|\bpolarAngle\b)')
+        if (-not $hasPitchClamp) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 6
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Sin limitación de cabeceo de cámara"
+                Issue       = "Fallo Crítico de Cámara: Falta limitación de ángulo vertical (Pitch Clamping). La cámara gira sin límite y se invierte de cabeza (flip upside down), arruinando la vista."
+            })
+        }
 
-    # B. Comprobación de Movimiento Direccional sin Hundimiento (dir.y = 0)
-    $hasYFlattening = ($totalCodeString -match '(?i)(direction\.y\s*=\s*0|dir\.y\s*=\s*0|moveForward|moveRight|\.setFromAxisAngle)')
-    if (-not $hasYFlattening) {
-        $violations.Add([PSCustomObject]@{
-            Category    = "Kinetic_Asset_Integrity"
-            Penalty     = 6
-            File        = $TargetPath
-            Line        = 0
-            Snippet     = "Movimiento sin neutralización del eje Y"
-            Issue       = "Fallo Crítico de Movimiento: La dirección de avance no neutraliza el eje Y (dir.y = 0 o moveForward). El personaje vuela hacia arriba al mirar al cielo o se hunde al mirar al suelo."
-        })
+        # B. Comprobación de Movimiento Direccional sin Hundimiento (dir.y = 0)
+        $hasYFlattening = ($totalCodeString -match '(?i)(direction\.y\s*=\s*0|dir\.y\s*=\s*0|moveForward|moveRight|\.setFromAxisAngle)')
+        if (-not $hasYFlattening) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 6
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Movimiento sin neutralización del eje Y"
+                Issue       = "Fallo Crítico de Movimiento: La dirección de avance no neutraliza el eje Y (dir.y = 0 o moveForward). El personaje vuela hacia arriba al mirar al cielo o se hunde al mirar al suelo."
+            })
+        }
     }
 
     # C. Comprobación de Física con DeltaTime (Evita velocidades erráticas por tasa de refresco)
@@ -346,6 +349,48 @@ if ($is3DOrGameOrCanvas) {
                 Line        = 0
                 Snippet     = "Texturas sin NearestFilter"
                 Issue       = "Fallo Crítico de Texturas: Texturas borrosas o sin nitidez de vóxel. Falta configurar magFilter = THREE.NearestFilter y minFilter = THREE.NearestFilter."
+            })
+        }
+    }
+
+    # E. Comprobación de Síntesis de Audio / Paisaje Sonoro Obligatorio en Simulaciones/Vuelo
+    $isSimOrFlightOrSpace = ($totalCodeString -match '(?i)(rocket|cohete|space\b|luna\b|moon\b|flight\b|launch\b|alunizaje)')
+    if ($isSimOrFlightOrSpace) {
+        $hasAudio = ($totalCodeString -match '(?i)(AudioContext|webkitAudioContext|createOscillator|createBufferSource|new\s+Audio\b|sound|audioEngine|playAudio|playCountdown|startRocketRoar|SpaceAudioEngine|ProceduralAudioEngine)')
+        if (-not $hasAudio) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 6
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Simulación o animación muda"
+                Issue       = "Fallo Sensorial Crítico: Simulación/animación espacial o de vuelo sin diseño de sonido. Se exige síntesis de audio procedural con Web Audio API (AudioContext) para rugido de motor, cuenta atrás y efectos de propulsión."
+            })
+        }
+
+        # F. Comprobación de Modelos 3D Compuestos PBR (Anti-Toy Cylinder Trap)
+        $hasCompositeModel = ($totalCodeString -match '(?i)(new\s+THREE\.Group|createHighFidelity|GLTFLoader|\.add\(|MeshStandardMaterial|MeshPhysicalMaterial|emissive)')
+        if (-not $hasCompositeModel) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 6
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Modelos 3D primitivos o sin materiales PBR"
+                Issue       = "Fallo de Fidelidad de Mallas 3D: Trampa del Cilindro de Juguete. El vehículo o nave fue modelado como una figura primitiva simple sin jerarquía compuesta (etapas desacoplables, toberas F-1/Raptor, aletas, cápsula) ni materiales PBR realistas."
+            })
+        }
+
+        # G. Comprobación de Transiciones Suaves de Cámara (Cinematic Director)
+        $hasSmoothCamera = ($totalCodeString -match '(?i)(\.lerp\(|\.slerp\(|TWEEN|damping|smoothstep|CinematicFlightDirector|interpolate)')
+        if (-not $hasSmoothCamera) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 5
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Cámara con saltos bruscos entre fases"
+                Issue       = "Fallo de Cámara/Movimiento: Falta interpolación suave en la cámara o director cinematográfico. El cambio entre fases de vuelo salta bruscamente sin lerp/slerp, provocando bugs y desorientación visual."
             })
         }
     }

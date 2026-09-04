@@ -1,21 +1,21 @@
-﻿---
+---
 name: goal
-description: "Motor Autónomo Perfeccionista Universal v4.0 (UltraGoal Engine - OmniThink Hyper-Cognition & 5-Phase Rigorous Test Harness). Obliga a la IA a 'pensar en todo pero absolutamente todo' mediante Razonamiento por Primeros Principios (omnithink_analyzer.ps1), 4 Perspectivas Críticas (Arquitecto, Red Team, Cinética, Rendimiento), Verificación de Arranque en Vivo, Barrera de Pantallazo Negro, Estabilidad de Cámara y Rúbrica >= 95/100."
+description: "Motor Autónomo Perfeccionista Universal v5.0 (UltraGoal Engine - OmniThink 5-Perspective Hyper-Cognition, Asset & Web Resource Orchestrator, Procedural Web Audio Synthesis, Cinematic Flight Director & 5-Phase Rigorous Test Harness). Obliga a la IA a 'pensar en todo pero absolutamente todo' mediante Razonamiento por Primeros Principios (omnithink_analyzer.ps1), búsqueda y aprovisionamiento de assets de alta fidelidad (asset_orchestrator.ps1), síntesis de sonido Web Audio API sin enlaces rotos, transiciones cinemáticas suaves, Verificación de Arranque en Vivo y Rúbrica >= 95/100."
 author: BryanGM12 & Antigravity Autonomous Systems
-version: 4.0.0
+version: 5.0.0
 metadata:
   category: orchestration
-  skills: ["goal", "omnithink-hypercognition", "system2-thinking", "rigorous-test-harness", "kinetic-integrity", "live-boot-verifier", "multi-photo-vision", "quality-gate"]
+  skills: ["goal", "omnithink-hypercognition", "asset-orchestrator", "procedural-audio", "cinematic-flight-director", "rigorous-test-harness", "kinetic-integrity", "live-boot-verifier", "multi-photo-vision", "quality-gate"]
 ---
 
-# ⚡ UltraGoal Universal Engine v4.0
-### OmniThink System 2 Hyper-Cognition • 5-Phase Rigorous Test Harness • Zero-Broken-Delivery
+# ⚡ UltraGoal Universal Engine v5.0
+### OmniThink System 2 Hyper-Cognition • Asset & Sensory Orchestrator • Procedural Web Audio • Cinematic Director • 5-Phase Rigorous Test Harness
 
-Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v4.0**. Esta versión incorpora la máxima exigencia de razonamiento autónomo: **obliga a la IA a pensar en todo pero absolutamente todo antes de programar, anticipando cada posible fallo mediante 4 perspectivas analíticas y ejecutando una batería de pruebas de 5 fases sumamente rigurosa**.
+Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v5.0**. Esta versión incorpora la máxima exigencia de razonamiento autónomo y producción multimedia: **obliga a la IA a pensar en todo pero absolutamente todo antes de programar, obtener recursos visuales/sonoros de alta fidelidad, erradicar modelos 3D primitivos y ejecutar una batería de pruebas de 5 fases sumamente rigurosa**.
 
 ---
 
-## 🧠 FASE 0: OMNITHINK HYPER-COGNITION (PENSAR EN TODO POR PRIMEROS PRINCIPIOS)
+## 🧠 FASE 0: OMNITHINK HYPER-COGNITION (5 PERSPECTIVAS CRÍTICAS)
 
 > 🛑 **PROHIBICIÓN ABSOLUTA DE PROGRAMACIÓN IMPULSIVA:**
 > Queda **TERMINANTEMENTE PROHIBIDO** saltar a programar sin haber ejecutado primero el motor de hiper-cognición:
@@ -23,11 +23,28 @@ Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v4.
 > powershell -ExecutionPolicy Bypass -File scripts/omnithink_analyzer.ps1 -GoalObjective "<Objetivo del Usuario>" -OutputPath "HYPER_COGNITION_SPEC.json"
 > ```
 > 
-> El Orquestador analiza la meta de forma obligatoria desde **4 Perspectivas Críticas**:
+> El Orquestador analiza la meta de forma obligatoria desde **5 Perspectivas Críticas**:
 > 1. **Arquitecto de Sistemas:** Define máquinas de estados finitos (Init, Loading, Ready, Active, Paused, Error), separación estricta de la vista y contratos de datos inmutables.
 > 2. **Red Team Adversarial:** ¿Dónde fallará si tomamos atajos? Anticipa scripts rotos sin `type="module"`, pantallazos negros (BSOD), caídas por 404 de assets, teclas pegadas en `window.blur` y fugas de memoria.
-> 3. **Especialista en Ergonomía Visual & Cinética:** Exige limitación de cabeceo de cámara (-1.5 a 1.5 rad), avance horizontal neutralizado (`dir.y = 0`), física escalada con `DeltaTime`, texturas con `NearestFilter` y mapeo por caras.
+> 3. **Especialista en Ergonomía Visual & Cinética:** Exige limitación de cabeceo de cámara en primera persona (-1.5 a 1.5 rad), avance horizontal neutralizado (`dir.y = 0`), física escalada con `DeltaTime` y texturas vóxel nítidas con `NearestFilter`.
 > 4. **Perfilador de Rendimiento:** Fija un presupuesto de 60 FPS estables sin pausas de GC, CERO allocations en bucles `animate()` y tiempos de respuesta < 100ms.
+> 5. **Arquitecto Sensorial & Orquestador de Assets:** Veto total a primitivas geométricas desnudas solitarias (un cilindro o caja simple). Exige modelos compuestos detallados (múltiples etapas, toberas, RCS, cápsula, aletas) con materiales PBR (`metalness` y `roughness`), diseño sonoro procedural (Web Audio API) y transiciones cinemáticas suaves (`lerp`/`slerp`).
+
+---
+
+## 🚀 APROVISIONAMIENTO DE ASSETS Y SENSORIALIDAD (`asset_orchestrator.ps1`)
+
+Para proyectos 3D, simulaciones, juegos o animaciones, el agente **DEBE consultar el orquestador de assets**:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/asset_orchestrator.ps1 -Domain "Space_Rocket"
+```
+
+El orquestador proporciona:
+1. **Catálogo de Texturas y Modelos Verificados:** Enlaces oficiales a texturas planetarias de la NASA (Tierra día/noche, nubes, Luna 4K, cielo estrellado) y CDNs de Three.js / GLTF.
+2. **Generador de Mallas Compuestas Procedurales:** Plantilla `createHighFidelityMultiStageRocket` con etapas desacoplables, toberas de motor con fulgor térmico emisivo, aletas de estabilización y cápsula dorada.
+3. **Motor de Audio Procedural (`ProceduralAudioEngine` / Web Audio API):** Generación de rugido de cohete con pink noise y filtro biquad pasabajos, cuenta regresiva con quindar tones, desacople de etapas y propulsores RCS, sin depender de archivos de audio externos propensos a errores 404.
+4. **Director de Vuelo Cinematográfico (`CinematicFlightDirector`):** Control multicámara (plataforma de despegue, cámara de propulsor Booster Cam, seguimiento orbital y cabina) con interpolación suave (`lerp`) que elimina tirones y saltos bruscos.
+5. **Directiva de Búsqueda Web (`search_web` / `read_url_content`):** Si el proyecto requiere recursos específicos del mundo real (texturas, mapas, modelos, documentación o esquemas), la IA debe buscar y extraer información verídica antes de construir maquetas simplificadas.
 
 ---
 
@@ -45,7 +62,7 @@ El arnés somete al proyecto a **5 Fases Inquebrantables de Prueba**:
 | **Fase 1: Estático & AST** | Sintaxis, compatibilidad ES modules y ausencia total de stubs | Declaraciones `import` sin `type="module"`, TODOs, FIXMEs o catch vacíos. |
 | **Fase 2: Arranque en Vivo** | Ejecución real en Chrome Headless (`verify_runtime_boot.ps1`) | Si la app no arranca, crashea o genera errores de consola. |
 | **Fase 3: Escrutinio Visual** | Varianza de luminancia de píxeles y filtrado de texturas | Desviación estándar < 3.0 (pantallazo negro/blanco) o texturas vóxel sin `NearestFilter`. |
-| **Fase 4: Estabilidad Cinética** | Cámara de 360°, vector de avance y escala temporal | Cámara sin pitch clamp (se da vuelta), vector de avance volador o falta de `DeltaTime`. |
+| **Fase 4: Estabilidad Cinética & Sensorial** | Cámara, física DeltaTime, audio procedural y mallas compuestas | Volteos de cámara en primera persona, simulaciones espaciales/vuelo mudas o mallas reducidas a un cilindro desnudo. |
 | **Fase 5: Pruebas Automatizadas** | Ejecución de suite de tests con aserciones formales | Exit code distinto de 0 o menos de 3 aserciones verificadas. |
 
 > 🛑 **Veto Inapelable:** Si cualquiera de las 5 fases reporta un fallo, el veredicto es **`RIGOROUS_TEST_FAILED`** y el proyecto queda bloqueado. El Constructor debe resolver el defecto internamente sin molestar al usuario.
@@ -68,21 +85,22 @@ El Auditor **DEBE examinar cada imagen con la herramienta `view_file`** para cer
 
 ---
 
-## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v4.0
+## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v5.0
 
 ```mermaid
 graph TD
     User([Usuario: /goal <objetivo>]) --> Master[Gemini Master Orchestrator]
     
-    subgraph "Fase 0: OmniThink Hyper-Cognition (Pensar en TODO)"
-        Master --> OmniThink["omnithink_analyzer.ps1 (4 Perspectivas: Architect, Red Team, UX, Perf)"]
-        OmniThink --> DeepPlan["deep_planner.ps1 (7 Niveles Universales)"]
+    subgraph "Fase 0: OmniThink Hyper-Cognition (5 Perspectivas)"
+        Master --> OmniThink["omnithink_analyzer.ps1 (Architect, Red Team, UX, Perf, Sensory/Assets)"]
+        OmniThink --> AssetOrch["asset_orchestrator.ps1 (CDNs, PBR Meshes, Web Audio, Director)"]
+        AssetOrch --> DeepPlan["deep_planner.ps1 (7 Niveles Universales)"]
         DeepPlan --> Spec["HYPER_COGNITION_SPEC.json & Contrato"]
     end
     
     subgraph "Bucle Autónomo de Construcción & Batería de Pruebas"
         Spec --> StateInit[milestone_tracker.ps1 -Action init]
-        StateInit --> Builder[Constructor: Cámara Clamp, DeltaTime & NearestFilter]
+        StateInit --> Builder[Constructor: Mallas Compuestas, Web Audio & Director]
         
         Builder --> Harness["rigorous_test_harness.ps1 (Las 5 Fases de Prueba)"]
         Harness -- "RIGOROUS_TEST_FAILED (Defectos detectados)" --> AutoFix[Corrección Autónoma Inmediata]
@@ -98,24 +116,18 @@ graph TD
         
         Advance --> Next{¿Quedan más hitos?}
         Next -- Sí --> Builder
-        Next -- No --> EndToEnd[Verificación Final de Punta a Punta]
+        Next -- No --> FinalCert[Certificación de Excelencia Universal v5.0]
     end
-    
-    EndToEnd --> Complete([<!-- GOAL_COMPLETE -->])
 ```
 
 ---
 
-## 📋 PROTOCOLO DE EJECUCIÓN AUTÓNOMA
+## 📜 RÚBRICA INQUEBRANTABLE (100 PUNTOS, CORTE >= 95)
 
-1. **Paso 1: OmniThink (Hiper-Cognición):**
-   - Corre `omnithink_analyzer.ps1` y `deep_planner.ps1`.
-   - Inicializa el estado con `milestone_tracker.ps1 -Action init`.
-2. **Paso 2: Construcción Defensiva:**
-   - El Constructor implementa resolviendo los vectores de fallo identificados por el Red Team.
-3. **Paso 3: Batería Rigurosa de 5 Fases & Multi-Foto:**
-   - Corre `rigorous_test_harness.ps1`. Si falla cualquier fase, auto-repara en el mismo ciclo.
-   - Corre `capture_vision.ps1 -Mode MultiStateAudit` e inspecciona con `view_file`.
-   - Corre `evaluate_rubric.ps1 -LiveBootCheck`.
-4. **Paso 4: Certificación:**
-   - Solo cuando el arnés de 5 fases obtiene `RIGOROUS_TEST_PASSED` y la rúbrica alcanza >= 95/100, se emite `<!-- GOAL_COMPLETE -->`.
+1. **Domain_Depth_Extensibility (15 pts):** Cero maquetas de juguete. Mínimo 8-15 variantes de datos reales.
+2. **Presentation_Shell_UX (15 pts):** Shell estructurado, navegación completa, configuración accesible y botón/handshake de audio.
+3. **Kinetic_Asset_Integrity (15 pts):** Pitch clamp, `dir.y = 0`, `DeltaTime`, `NearestFilter`, modelos 3D compuestos PBR, audio procedural activo y director con transiciones suaves.
+4. **Performance_Resource_Hygiene (15 pts):** Cero instanciaciones en bucles de renderizado, 60 FPS estables.
+5. **Robustness_Error_Handling (15 pts):** Cero catch vacíos, error boundaries activos y validación estricta de entradas.
+6. **Functional_Completeness (10 pts):** Cero TODOs/FIXMEs, cero stubs incompletos.
+7. **Automated_Testing (15 pts):** Batería de pruebas automatizadas con aserciones rigurosas.
