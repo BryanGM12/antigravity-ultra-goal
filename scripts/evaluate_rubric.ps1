@@ -214,6 +214,29 @@ if ($isUIOrWebOrGame) {
             Issue       = "Trampa de Demo de Juguete: No se encontró barra de navegación, menú de inicio ni vistas de configuración/opciones. La interfaz es un contenedor plano sin opciones reales."
         })
     }
+
+    # Comprobación de Reporte de Inspección Visual por la IA
+    $visualReportFile = Join-Path $TargetPath "VISUAL_INSPECTION_REPORT.md"
+    $hasVisualReport = (Test-Path $visualReportFile)
+    if (-not $hasVisualReport -and ($targetItem.PSIsContainer)) {
+        $walkthrough = Join-Path $TargetPath "walkthrough.md"
+        if (Test-Path $walkthrough) {
+            $wtContent = Get-Content -LiteralPath $walkthrough -Raw -ErrorAction SilentlyContinue
+            if ($wtContent -match '(?i)(inspecci[oó]n visual|captura|screenshot|an[aá]lisis visual)') {
+                $hasVisualReport = $true
+            }
+        }
+    }
+    if (-not $hasVisualReport) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Presentation_Shell_UX"
+            Penalty     = 6
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Sin análisis visual multimodal"
+            Issue       = "Fallo de Auditoría Visual: La IA no analizó visualmente el proyecto. Debe llamar a view_file sobre las capturas generadas y registrar su análisis visual en VISUAL_INSPECTION_REPORT.md."
+        })
+    }
 }
 
 # 2. Comprobación de Profundidad de Dominio y Modelado (Domain Depth)

@@ -116,8 +116,22 @@ export class ShellMenu { constructor() { this.routes = new Map(); } }
 Set-Content (Join-Path $harnessCleanDir "game.js") -Value $cleanCode
 Set-Content (Join-Path $harnessCleanDir "game.test.js") -Value "test('engine', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
 
+# Probar que el arnés rechaza si falta VISUAL_INSPECTION_REPORT.md
+$harnessNoVision = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Visual Project Lacking VISUAL_INSPECTION_REPORT.md" -Condition ($harnessNoVision.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessNoVision.fatal_defects | Where-Object { $_ -match "Auditoría Visual Incompleta" }).Count -gt 0))
+
+# Ahora agregar el reporte de inspección visual realizado por la IA
+Set-Content (Join-Path $harnessCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
+# Visual Inspection Report
+- Geometria y modelos 3D: Terreno voxel con bloques correctamente alineados en Y=0.
+- Iluminacion y materiales: Luz direccional con sombreado y contraste adecuado.
+- Nitidez de texturas: NearestFilter verificado, cero difuminado bilineal.
+- Interfaz y HUD: Menu principal de inicio y rutas de navegacion visibles.
+- Veredicto visual: Aprobado al 100% sin defectos graficos.
+"@
+
 $harnessResClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
-Assert-Test -TestName "Harness Approves Clean Code (0 Defects)" -Condition ($harnessResClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessResClean.fatal_defects_count -eq 0)
+Assert-Test -TestName "Harness Approves Clean Code with Visual Report (0 Defects)" -Condition ($harnessResClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessResClean.fatal_defects_count -eq 0)
 
 # --- TEST 6: Kinetic, Camera & Texture Integrity Gate in Rubric ---
 Write-Host "`n[Test 6] Evaluando Kinetic, Camera & Texture Integrity Gate en Rubrica..." -ForegroundColor Yellow
@@ -217,6 +231,14 @@ export class ShellMenu { constructor() { this.routes = new Map(); } }
 Set-Content (Join-Path $rocketCleanDir "main.js") -Value $cleanRocketCode
 Set-Content (Join-Path $rocketCleanDir "index.html") -Value "<html><body style='margin:0;background:#050510;'><h1 style='color:white;'>Apollo Mission Simulation</h1><div style='height:300px;background:linear-gradient(to top, #ff6600, #000);'></div></body></html>"
 Set-Content (Join-Path $rocketCleanDir "rocket.test.js") -Value "test('mission', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
+Set-Content (Join-Path $rocketCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
+# Visual Inspection Report
+- Geometria y modelos 3D: Cohete Saturn V multi-etapa con toberas y capsula dorada PBR.
+- Iluminacion y materiales: Fondo espacial con estrellas y fulgor de motor emissive.
+- Audio: ProceduralAudioEngine inicializado con Web Audio API.
+- Camara: CinematicFlightDirector con suavizado lerp verificado.
+- Veredicto visual: Aprobado al 100% sin defectos graficos.
+"@
 
 $harnessRocketClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $rocketCleanDir | ConvertFrom-Json
 Assert-Test -TestName "Harness Approves High-Fidelity Rocket with Web Audio & Smooth Camera" -Condition ($harnessRocketClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessRocketClean.fatal_defects_count -eq 0)

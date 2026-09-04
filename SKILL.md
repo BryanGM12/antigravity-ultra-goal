@@ -69,19 +69,21 @@ El arnés somete al proyecto a **5 Fases Inquebrantables de Prueba**:
 
 ---
 
-## 📸 PROTOCOLO DE AUDITORÍA MULTI-FOTO CON `view_file`
+## 👁️ EL MANDATO INNEGOCIABLE DE ANÁLISIS VISUAL MULTIMODAL (PROHIBIDO ENTREGAR A CIEGAS)
 
-El Auditor debe ejecutar:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -Mode MultiStateAudit
-```
-Genera la **Galería de 4 Fotos Críticas**:
-1. **`1_overview_grid.png`:** Panorama general con cuadrícula `[A1]..[C3]`.
-2. **`2_sector_center.png`:** Recorte 1:1 del centro (mira, wireframe del bloque seleccionado y horizonte).
-3. **`3_sector_ground.png`:** Recorte 1:1 del suelo (para verificar que los bloques toquen el piso Y=0 y que las texturas sean nítidas).
-4. **`4_sector_hud.png`:** Recorte 1:1 del inventario y números de ítems.
+> 🛑 **PROHIBIDO ASUMIR QUE ALGO FUNCIONA SIN HABERLO VISTO:**
+> La IA cuenta con capacidades de visión multimodal de última generación. Queda **TERMINANTEMENTE PROHIBIDO** entregar o declarar completado cualquier proyecto con interfaz visual, 3D, juego, simulación, animación o dashboard sin haber inspeccionado visualmente el renderizado real con sus propios ojos a través de `view_file`.
 
-El Auditor **DEBE examinar cada imagen con la herramienta `view_file`** para certificar la excelencia visual.
+### Los 4 Pasos Obligatorios de Visión:
+1. **Paso 1 (Captura Automática):** Ejecutar `capture_vision.ps1 -TargetDirectory "<Ruta_del_Proyecto>"` o `rigorous_test_harness.ps1`. El motor renderiza la aplicación en Chrome Headless a 1280x720 y genera la galería de 4 sectores.
+2. **Paso 2 (Invocación Innegociable de `view_file`):** La IA **DEBE LLAMAR OBLIGATORIAMENTE A LA HERRAMIENTA `view_file`** con la ruta absoluta de `boot_rendered_screenshot.png` o `1_overview_grid.png` y `2_sector_center.png`.
+3. **Paso 3 (Análisis Visual Crítico):** La IA debe examinar la imagen recibida en su contexto multimodal y evaluar:
+   - ¿Qué modelos 3D o figuras geométricas se observan? (¿Son mallas compuestas detalladas o cilindros planos?).
+   - ¿Los materiales PBR y la iluminación tienen contraste, sombras y fulgor de motor o se ven apagados?
+   - ¿Las texturas se ven nítidas (NearestFilter) o borrosas?
+   - ¿El HUD o interfaz de usuario está centrado, con botones y texto legible?
+   - ¿Se observa algún glitch, z-fighting, pantalla negra o elemento flotando fuera de lugar?
+4. **Paso 4 (Documentación en `VISUAL_INSPECTION_REPORT.md`):** Guardar el reporte de inspección visual en `<Ruta_del_Proyecto>\VISUAL_INSPECTION_REPORT.md`. Tanto `rigorous_test_harness.ps1` (Fase 3) como `evaluate_rubric.ps1` **VETARÁN DE INMEDIATO** cualquier proyecto que no contenga este reporte con al menos 3 observaciones críticas.
 
 ---
 

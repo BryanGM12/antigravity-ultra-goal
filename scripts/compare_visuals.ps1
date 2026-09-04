@@ -56,11 +56,9 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 }
 
 try {
-    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
-    Add-Type -AssemblyName System.Drawing.Common -ErrorAction SilentlyContinue
-    Add-Type -AssemblyName System.Drawing.Primitives -ErrorAction SilentlyContinue
-    $refAssemblies = @([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.Location } | Select-Object -ExpandProperty Location)
-    Add-Type -TypeDefinition @"
+    if (-not ([System.Management.Automation.PSTypeName]'UltraImageDiff').Type) {
+        Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+        $typeDefinition = @"
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -172,15 +170,17 @@ public class UltraImageDiff {
         }
     }
 }
-"@ -ReferencedAssemblies $refAssemblies -ErrorAction SilentlyContinue
+"@
+        Add-Type -TypeDefinition $typeDefinition -ReferencedAssemblies "System.Drawing"
+    }
 
     $rawJson = [UltraImageDiff]::AnalyzeDiff($ImageA, $ImageB, $OutputPath, $Tolerance, $MinExpectedDelta)
     $obj = $rawJson | ConvertFrom-Json
 
     $instructionNote = if ($obj.verdict -eq "STATE_CHANGED") {
-        "Interacción detectada exitosamente. Inspecciona '$OutputPath' con view_file para confirmar que el objeto se movió a las coordenadas deseadas y no quedó huérfano."
+        "Interaccion detectada exitosamente. Inspecciona '$OutputPath' con view_file para confirmar que el objeto se movio a las coordenadas deseadas y no quedo huerfano."
     } else {
-        "FALLO CRÍTICO: No se detectó cambio visual suficiente ($($obj.delta_percent)% < $($obj.min_expected_delta)%). La pantalla parece congelada o la acción no tuvo efecto en la interfaz."
+        "FALLO CRITICO: No se detecto cambio visual suficiente ($($obj.delta_percent)% < $($obj.min_expected_delta)%). La pantalla parece congelada o la accion no tuvo efecto en la interfaz."
     }
 
     $obj | Add-Member -NotePropertyName "guidance" -NotePropertyValue $instructionNote -Force

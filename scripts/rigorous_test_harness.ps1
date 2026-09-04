@@ -181,12 +181,40 @@ if ($isVoxelGame -and -not $hasNearestFilter) {
     $fatalDefects.Add("Fase 3 (Texturas): Texturas borrosas o sin nitidez de vóxel. Falta configurar magFilter y minFilter = THREE.NearestFilter.")
 }
 
-$phaseResults["Phase_3_Visual_Textures"] = [PSCustomObject]@{
-    status              = if ($visualPassed) { "PASSED" } else { "FAILED" }
-    luminance_std_dev   = $luminanceStdDev
-    dead_screen_detected= $isDeadScreen
-    nearest_filter_ok   = if ($isVoxelGame) { $hasNearestFilter } else { "N/A" }
-}
+# C. Verificación de Auditoría Visual Realizada por la IA (MANDATO ANTI-CIEGAS)
+    $isVisualApp = (Test-Path $indexHtmlPath) -or ($allCodeText -match '(?i)(THREE\.|canvas|screen|<html|<body|render\(|draw\(|document\.createElement)')
+    $visualReportPath = Join-Path $TargetDirectory "VISUAL_INSPECTION_REPORT.md"
+    $hasVisualInspection = $false
+    $reportObservationsCount = 0
+
+    if (Test-Path $visualReportPath) {
+        $repContent = Get-Content -LiteralPath $visualReportPath -Raw -ErrorAction SilentlyContinue
+        if ($null -ne $repContent) {
+            $bulletMatches = [regex]::Matches($repContent, '(?m)^\s*[-*•]\s+.+')
+            $reportObservationsCount = $bulletMatches.Count
+            if ($reportObservationsCount -ge 3 -or $repContent.Length -gt 150) {
+                $hasVisualInspection = $true
+            }
+        }
+    }
+
+    if ($isVisualApp -and -not $hasVisualInspection) {
+        $visualPassed = $false
+        $targetImgToView = if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $liveBootScreenshot)) {
+            $liveBootScreenshot
+        } else {
+            Join-Path $TargetDirectory "boot_rendered_screenshot.png"
+        }
+        $fatalDefects.Add("Fase 3 (Auditoría Visual Incompleta): La IA no ha realizado el análisis visual multimodal. DEBES invocar la herramienta view_file sobre '$targetImgToView' (o las fotos de capture_vision.ps1) para mirar el renderizado con tus propios ojos y crear '$visualReportPath' documentando al menos 3 observaciones críticas: 1) Geometría y modelos 3D, 2) Iluminación y materiales PBR, 3) Nitidez de texturas, 4) Interfaz/HUD, 5) Defectos visuales observados.")
+    }
+
+    $phaseResults["Phase_3_Visual_Textures"] = [PSCustomObject]@{
+        status                 = if ($visualPassed) { "PASSED" } else { "FAILED" }
+        luminance_std_dev      = $luminanceStdDev
+        dead_screen_detected   = $isDeadScreen
+        nearest_filter_ok      = if ($isVoxelGame) { $hasNearestFilter } else { "N/A" }
+        visual_inspection_done = if ($isVisualApp) { $hasVisualInspection } else { "N/A" }
+    }
 
 # =========================================================================
 # FASE 4: Estabilidad Cinética, Cámara & Movimiento

@@ -34,6 +34,12 @@ param(
     [switch]$GenerateSectors,
 
     [Parameter(Mandatory = $false)]
+    [string]$TargetDirectory = "",
+
+    [Parameter(Mandatory = $false)]
+    [string]$HtmlPath = "",
+
+    [Parameter(Mandatory = $false)]
     [int]$BurstCount = 3,
 
     [Parameter(Mandatory = $false)]
@@ -42,13 +48,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-try {
+if (-not ([System.Management.Automation.PSTypeName]'UltraVisionCaptureV3').Type) {
     Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
-    Add-Type -AssemblyName System.Drawing.Common -ErrorAction SilentlyContinue
-    Add-Type -AssemblyName System.Drawing.Primitives -ErrorAction SilentlyContinue
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
-    $refAssemblies = @([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.Location } | Select-Object -ExpandProperty Location)
-    Add-Type -TypeDefinition @"
+    $typeDefinition = @"
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -140,9 +143,8 @@ public class UltraVisionCaptureV3 {
         return crop;
     }
 }
-"@ -ReferencedAssemblies $refAssemblies
-} catch {
-    # El tipo ya puede estar cargado en la sesión
+"@
+    Add-Type -TypeDefinition $typeDefinition -ReferencedAssemblies "System.Drawing", "System.Windows.Forms"
 }
 
 function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
@@ -252,6 +254,40 @@ if ($targetHWnd -eq [IntPtr]::Zero -or $targetWidth -le 0 -or $targetHeight -le 
 }
 
 function Get-RawFrame {
+    # 1. Si se especificó un archivo HTML o un directorio con index.html, renderizar con Chrome Headless
+    $renderTarget = $HtmlPath
+    if ([string]::IsNullOrWhiteSpace($renderTarget) -and -not [string]::IsNullOrWhiteSpace($TargetDirectory)) {
+        $cand = Join-Path $TargetDirectory "index.html"
+        if (Test-Path $cand) { $renderTarget = $cand }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($renderTarget) -and (Test-Path $renderTarget)) {
+        $chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+        if (-not (Test-Path $chromePath)) {
+            $cmd = Get-Command chrome.exe -ErrorAction SilentlyContinue
+            if ($cmd) { $chromePath = $cmd.Source }
+        }
+        if ($chromePath -and (Test-Path $chromePath)) {
+            $tempRender = Join-Path $baseDir "headless_render_$timestamp.png"
+            $fileUri = "file:///" + (Resolve-Path $renderTarget).Path.Replace('\', '/')
+            $cmdLine = "`"$chromePath`" --headless=new --disable-gpu --allow-file-access-from-files --screenshot=`"$tempRender`" --window-size=1280,720 `"$fileUri`" >nul 2>nul"
+            cmd.exe /c $cmdLine
+            $elapsed = 0
+            while (-not (Test-Path $tempRender) -and $elapsed -lt 4.0) {
+                Start-Sleep -Milliseconds 200
+                $elapsed += 0.2
+            }
+            if (Test-Path $tempRender) {
+                $rawImg = [System.Drawing.Bitmap]::FromFile($tempRender)
+                $cloned = New-Object System.Drawing.Bitmap($rawImg)
+                $rawImg.Dispose()
+                Remove-Item $tempRender -Force -ErrorAction SilentlyContinue
+                return $cloned
+            }
+        }
+    }
+
+    # 2. Captura de ventana de proceso o escritorio GDI nativo
     if ($targetHWnd -ne [IntPtr]::Zero) {
         return [UltraVisionCaptureV3]::CaptureWindowGDI($targetHWnd, $targetWidth, $targetHeight)
     } else {
@@ -305,7 +341,7 @@ $h = $rawBmp.Height
 $gallery = [ordered]@{}
 $gallery["1_overview_grid"] = [PSCustomObject]@{
     path            = $OutputPath
-    description     = "Captura general con cuadrícula [A1]..[C3]"
+    description     = "Captura general con cuadricula [A1]..[C3]"
     luminance_stat  = $mainLum
 }
 
@@ -340,7 +376,7 @@ $pathHUD = Join-Path $baseDir "sector_hud_$timestamp.png"
 $bmpHUD.Save($pathHUD, [System.Drawing.Imaging.ImageFormat]::Png)
 $gallery["4_sector_hud"] = [PSCustomObject]@{
     path            = $pathHUD
-    description     = "Recorte 1:1 Sector HUD (inventario, números de ítems y hotbar)"
+    description     = "Recorte 1:1 Sector HUD (inventario, numeros de items y hotbar)"
     luminance_stat  = (Test-DeadOrBlankBitmap $bmpHUD)
 }
 $bmpHUD.Dispose()
@@ -350,9 +386,9 @@ $rawBmp.Dispose()
 # Comprobar si hay pantalla negra o muerta
 $hasDeadScreen = $mainLum.is_dead_or_blank
 $deadWarning = if ($hasDeadScreen) {
-    "ALERTA CRÍTICA DE VISIÓN: Se detectó pantalla negra o vacía (Dead Screen). El juego/aplicación no renderizó gráficos activos."
+    "ALERTA CRITICA DE VISION: Se detecto pantalla negra o vacia (Dead Screen). El juego/aplicacion no renderizo graficos activos."
 } else {
-    "PANTALLA ACTIVA: Gráficos vivos detectados con varianza de luminancia normal ($($mainLum.std_deviation))."
+    "PANTALLA ACTIVA: Graficos vivos detectados con varianza de luminancia normal ($($mainLum.std_deviation))."
 }
 
 $result = [PSCustomObject]@{
@@ -364,7 +400,13 @@ $result = [PSCustomObject]@{
     dead_screen_detected= $hasDeadScreen
     visual_verdict      = $deadWarning
     photo_gallery       = $gallery
-    instructions        = "El Auditor DEBE abrir cada imagen de la galería con view_file. Si dead_screen_detected es TRUE, la entrega debe ser vetada de inmediato."
+    instructions        = "La IA DEBE abrir las imagenes de la galeria con la herramienta view_file para inspeccionar visualmente la interfaz y los graficos."
+    action_required_for_ai = @(
+        "PASO 1 OBLIGATORIO: Invoca view_file con AbsolutePath = '$OutputPath' para ver la captura general con cuadricula [A1]..[C3].",
+        "PASO 2 OBLIGATORIO: Invoca view_file con AbsolutePath = '$pathCenter' para examinar el modelo 3D o contenido central 1:1.",
+        "PASO 3 OBLIGATORIO: Realiza el analisis visual multimodal detallando modelos, iluminacion, texturas e interfaz.",
+        "PASO 4 OBLIGATORIO: Registra tus observaciones en 'VISUAL_INSPECTION_REPORT.md' para certificar la meta."
+    )
     captured_at         = (Get-Date -Format "o")
 }
 
