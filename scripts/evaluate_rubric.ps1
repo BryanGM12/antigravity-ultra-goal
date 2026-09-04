@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal Universal Quality & Anti-Toy Rubric Evaluator v3.1
 .DESCRIPTION
@@ -25,6 +25,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$Category = "Auto",
+
+    [Parameter(Mandatory = $false)]
+    [switch]$LiveBootCheck,
 
     [Parameter(Mandatory = $false)]
     [string[]]$ExcludeDirs = @("node_modules", ".git", "bin", "obj", "venv", ".venv", "dist", "build", ".system_generated", "coverage")
@@ -225,6 +228,67 @@ if (-not $hasExtensibleModel -and $files.Count -gt 0) {
         Snippet     = "Sin modelos de dominio estructurados"
         Issue       = "Trampa de Demo de Juguete: Código plano sin modelos de datos, entidades ni estructuras extensibles."
     })
+}
+
+# 3. Comprobación Estática de Errores Fatales en HTML (Imports fuera de módulo, scripts faltantes)
+$htmlFiles = $files | Where-Object { $_.Extension.ToLower() -eq ".html" }
+foreach ($h in $htmlFiles) {
+    $hContent = Get-Content -LiteralPath $h.FullName -Raw -ErrorAction SilentlyContinue
+    if ($null -ne $hContent) {
+        if ($hContent -match '<script\b(?![^>]*\btype\s*=\s*["'']module["''])[^>]*>[^<]*\bimport\s+[\s\S]*?from\b') {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Robustness_Error_Handling"
+                Penalty     = 10
+                File        = $h.FullName
+                Line        = 1
+                Snippet     = "import ... inside traditional script"
+                Issue       = "ERROR FATAL DE SINTAXIS: Declaración 'import' dentro de <script> tradicional sin type='module'. La app no arranca en navegadores (SyntaxError: Cannot use import statement outside a module)."
+            })
+        }
+        $scriptSrcMatches = [regex]::Matches($hContent, '(?i)<script[^>]+src=["'']([^"'']+)["'']')
+        foreach ($sm in $scriptSrcMatches) {
+            $srcVal = $sm.Groups[1].Value
+            if (-not ($srcVal -like "http*" -or $srcVal -like "//*" -or $srcVal -like "data:*")) {
+                $resolvedLocal = Join-Path $h.DirectoryName $srcVal.Replace('/', '\')
+                if (-not (Test-Path $resolvedLocal)) {
+                    $violations.Add([PSCustomObject]@{
+                        Category    = "Functional_Completeness"
+                        Penalty     = 10
+                        File        = $h.FullName
+                        Line        = 1
+                        Snippet     = "src='$srcVal'"
+                        Issue       = "ARCHIVO LOCAL FALTANTE: El script local '$srcVal' referenciado en el HTML no existe en el disco."
+                    })
+                }
+            }
+        }
+    }
+}
+
+# 4. Comprobación de Arranque en Vivo y Detección de Pantalla Negra (Live Boot Gate)
+if ($LiveBootCheck -and ($targetItem.PSIsContainer)) {
+    $indexHtmlPath = Join-Path $TargetPath "index.html"
+    if (Test-Path $indexHtmlPath) {
+        $bootScript = Join-Path $PSScriptRoot "verify_runtime_boot.ps1"
+        if (Test-Path $bootScript) {
+            try {
+                $bootJson = & $bootScript -TargetDirectory $TargetPath 2>&1
+                $bootObj = $bootJson | ConvertFrom-Json
+                if ($bootObj.verdict -ne "BOOT_SUCCESS") {
+                    foreach ($diag in $bootObj.diagnostics) {
+                        $violations.Add([PSCustomObject]@{
+                            Category    = "Functional_Completeness"
+                            Penalty     = 15
+                            File        = $indexHtmlPath
+                            Line        = 0
+                            Snippet     = "Live Boot Failure"
+                            Issue       = "FALLO CRÍTICO DE ARRANQUE EN VIVO: $diag"
+                        })
+                    }
+                }
+            } catch {}
+        }
+    }
 }
 
 # Aplicar deducciones

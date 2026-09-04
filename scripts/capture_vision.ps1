@@ -1,15 +1,15 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Vision Capture Engine v2.1 (Multi-Sector & Burst Inspection)
+    UltraGoal Vision Capture Engine v3.2 (Multi-State Audit & Dead-Screen Gate)
 .DESCRIPTION
     Motor de captura e inspección visual de alta fidelidad para agentes Gemini en Antigravity.
     Incluye:
     - Captura GDI nativa ultra-resiliente (pantalla completa o ventana por proceso).
+    - Modo MultiStateAudit: Genera una galería completa de fotos (General con cuadrícula, recortes 1:1 de Suelo, HUD y Centro)
+      con análisis de varianza de luminancia para detectar de inmediato pantallas negras o vacías.
     - Modo GridOverlay: Inscribe cuadrícula de coordenadas [A1]..[C3] para ubicar sectores exactos.
-    - Modo MultiSector: Extrae recortes 1:1 sin reescalado (Ground/Baseline, Viewport Center, HUD/Inventory)
-      para que la IA detecte bloques invisibles, costuras y detalles minúsculos.
-    - Modo Burst: Ráfaga secuencial de N fotogramas para auditar animaciones, seguimiento de cursor
-      e interacción en tiempo real (drag-and-drop).
+    - Modo MultiSector: Extrae recortes 1:1 sin reescalado (Ground/Baseline, Viewport Center, HUD/Inventory).
+    - Modo Burst: Ráfaga secuencial de N fotogramas para auditar animaciones en tiempo real.
 #>
 
 [CmdletBinding()]
@@ -27,8 +27,8 @@ param(
     [int]$DelaySeconds = 0,
 
     [Parameter(Mandatory = $false)]
-    [ValidateSet("Full", "GridOverlay", "MultiSector", "Burst")]
-    [string]$Mode = "Full",
+    [ValidateSet("Full", "GridOverlay", "MultiSector", "Burst", "MultiStateAudit")]
+    [string]$Mode = "MultiStateAudit",
 
     [Parameter(Mandatory = $false)]
     [switch]$GenerateSectors,
@@ -49,7 +49,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-public class UltraVisionCaptureV2 {
+public class UltraVisionCaptureV3 {
     [DllImport("user32.dll")]
     public static extern IntPtr GetDesktopWindow();
     [DllImport("user32.dll")]
@@ -58,282 +58,293 @@ public class UltraVisionCaptureV2 {
     public static extern IntPtr ReleaseDC(IntPtr hWnd, IntPtr hDC);
     [DllImport("user32.dll")]
     public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
-    [DllImport("user32.dll")]
-    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-    [DllImport("user32.dll")]
-    public static extern bool SetForegroundWindow(IntPtr hWnd);
-    [DllImport("user32.dll")]
-    public static extern int GetSystemMetrics(int nIndex);
-
     [DllImport("gdi32.dll")]
     public static extern bool BitBlt(IntPtr hObject, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hObjectSource, int nXSrc, int nYSrc, int dwRop);
-    [DllImport("gdi32.dll")]
-    public static extern IntPtr CreateCompatibleBitmap(IntPtr hDC, int nWidth, int nHeight);
-    [DllImport("gdi32.dll")]
-    public static extern IntPtr CreateCompatibleDC(IntPtr hDC);
-    [DllImport("gdi32.dll")]
-    public static extern bool DeleteDC(IntPtr hDC);
-    [DllImport("gdi32.dll")]
-    public static extern bool DeleteObject(IntPtr hObject);
-    [DllImport("gdi32.dll")]
-    public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
 
     public const int SRCCOPY = 0x00CC0020;
-    public const int SM_CXSCREEN = 0;
-    public const int SM_CYSCREEN = 1;
 
-    public struct RECT {
-        public int Left;
-        public int Top;
-        public int Right;
-        public int Bottom;
-    }
-
-    public static Bitmap CaptureDesktop() {
-        int width = GetSystemMetrics(SM_CXSCREEN);
-        int height = GetSystemMetrics(SM_CYSCREEN);
-        if (width <= 0) width = 1920;
-        if (height <= 0) height = 1080;
-
+    public static Bitmap CaptureDesktopGDI(int width, int height) {
         IntPtr hDesk = GetDesktopWindow();
-        IntPtr hDC = GetWindowDC(hDesk);
-        IntPtr hMemDC = CreateCompatibleDC(hDC);
-        IntPtr hBitmap = CreateCompatibleBitmap(hDC, width, height);
-        IntPtr hOld = SelectObject(hMemDC, hBitmap);
-
-        BitBlt(hMemDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
-
-        SelectObject(hMemDC, hOld);
-        DeleteDC(hMemDC);
-        ReleaseDC(hDesk, hDC);
-
-        Bitmap bmp = Image.FromHbitmap(hBitmap);
-        DeleteObject(hBitmap);
+        IntPtr hDeskDC = GetWindowDC(hDesk);
+        Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        using (Graphics g = Graphics.FromImage(bmp)) {
+            IntPtr hBmpDC = g.GetHdc();
+            BitBlt(hBmpDC, 0, 0, width, height, hDeskDC, 0, 0, SRCCOPY);
+            g.ReleaseHdc(hBmpDC);
+        }
+        ReleaseDC(hDesk, hDeskDC);
         return bmp;
     }
 
-    public static Bitmap CaptureWindow(IntPtr hWnd) {
-        RECT rect;
-        GetWindowRect(hWnd, out rect);
-        int width = rect.Right - rect.Left;
-        int height = rect.Bottom - rect.Top;
-        if (width <= 0) width = 800;
-        if (height <= 0) height = 600;
-
-        IntPtr hDC = GetWindowDC(hWnd);
-        IntPtr hMemDC = CreateCompatibleDC(hDC);
-        IntPtr hBitmap = CreateCompatibleBitmap(hDC, width, height);
-        IntPtr hOld = SelectObject(hMemDC, hBitmap);
-
-        bool pwSuccess = PrintWindow(hWnd, hMemDC, 2);
-        if (!pwSuccess) {
-            BitBlt(hMemDC, 0, 0, width, height, hDC, 0, 0, SRCCOPY);
+    public static Bitmap CaptureWindowGDI(IntPtr hWnd, int width, int height) {
+        Bitmap bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        using (Graphics g = Graphics.FromImage(bmp)) {
+            IntPtr hBmpDC = g.GetHdc();
+            bool ok = PrintWindow(hWnd, hBmpDC, 2);
+            if (!ok) {
+                IntPtr hWndDC = GetWindowDC(hWnd);
+                BitBlt(hBmpDC, 0, 0, width, height, hWndDC, 0, 0, SRCCOPY);
+                ReleaseDC(hWnd, hWndDC);
+            }
+            g.ReleaseHdc(hBmpDC);
         }
-
-        SelectObject(hMemDC, hOld);
-        DeleteDC(hMemDC);
-        ReleaseDC(hWnd, hDC);
-
-        Bitmap bmp = Image.FromHbitmap(hBitmap);
-        DeleteObject(hBitmap);
         return bmp;
     }
 
     public static Bitmap ApplyInspectionGrid(Bitmap source) {
-        Bitmap output = new Bitmap(source);
-        using (Graphics g = Graphics.FromImage(output)) {
-            int w = output.Width;
-            int h = output.Height;
-            int colW = w / 3;
-            int rowH = h / 3;
-
-            using (Pen pen = new Pen(Color.FromArgb(140, 0, 240, 255), 2))
-            using (Font font = new Font("Arial", Math.Max(12, h / 45), FontStyle.Bold))
-            using (Brush textBrush = new SolidBrush(Color.FromArgb(255, 255, 230, 0)))
-            using (Brush bgBrush = new SolidBrush(Color.FromArgb(150, 0, 0, 0))) {
-                // Vertical lines
-                g.DrawLine(pen, colW, 0, colW, h);
-                g.DrawLine(pen, colW * 2, 0, colW * 2, h);
-
-                // Horizontal lines
-                g.DrawLine(pen, 0, rowH, w, rowH);
-                g.DrawLine(pen, 0, rowH * 2, w, rowH * 2);
-
-                string[] labels = new string[] {
-                    "[A1: Top-Left]",   "[A2: Top-Center / Sky]",      "[A3: Top-Right]",
-                    "[B1: Mid-Left]",   "[B2: Viewport / Raycast Focus]", "[B3: Mid-Right]",
-                    "[C1: Bottom-Left]","[C2: Ground / Baseline Voxels]","[C3: Bottom-Right / HUD]"
-                };
-
+        Bitmap target = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
+        using (Graphics g = Graphics.FromImage(target)) {
+            g.DrawImage(source, 0, 0);
+            using (Pen pen = new Pen(Color.FromArgb(180, 0, 255, 255), 2))
+            using (Font font = new Font("Consolas", 14, FontStyle.Bold))
+            using (Brush textBrush = new SolidBrush(Color.FromArgb(240, 255, 255, 0)))
+            using (Brush bgBrush = new SolidBrush(Color.FromArgb(140, 0, 0, 0))) {
+                int colW = source.Width / 3;
+                int rowH = source.Height / 3;
+                string[] colLabels = new string[] { "A", "B", "C" };
+                for (int c = 1; c < 3; c++) {
+                    g.DrawLine(pen, c * colW, 0, c * colW, source.Height);
+                }
+                for (int r = 1; r < 3; r++) {
+                    g.DrawLine(pen, 0, r * rowH, source.Width, r * rowH);
+                }
                 for (int r = 0; r < 3; r++) {
                     for (int c = 0; c < 3; c++) {
-                        string lbl = labels[r * 3 + c];
-                        int x = c * colW + 12;
-                        int y = r * rowH + 12;
-                        SizeF size = g.MeasureString(lbl, font);
-                        g.FillRectangle(bgBrush, x - 2, y - 2, size.Width + 4, size.Height + 4);
-                        g.DrawString(lbl, font, textBrush, x, y);
+                        string tag = string.Format("[{0}{1}]", colLabels[c], r + 1);
+                        int tx = c * colW + 15;
+                        int ty = r * rowH + 15;
+                        g.FillRectangle(bgBrush, tx - 4, ty - 2, 60, 24);
+                        g.DrawString(tag, font, textBrush, tx, ty);
                     }
                 }
             }
         }
-        return output;
+        return target;
     }
 
     public static Bitmap CropRegion(Bitmap source, Rectangle rect) {
-        int x = Math.Max(0, rect.X);
-        int y = Math.Max(0, rect.Y);
-        int w = Math.Min(rect.Width, source.Width - x);
-        int h = Math.Min(rect.Height, source.Height - y);
-
-        Bitmap crop = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+        Rectangle srcRect = new Rectangle(0, 0, source.Width, source.Height);
+        rect.Intersect(srcRect);
+        if (rect.Width <= 0 || rect.Height <= 0) {
+            return new Bitmap(10, 10);
+        }
+        Bitmap crop = new Bitmap(rect.Width, rect.Height, PixelFormat.Format32bppArgb);
         using (Graphics g = Graphics.FromImage(crop)) {
-            g.DrawImage(source, new Rectangle(0, 0, w, h), new Rectangle(x, y, w, h), GraphicsUnit.Pixel);
+            g.DrawImage(source, new Rectangle(0, 0, rect.Width, rect.Height), rect, GraphicsUnit.Pixel);
         }
         return crop;
     }
 }
-"@ -ReferencedAssemblies System.Drawing -ErrorAction SilentlyContinue
+"@ -ReferencedAssemblies "System.Drawing"
+} catch {
+    # El tipo ya puede estar cargado en la sesión
+}
 
-    if ($DelaySeconds -gt 0) {
-        Start-Sleep -Seconds $DelaySeconds
+function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
+    $w = $bmp.Width
+    $h = $bmp.Height
+    $stepX = [Math]::Max(1, [int]($w / 32))
+    $stepY = [Math]::Max(1, [int]($h / 32))
+    $samples = [System.Collections.Generic.List[double]]::new()
+    $blackCount = 0
+    $whiteCount = 0
+
+    for ($x = 0; $x -lt $w; $x += $stepX) {
+        for ($y = 0; $y -lt $h; $y += $stepY) {
+            $pixel = $bmp.GetPixel($x, $y)
+            $lum = 0.299 * $pixel.R + 0.587 * $pixel.G + 0.114 * $pixel.B
+            $samples.Add($lum)
+            if ($lum -lt 5) { $blackCount++ }
+            if ($lum -gt 250) { $whiteCount++ }
+        }
     }
 
-    # Directorio base de salida
-    $baseDir = ""
-    if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
-        $baseDir = Split-Path $OutputPath -Parent
-        if ([string]::IsNullOrWhiteSpace($baseDir)) { $baseDir = "." }
-    } elseif (-not [string]::IsNullOrWhiteSpace($ConversationId)) {
+    $sum = 0
+    foreach ($s in $samples) { $sum += $s }
+    $mean = if ($samples.Count -gt 0) { $sum / $samples.Count } else { 0 }
+    
+    $varSum = 0
+    foreach ($s in $samples) { $varSum += [Math]::Pow($s - $mean, 2) }
+    $stdDev = if ($samples.Count -gt 0) { [Math]::Sqrt($varSum / $samples.Count) } else { 0 }
+    $blackPct = if ($samples.Count -gt 0) { ($blackCount / $samples.Count) * 100 } else { 0 }
+    $whitePct = if ($samples.Count -gt 0) { ($whiteCount / $samples.Count) * 100 } else { 0 }
+
+    $isDead = ($stdDev -lt 3.0) -or ($blackPct -gt 98.0) -or ($whitePct -gt 98.0)
+
+    return [PSCustomObject]@{
+        mean_luminance   = [Math]::Round($mean, 2)
+        std_deviation    = [Math]::Round($stdDev, 2)
+        black_percentage = [Math]::Round($blackPct, 1)
+        white_percentage = [Math]::Round($whitePct, 1)
+        is_dead_or_blank = $isDead
+    }
+}
+
+if ($DelaySeconds -gt 0) {
+    Start-Sleep -Seconds $DelaySeconds
+}
+
+$timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+
+if ([string]::IsNullOrWhiteSpace($OutputPath)) {
+    if (-not [string]::IsNullOrWhiteSpace($ConversationId)) {
         $baseDir = "C:\Users\Administrator\.gemini\antigravity\brain\$ConversationId\scratch"
     } else {
-        $baseDir = $env:TEMP
+        $baseDir = "$env:TEMP\ultragoal_vision"
     }
-
-    if (-not (Test-Path $baseDir)) {
+    if (-not (Test-Path $baseDir)) { New-Item -ItemType Directory -Path $baseDir -Force | Out-Null }
+    $OutputPath = Join-Path $baseDir "vision_capture_$timestamp.png"
+} else {
+    $baseDir = Split-Path -Parent $OutputPath
+    if (-not [string]::IsNullOrWhiteSpace($baseDir) -and -not (Test-Path $baseDir)) {
         New-Item -ItemType Directory -Path $baseDir -Force | Out-Null
     }
+}
 
-    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-        $OutputPath = Join-Path $baseDir "vision_capture_$timestamp.png"
-    }
+$targetHWnd = [IntPtr]::Zero
+$targetWidth = 0
+$targetHeight = 0
 
-    # Funcion interna para capturar un frame
-    function Get-RawFrame {
-        $targetProc = $null
-        if (-not [string]::IsNullOrWhiteSpace($ProcessName)) {
-            $targetProc = Get-Process -Name $ProcessName -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+if (-not [string]::IsNullOrWhiteSpace($ProcessName)) {
+    $proc = Get-Process -Name $ProcessName -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero } | Select-Object -First 1
+    if ($proc) {
+        $targetHWnd = $proc.MainWindowHandle
+        Add-Type -TypeDefinition @"
+        using System;
+        using System.Runtime.InteropServices;
+        public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+        public class WinPos {
+            [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
         }
+"@ -ErrorAction SilentlyContinue
+        $rc = New-Object RECT
+        [WinPos]::GetWindowRect($targetHWnd, [ref]$rc) | Out-Null
+        $targetWidth = $rc.Right - $rc.Left
+        $targetHeight = $rc.Bottom - $rc.Top
+    }
+}
 
-        if ($targetProc) {
-            [UltraVisionCaptureV2]::SetForegroundWindow($targetProc.MainWindowHandle) | Out-Null
-            Start-Sleep -Milliseconds 200
-            return [UltraVisionCaptureV2]::CaptureWindow($targetProc.MainWindowHandle)
-        } else {
-            return [UltraVisionCaptureV2]::CaptureDesktop()
+if ($targetHWnd -eq [IntPtr]::Zero -or $targetWidth -le 0 -or $targetHeight -le 0) {
+    $screen = [System.Windows.Forms.Screen]::PrimaryScreen
+    $targetWidth = $screen.Bounds.Width
+    $targetHeight = $screen.Bounds.Height
+}
+
+function Get-RawFrame {
+    if ($targetHWnd -ne [IntPtr]::Zero) {
+        return [UltraVisionCaptureV3]::CaptureWindowGDI($targetHWnd, $targetWidth, $targetHeight)
+    } else {
+        return [UltraVisionCaptureV3]::CaptureDesktopGDI($targetWidth, $targetHeight)
+    }
+}
+
+# 1. MODO BURST
+if ($Mode -eq "Burst") {
+    $burstFrames = @()
+    for ($i = 1; $i -le $BurstCount; $i++) {
+        $bmp = Get-RawFrame
+        $framePath = Join-Path $baseDir "burst_frame_${i}_$timestamp.png"
+        $bmp.Save($framePath, [System.Drawing.Imaging.ImageFormat]::Png)
+        $lum = Test-DeadOrBlankBitmap $bmp
+        $burstFrames += [PSCustomObject]@{
+            index          = $i
+            path           = $framePath
+            timestamp      = (Get-Date -Format "o")
+            size_bytes     = (Get-Item $framePath).Length
+            luminance_stat = $lum
         }
+        $bmp.Dispose()
+        if ($i -lt $BurstCount) { Start-Sleep -Milliseconds $BurstIntervalMs }
     }
-
-    # MODO BURST: Ráfaga de N frames para auditar dinamismo e interacción
-    if ($Mode -eq "Burst") {
-        $burstFrames = @()
-        for ($i = 1; $i -le $BurstCount; $i++) {
-            $bmp = Get-RawFrame
-            $framePath = Join-Path $baseDir "burst_frame_${i}_$timestamp.png"
-            $bmp.Save($framePath, [System.Drawing.Imaging.ImageFormat]::Png)
-            $burstFrames += [PSCustomObject]@{
-                index      = $i
-                path       = $framePath
-                timestamp  = (Get-Date -Format "o")
-                size_bytes = (Get-Item $framePath).Length
-            }
-            $bmp.Dispose()
-            if ($i -lt $BurstCount) {
-                Start-Sleep -Milliseconds $BurstIntervalMs
-            }
-        }
-
-        $result = [PSCustomObject]@{
-            status       = "ok"
-            mode         = "Burst"
-            frame_count  = $BurstCount
-            interval_ms  = $BurstIntervalMs
-            frames       = $burstFrames
-            summary      = "Ráfaga de $BurstCount fotogramas capturada para auditoría dinámica y seguimiento de cursor/movimiento."
-        }
-        Write-Output ($result | ConvertTo-Json -Depth 5)
-        exit 0
-    }
-
-    # CAPTURA PRINCIPAL
-    $rawBmp = Get-RawFrame
-
-    # Si se pide GridOverlay o MultiSector, aplicar la cuadrícula sobre la imagen base
-    $mainSaveBmp = $rawBmp
-    if ($Mode -eq "GridOverlay" -or $Mode -eq "MultiSector") {
-        $mainSaveBmp = [UltraVisionCaptureV2]::ApplyInspectionGrid($rawBmp)
-    }
-
-    $mainSaveBmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
-
-    # GENERAR RECORTES DE SECTOR EN ALTA RESOLUCIÓN (1:1 Native Crops)
-    $sectorFiles = [ordered]@{}
-    if ($Mode -eq "MultiSector" -or $GenerateSectors) {
-        $w = $rawBmp.Width
-        $h = $rawBmp.Height
-
-        # 1. Sector Central (Viewport & Crosshair Focus) - 40% central
-        $rectCenter = New-Object System.Drawing.Rectangle([int]($w * 0.3), [int]($h * 0.25), [int]($w * 0.4), [int]($h * 0.4))
-        $bmpCenter = [UltraVisionCaptureV2]::CropRegion($rawBmp, $rectCenter)
-        $pathCenter = Join-Path $baseDir "sector_center_$timestamp.png"
-        $bmpCenter.Save($pathCenter, [System.Drawing.Imaging.ImageFormat]::Png)
-        $bmpCenter.Dispose()
-        $sectorFiles["center_focus"] = $pathCenter
-
-        # 2. Sector Suelo/Ground Baseline (Donde descansan bloques, entidades y colisiones) - 40% inferior central
-        $rectGround = New-Object System.Drawing.Rectangle([int]($w * 0.2), [int]($h * 0.55), [int]($w * 0.6), [int]($h * 0.35))
-        $bmpGround = [UltraVisionCaptureV2]::CropRegion($rawBmp, $rectGround)
-        $pathGround = Join-Path $baseDir "sector_ground_$timestamp.png"
-        $bmpGround.Save($pathGround, [System.Drawing.Imaging.ImageFormat]::Png)
-        $bmpGround.Dispose()
-        $sectorFiles["ground_baseline"] = $pathGround
-
-        # 3. Sector HUD / Inventario / Barra de Acciones (Bottom 20%)
-        $rectHUD = New-Object System.Drawing.Rectangle([int]($w * 0.15), [int]($h * 0.78), [int]($w * 0.7), [int]($h * 0.22))
-        $bmpHUD = [UltraVisionCaptureV2]::CropRegion($rawBmp, $rectHUD)
-        $pathHUD = Join-Path $baseDir "sector_hud_$timestamp.png"
-        $bmpHUD.Save($pathHUD, [System.Drawing.Imaging.ImageFormat]::Png)
-        $bmpHUD.Dispose()
-        $sectorFiles["hud_inventory"] = $pathHUD
-    }
-
-    $wFinal = $rawBmp.Width
-    $hFinal = $rawBmp.Height
-
-    if ($mainSaveBmp -ne $rawBmp) { $mainSaveBmp.Dispose() }
-    $rawBmp.Dispose()
-
-    $fileSize = (Get-Item $OutputPath).Length
 
     $result = [PSCustomObject]@{
-        status        = "ok"
-        mode          = $Mode
-        path          = $OutputPath
-        width         = $wFinal
-        height        = $hFinal
-        size_bytes    = $fileSize
-        captured_at   = (Get-Date -Format "o")
-        sector_crops  = $sectorFiles
-        instructions  = "Inspecciona 'sector_ground' para verificar que las superficies toquen el suelo; 'sector_center' para raycast/mallas; y 'sector_hud' para inventario e iconos."
+        status       = "ok"
+        mode         = "Burst"
+        frame_count  = $BurstCount
+        frames       = $burstFrames
+        summary      = "Ráfaga de $BurstCount fotogramas capturada para auditoría dinámica."
     }
-
     Write-Output ($result | ConvertTo-Json -Depth 5)
-} catch {
-    $errObj = [PSCustomObject]@{
-        status  = "error"
-        message = $_.Exception.Message
-    }
-    Write-Output ($errObj | ConvertTo-Json -Compress)
-    exit 1
+    exit 0
 }
+
+# 2. MODO MULTI-STATE AUDIT (Galería Completa con Análisis de Pantalla Negra)
+$rawBmp = Get-RawFrame
+$mainLum = Test-DeadOrBlankBitmap $rawBmp
+
+# Imagen con Cuadrícula de Coordenadas
+$gridBmp = [UltraVisionCaptureV3]::ApplyInspectionGrid($rawBmp)
+$gridBmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+$gridBmp.Dispose()
+
+# Generar Recortes Nativos 1:1
+$w = $rawBmp.Width
+$h = $rawBmp.Height
+
+$gallery = [ordered]@{}
+$gallery["1_overview_grid"] = [PSCustomObject]@{
+    path            = $OutputPath
+    description     = "Captura general con cuadrícula [A1]..[C3]"
+    luminance_stat  = $mainLum
+}
+
+# Sector Centro (30% a 70%)
+$rectCenter = New-Object System.Drawing.Rectangle([int]($w * 0.3), [int]($h * 0.25), [int]($w * 0.4), [int]($h * 0.4))
+$bmpCenter = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectCenter)
+$pathCenter = Join-Path $baseDir "sector_center_$timestamp.png"
+$bmpCenter.Save($pathCenter, [System.Drawing.Imaging.ImageFormat]::Png)
+$gallery["2_sector_center"] = [PSCustomObject]@{
+    path            = $pathCenter
+    description     = "Recorte 1:1 Sector Centro (mira, raycast wireframe y horizonte)"
+    luminance_stat  = (Test-DeadOrBlankBitmap $bmpCenter)
+}
+$bmpCenter.Dispose()
+
+# Sector Suelo / Baseline (20% a 80%, inferior)
+$rectGround = New-Object System.Drawing.Rectangle([int]($w * 0.2), [int]($h * 0.55), [int]($w * 0.6), [int]($h * 0.35))
+$bmpGround = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectGround)
+$pathGround = Join-Path $baseDir "sector_ground_$timestamp.png"
+$bmpGround.Save($pathGround, [System.Drawing.Imaging.ImageFormat]::Png)
+$gallery["3_sector_ground"] = [PSCustomObject]@{
+    path            = $pathGround
+    description     = "Recorte 1:1 Sector Suelo (apoyo en suelo Y=0 y colisiones)"
+    luminance_stat  = (Test-DeadOrBlankBitmap $bmpGround)
+}
+$bmpGround.Dispose()
+
+# Sector HUD / Barra Inferior
+$rectHUD = New-Object System.Drawing.Rectangle([int]($w * 0.15), [int]($h * 0.78), [int]($w * 0.7), [int]($h * 0.22))
+$bmpHUD = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectHUD)
+$pathHUD = Join-Path $baseDir "sector_hud_$timestamp.png"
+$bmpHUD.Save($pathHUD, [System.Drawing.Imaging.ImageFormat]::Png)
+$gallery["4_sector_hud"] = [PSCustomObject]@{
+    path            = $pathHUD
+    description     = "Recorte 1:1 Sector HUD (inventario, números de ítems y hotbar)"
+    luminance_stat  = (Test-DeadOrBlankBitmap $bmpHUD)
+}
+$bmpHUD.Dispose()
+
+$rawBmp.Dispose()
+
+# Comprobar si hay pantalla negra o muerta
+$hasDeadScreen = $mainLum.is_dead_or_blank
+$deadWarning = if ($hasDeadScreen) {
+    "ALERTA CRÍTICA DE VISIÓN: Se detectó pantalla negra o vacía (Dead Screen). El juego/aplicación no renderizó gráficos activos."
+} else {
+    "PANTALLA ACTIVA: Gráficos vivos detectados con varianza de luminancia normal ($($mainLum.std_deviation))."
+}
+
+$result = [PSCustomObject]@{
+    status              = "ok"
+    mode                = $Mode
+    primary_screenshot  = $OutputPath
+    width               = $targetWidth
+    height              = $targetHeight
+    dead_screen_detected= $hasDeadScreen
+    visual_verdict      = $deadWarning
+    photo_gallery       = $gallery
+    instructions        = "El Auditor DEBE abrir cada imagen de la galería con view_file. Si dead_screen_detected es TRUE, la entrega debe ser vetada de inmediato."
+    captured_at         = (Get-Date -Format "o")
+}
+
+Write-Output ($result | ConvertTo-Json -Depth 5)
