@@ -1,11 +1,11 @@
-﻿# 🛡️ Reporte de Auditoría y Calidad Adversarial (UltraGoal Audit)
+﻿# 🛡️ Reporte de Auditoría y Calidad Adversarial (UltraGoal Universal Audit v3.1)
 
-> **Regla de Oro:** El Agente Auditor opera como Red Team/Inspector de Calidad. Su objetivo es encontrar defectos, casos borde no contemplados, fragilidad y deuda técnica. Si la puntuación global es menor a **95/100**, el hito es **RECHAZADO**.
+> **Regla de Oro:** El Agente Auditor opera como Red Team e Inspector de Calidad autónomo. Su objetivo es encontrar defectos, fragilidad técnica, maquetas incompletas o fugas de rendimiento. Si la puntuación global es menor a **95/100**, el hito es **RECHAZADO internamente** y devuelto al Constructor sin molestar al usuario.
 
 ---
 
 ## 1. Metadatos de Auditoría
-- **Hito Evaluado:** [Ej. Hito 2: Implementación Central del Motor]
+- **Hito Evaluado:** [Ej. Hito 2: Modelo de Dominio & Reglas de Negocio]
 - **Auditor:** Gemini Critic (Overseer Subagent)
 - **Fecha:** [YYYY-MM-DD HH:mm:ss]
 - **Veredicto Final:** `[ APROBADO (Score >= 95) / RECHAZADO (Score < 95) ]`
@@ -13,16 +13,17 @@
 
 ---
 
-## 2. Matriz de Evaluación Detallada
+## 2. Matriz de Evaluación Detallada (Rúbrica Universal de 100 Puntos)
 
-| Dimensión | Puntos Máx. | Puntos Obtenidos | Observaciones del Auditor |
+| Dimensión de Ingeniería | Puntos Máx. | Puntos Obtenidos | Observaciones del Auditor |
 | :--- | :--- | :--- | :--- |
-| **1. Completitud Funcional** (0 TODOs, 0 Stubs) | 30 | [ ] | [Verificación de que todo lo especificado existe] |
-| **2. Robustez & Manejo de Errores** | 20 | [ ] | [Resiliencia ante entradas inválidas, fallos de red/I/O] |
-| **3. Arquitectura, Modularidad & SOLID** | 15 | [ ] | [Código limpio, sin duplicación ni dependencias circulares] |
-| **4. Rigor de Pruebas Automatizadas** | 15 | [ ] | [Tests unitarios/integración con aserciones reales] |
-| **5. Fidelidad Visual & UX / Terminal** | 10 | [ ] | [Verificación de interfaces o salidas de consola legibles] |
-| **6. Seguridad & Cero Secretos** | 10 | [ ] | [Sin tokens, llaves expuestas ni vulnerabilidades obvias] |
+| **1. Profundidad de Dominio & Extensibilidad** | 20 | [ ] | [Entidades tipadas, esquemas y lógica extensible (no hardcodeada)] |
+| **2. Shell de Usuario, Navegación & UX** | 15 | [ ] | [Menú de inicio, navegación fluida, panel de ajustes o CLI help] |
+| **3. Higiene de Recursos & Rendimiento** | 15 | [ ] | [Cero allocations en bucles calientes, sin fugas ni GC spikes] |
+| **4. Robustez & Blindaje ante Errores** | 15 | [ ] | [Cero catch vacíos, error boundaries y reintentos en red/E/S] |
+| **5. Sincronización de Interacción & Estado** | 10 | [ ] | [Drag-and-drop, filtros en vivo y estado reactivo sin lag] |
+| **6. Completitud Funcional (0 TODOs/Stubs)** | 10 | [ ] | [0 TODOs, 0 FIXMEs, 0 stubs NotImplemented, 0 secretos] |
+| **7. Rigor de Pruebas Automatizadas** | 15 | [ ] | [Suites de tests con aserciones reales y exit code 0] |
 | **TOTAL** | **100** | **[ ]** | **Umbral requerido: >= 95** |
 
 ---
@@ -33,14 +34,14 @@
 
 ---
 
-## 4. Plan de Remediación Obligatorio (Para el Agente Constructor)
-> El Builder DEBE resolver cada uno de estos puntos antes de solicitar una nueva auditoría.
-- [ ] Acción Correctiva 1: [Detalle exacto]
-- [ ] Acción Correctiva 2: [Detalle exacto]
+## 4. Plan de Autocorrección Obligatorio (Para el Constructor - Sin Feedback del Usuario)
+> El Constructor DEBE resolver cada uno de estos puntos de forma autónoma antes de la re-auditoría.
+- [ ] Acción Correctiva 1: [Detalle exacto de la solución técnica]
+- [ ] Acción Correctiva 2: [Detalle exacto de la solución técnica]
 
 ---
 
 ## 5. Dictamen del Auditor
 ```text
-[ FIRMA DIGITAL DEL AUDITOR: APROBADO / RECHAZADO ]
+[ FIRMA DIGITAL DEL AUDITOR: APROBADO (>= 95) / RECHAZADO (< 95) ]
 ```
