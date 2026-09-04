@@ -1,13 +1,12 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Deep Domain Planner & Anti-Toy Pre-Mortem Engine v3.0
+    UltraGoal Universal Deep Domain Planner v3.1 (First-Principles Software Architecture)
 .DESCRIPTION
-    Motor de investigación profunda y descomposición de alcance para proyectos ambiciosos en Antigravity.
-    Previene el síndrome de la "Demo de Juguete" (toy demo) donde la IA implementa versiones
-    superficiales e incompletas de software complejo (ej. clon de Minecraft sin menú de inicio,
-    sin animales, sin tercera persona, con crafteo roto o solo 3 bloques).
-    Descompone cualquier objetivo en los 6 Pilares Canónicos de Ingeniería y genera
-    un contrato de especificación exhaustivo con cláusulas anti-juguete.
+    Motor de planificación profunda universal y erradicación del "Síndrome de la Demo de Juguete".
+    Totalmente agnóstico de dominio: aplicable a aplicaciones web, full-stack, servicios backend,
+    herramientas CLI, apps móviles, dashboards, sistemas de escritorio, motores y videojuegos.
+    Descompone cualquier objetivo en los 7 Niveles Universales de Ingeniería de Software y
+    establece un contrato de completitud técnica sin necesidad de supervisión constante del usuario.
 #>
 
 [CmdletBinding()]
@@ -24,216 +23,138 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# Deteccion automatica de categoria si es Auto
+# Clasificación inteligente del dominio de software
 if ($Category -eq "Auto") {
-    if ($GoalObjective -match '(?i)(juego|game|minecraft|clon|voxel|3d|arcade|rpg|simula)') {
-        $Category = "Interactive_Game"
-    } elseif ($GoalObjective -match '(?i)(web|dashboard|frontend|react|vue|landing|portal|ecommerce|tienda)') {
-        $Category = "Web_Application"
-    } elseif ($GoalObjective -match '(?i)(api|microservicio|backend|rest|graphql|database|servicio)') {
-        $Category = "Backend_Service"
+    if ($GoalObjective -match '(?i)(juego|game|3d|arcade|voxel|simula|unity|canvas|phaser)') {
+        $Category = "Interactive_Simulation_or_Game"
+    } elseif ($GoalObjective -match '(?i)(web|dashboard|react|vue|angular|frontend|saas|portal|landing|ecommerce|ui\b)') {
+        $Category = "Web_or_FullStack_Application"
+    } elseif ($GoalObjective -match '(?i)(api|microservicio|rest|graphql|backend|server|endpoint|database|grpc)') {
+        $Category = "Backend_Service_or_API"
+    } elseif ($GoalObjective -match '(?i)(cli|terminal|herramienta|script|tui|daemon|automatiza|consola|powershell)') {
+        $Category = "CLI_or_Systems_Tool"
+    } elseif ($GoalObjective -match '(?i)(desktop|escritorio|electron|tauri|winforms|wpf|gui\b)') {
+        $Category = "Desktop_Application"
     } else {
-        $Category = "General_Software"
+        $Category = "General_Software_System"
     }
 }
 
-# 1. Definición de los 6 Pilares Canónicos según Categoría
-$pillars = [ordered]@{}
-$antiToyRisks = @()
-
-switch ($Category) {
-    "Interactive_Game" {
-        $pillars = [ordered]@{
-            "1_Presentation_Shell" = [PSCustomObject]@{
-                Name = "Menú de Inicio, Pantallas & Audio (Tier-1 Shell)"
-                Mandatory_Requirements = @(
-                    "Menú de título real con fondo panorámico/animado, botón 'Jugar', botón 'Opciones' y botón 'Créditos' (PROHIBIDO mero overlay 'click para continuar')",
-                    "Menú de Pausa (tecla ESC) con opciones de reanudar, ajustes y volver al menú principal",
-                    "Sistema de Ajustes funcionales: control de volumen de sonido, campo de visión (FOV) y distancia de renderizado",
-                    "Efectos de audio / SFX (pasos, colocación/ruptura de bloques, clics de interfaz)"
-                )
-            }
-            "2_Perspective_Controls" = [PSCustomObject]@{
-                Name = "Cámara Multiperspectiva & Controles Fluidos"
-                Mandatory_Requirements = @(
-                    "Soporte para Primera Persona Y Tercera Persona (conmutador con tecla F5 o botón)",
-                    "Mira central (Crosshair) con resaltado de caja wireframe en el bloque apuntado",
-                    "Movimiento físico completo: caminar, correr (doble W o Shift), saltar con gravedad y colisión AABB sólida"
-                )
-            }
-            "3_Entities_AI" = [PSCustomObject]@{
-                Name = "Entidades Vivas & Sistema de IA (Mobs)"
-                Mandatory_Requirements = @(
-                    "Al menos 2 tipos de animales pasivos (ej. vaca, cerdo, oveja o pollo) con modelo 3D y texturas",
-                    "Al menos 1 criatura hostil o NPC con máquina de estados (Wander, Idle, Chase, Attack)",
-                    "Colisiones físicas independientes para entidades y detección de daño/impacto"
-                )
-            }
-            "4_Materials_Content" = [PSCustomObject]@{
-                Name = "Riqueza de Materiales (Zero-Paucity Invariant)"
-                Mandatory_Requirements = @(
-                    "Mínimo 8 a 12 tipos distintos de bloques con texturas diferenciadas (Pasto con cara superior/lateral, Tierra, Piedra, Madera, Hojas, Arena, Agua, Carbón, Cristal)",
-                    "Propiedades físicas por bloque (dureza de picado, transparencia, resistencia)",
-                    "Generación procedural de terreno con capas geológicas (césped arriba, tierra al medio, piedra profunda)"
-                )
-            }
-            "5_Crafting_Mechanics" = [PSCustomObject]@{
-                Name = "Mecánicas Profundas & Matriz de Crafteo Real"
-                Mandatory_Requirements = @(
-                    "Cuadrícula de Crafteo real (2x2 en inventario del jugador Y 3x3 en Mesa de Trabajo / Crafting Table)",
-                    "Motor de recetas extensible basado en diccionario/matriz (madera -> tablones -> palos -> pico/espada/mesa)",
-                    "Inventario con arrastre de objetos donde el sprite sigue al cursor (Drag-and-Drop verificado)",
-                    "Apilamiento de ítems con números de cantidad visibles (x64, x16) y barra de acceso rápido (Hotbar de 9 slots con rueda del ratón)"
-                )
-            }
-            "6_Persistence_Environment" = [PSCustomObject]@{
-                Name = "Ciclo Ambiental & Persistencia de Estado"
-                Mandatory_Requirements = @(
-                    "Ciclo de día y noche con rotación de sol/luna y variación de luz ambiental",
-                    "Sistema de guardado y carga del mundo e inventario (LocalStorage o archivo JSON)",
-                    "Partículas al romper bloques"
-                )
-            }
-        }
-
-        $antiToyRisks = @(
-            "Riesgo de Demo: Reducir el inicio a un texto blanco 'Click para empezar' -> DEFENSA: Exigir menú estilo Minecraft completo.",
-            "Riesgo de Demo: Mundo vacío sin vida -> DEFENSA: Implementar mobs con máquina de estados de deambulación.",
-            "Riesgo de Demo: Solo 2 tipos de bloques -> DEFENSA: Exigir catálogo mínimo de 10 bloques con caras independientes.",
-            "Riesgo de Demo: Crafteo de 1 solo botón falso -> DEFENSA: Exigir cuadrícula 2x2 y 3x3 con motor de recetas.",
-            "Riesgo de Demo: Cámara fija sin tercera persona -> DEFENSA: Exigir conmutación F5 (1ra/3ra persona)."
+# Definición de los 7 Niveles Universales de Ingeniería de Software
+$universalTiers = [ordered]@{
+    "Tier_1_Entry_And_Presentation_Shell" = [PSCustomObject]@{
+        Name = "Capa 1: Interfaz de Entrada, Navegación & Shell de Usuario"
+        Mandatory_Requirements = @(
+            "Punto de entrada profesional y estructurado (Menú de inicio/Landing/Dashboard/CLI Help completa; PROHIBIDO iniciar en un vacío o cartel plano sin opciones)",
+            "Configuración y Preferencias accesibles (Ajustes de tema, volumen, parámetros de ejecución o credenciales)",
+            "Retroalimentación visual/auditiva clara ante estados de carga, transiciones y pantallas de error/pausa"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: Diseñar una pantalla de inicio y navegación completa con rutas o menús reales, en lugar de un único contenedor sin salida."
         )
     }
 
-    "Web_Application" {
-        $pillars = [ordered]@{
-            "1_Presentation_Shell" = [PSCustomObject]@{
-                Name = "Diseño UI/UX Profesional & Navegación"
-                Mandatory_Requirements = @(
-                    "Barra de navegación responsive con logo, menú colapsable (hamburguesa) y tema claro/oscuro",
-                    "Estados de carga (Skeletons/Spinners) y páginas de error 404/500 pulidas",
-                    "Tipografía legible y paleta de colores con tokens accesibles (WCAG AA)"
-                )
-            }
-            "2_Forms_Validation" = [PSCustomObject]@{
-                Name = "Formularios Robustos & Validación en Tiempo Real"
-                Mandatory_Requirements = @(
-                    "Validación client-side y feedback visual instantáneo (errores en rojo, éxito en verde)",
-                    "Manejo de entradas maliciosas (XSS sanitization)",
-                    "Máscaras y formateo para campos numéricos/teléfono/fechas"
-                )
-            }
-            "3_Interactive_State" = [PSCustomObject]@{
-                Name = "Gestión de Estado & Feedback Dinámico"
-                Mandatory_Requirements = @(
-                    "Transiciones suaves sin parpadeo de pantalla (micro-animaciones)",
-                    "Modales accesibles con foco atrapado y cierre con ESC o clic fuera",
-                    "Notificaciones Toast no bloqueantes para acciones exitosas o fallidas"
-                )
-            }
-            "4_Data_Table_Grid" = [PSCustomObject]@{
-                Name = "Filtrado, Paginación & Búsqueda"
-                Mandatory_Requirements = @(
-                    "Búsqueda instantánea con debouncing",
-                    "Ordenamiento por columnas y filtros combinados",
-                    "Paginación o scroll infinito fluido sin degradación de memoria"
-                )
-            }
-            "5_Persistence_Auth" = [PSCustomObject]@{
-                Name = "Autenticación, Sesión & Persistencia"
-                Mandatory_Requirements = @(
-                    "Protección de rutas privadas y persistencia de sesión",
-                    "Almacenamiento seguro en LocalStorage/IndexedDB con serialización tipada"
-                )
-            }
-            "6_Responsive_Accessibility" = [PSCustomObject]@{
-                Name = "Adaptabilidad Móvil & Accesibilidad"
-                Mandatory_Requirements = @(
-                    "Diseño mobile-first 100% utilizable en 320px, 768px y 1080p+",
-                    "Navegabilidad completa por teclado (Tab, Enter, Espacio)"
-                )
-            }
-        }
-        $antiToyRisks = @(
-            "Riesgo de Demo: Una sola tabla fea sin estilos -> DEFENSA: Exigir diseño profesional con tokens UI.",
-            "Riesgo de Demo: Formularios que no validan nada -> DEFENSA: Validación estricta con feedback visual.",
-            "Riesgo de Demo: Sin estados de carga ni manejo de error -> DEFENSA: Skeletons y modales de error."
+    "Tier_2_Core_Domain_Model_And_Rules" = [PSCustomObject]@{
+        Name = "Capa 2: Motor de Dominio Central & Lógica de Negocio"
+        Mandatory_Requirements = @(
+            "Modelo de datos exhaustivo con entidades tipadas, validación de esquemas y reglas de negocio formales",
+            "Manejo de relaciones y casos de borde de la lógica principal (no conformarse con 1 solo caso hardcodeado)",
+            "Separación estricta entre la lógica de procesamiento y la capa de presentación (Clean Architecture)"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: Prohibido usar un 'if (item == x)' estático. La lógica debe operar sobre diccionarios, colecciones o registros extensibles."
         )
     }
 
-    Default {
-        $pillars = [ordered]@{
-            "1_Architecture_Core" = [PSCustomObject]@{
-                Name = "Núcleo Arquitectónico & Modularidad"
-                Mandatory_Requirements = @(
-                    "Separación estricta de responsabilidades (Clean Architecture / Hexagonal)",
-                    "Tipado estricto y modelos de dominio inmutables"
-                )
-            }
-            "2_Robustness_Resilience" = [PSCustomObject]@{
-                Name = "Manejo Exhaustivo de Excepciones"
-                Mandatory_Requirements = @(
-                    "Cero errores silenciosos o bloques catch vacíos",
-                    "Reintentos con backoff exponencial para I/O y red"
-                )
-            }
-            "3_Telemetry_Logging" = [PSCustomObject]@{
-                Name = "Observabilidad & Logging Estructurado"
-                Mandatory_Requirements = @(
-                    "Logs estructurados JSON con niveles (DEBUG, INFO, WARN, ERROR)",
-                    "Métricas de salud y rendimiento"
-                )
-            }
-            "4_Testing_Rigor" = [PSCustomObject]@{
-                Name = "Batería de Pruebas Automatizadas"
-                Mandatory_Requirements = @(
-                    "Pruebas unitarias de todas las ramas lógicas",
-                    "Pruebas de integración de contratos de datos"
-                )
-            }
-            "5_Configuration_Security" = [PSCustomObject]@{
-                Name = "Configuración Segura & Sin Secretos"
-                Mandatory_Requirements = @(
-                    "Configuración desacoplada en variables de entorno",
-                    "Cero credenciales en código fuente"
-                )
-            }
-            "6_Documentation_CLI" = [PSCustomObject]@{
-                Name = "Documentación & Experiencia de Uso"
-                Mandatory_Requirements = @(
-                    "README con instrucciones de instalación y ejemplos de uso",
-                    "CLI o interfaz intuitiva con mensajes claros"
-                )
-            }
-        }
-        $antiToyRisks = @(
-            "Riesgo de Demo: Script de 1 solo archivo sin pruebas -> DEFENSA: Exigir modularidad y tests unitarios.",
-            "Riesgo de Demo: Sin manejo de fallos -> DEFENSA: Exigir resiliencia y logging estructurado."
+    "Tier_3_Interactivity_And_Dynamic_State" = [PSCustomObject]@{
+        Name = "Capa 3: Interacción Fluida, Eventos & Transiciones de Estado"
+        Mandatory_Requirements = @(
+            "Gestión reactiva de eventos (arrastrar y soltar / drag-and-drop, selección interactiva, filtrado en tiempo real, atajos de teclado)",
+            "Sincronización bidireccional perfecta: cuando un elemento se mueve o edita, todos los observadores y componentes visuales reflejan el cambio instantáneamente",
+            "Micro-interacciones pulidas: hover states, animaciones de transición suaves y prevención de desalineaciones"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: Cada acción de usuario (clic, arrastre, tecla) debe disparar una mutación visible verificable mediante diffs."
+        )
+    }
+
+    "Tier_4_Content_Depth_And_Variety" = [PSCustomObject]@{
+        Name = "Capa 4: Amplitud de Contenido & Catálogo (Zero-Paucity Invariant)"
+        Mandatory_Requirements = @(
+            "Diversidad sustancial de datos, materiales o componentes: mínimo 8 a 15 variantes reales con propiedades diferenciadas",
+            "Generación o carga de datos sintéticos realistas para verificar escalabilidad",
+            "Sistemas auxiliares activos (ej. agentes de fondo, mobs con IA, tablas paginadas, procesamiento en lotes)"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: Queda prohibido entregar proyectos con solo 2 o 3 ítems de ejemplo. Debe incluirse un catálogo rico y representativo."
+        )
+    }
+
+    "Tier_5_Resilience_And_Error_Boundaries" = [PSCustomObject]@{
+        Name = "Capa 5: Resiliencia, Blindaje de Excepciones & Auto-Recuperación"
+        Mandatory_Requirements = @(
+            "Límites de error (Error Boundaries) que prevengan que un fallo en un componente tumbe toda la aplicación",
+            "Validación exhaustiva de entradas de usuario, tipos incompatibles, valores nulos y casos límite",
+            "Reintentos inteligentes con backoff exponencial para operaciones de E/S o red, y mensajes de error humanos y descriptivos"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: Cero bloques catch vacíos o silenciamiento de errores. Cada excepción debe ser manejada y comunicada."
+        )
+    }
+
+    "Tier_6_Performance_And_Resource_Hygiene" = [PSCustomObject]@{
+        Name = "Capa 6: Optimización de Rendimiento & Cero Fugas de Memoria"
+        Mandatory_Requirements = @(
+            "Eliminación radical de asignaciones continuas de memoria en bucles de alta frecuencia (animación, tick, rendering o polling)",
+            "Manejo eficiente de recursos: cancelación de suscripciones/listeners al destruir componentes, batching de operaciones y debouncing de inputs",
+            "Fluidez garantizada: tiempos de respuesta < 100ms en UIs/APIs y 60 FPS estables sin pausas de Garbage Collector en aplicaciones gráficas"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: Reutilización obligatoria de estructuras en memoria y perfilado de recursos antes de la entrega."
+        )
+    }
+
+    "Tier_7_Persistence_And_Lifecycle" = [PSCustomObject]@{
+        Name = "Capa 7: Persistencia de Estado, Configuración & Cierre Limpio"
+        Mandatory_Requirements = @(
+            "Persistencia confiable del estado de la aplicación (LocalStorage, IndexedDB, SQLite, JSON en disco o base de datos)",
+            "Capacidad de exportar/importar datos o restaurar la sesión exactamente en el punto donde se dejó",
+            "Manejo limpio del ciclo de vida (inicialización ordenada, migración de esquemas y cierre de conexiones/streams)"
+        )
+        Anti_Toy_Defenses = @(
+            "Defensa contra la trampa de la maqueta: La aplicación debe recordar datos entre reinicios sin perder información."
         )
     }
 }
 
-# 2. Generar Plan de Hitos Exhaustivos (5 a 7 hitos profundos, nunca 3 superficiales)
-$suggestedMilestones = @()
+# Generar Hitos de Ingeniería de Alta Fidelidad
+$milestonesList = @()
 $idx = 1
-foreach ($k in $pillars.Keys) {
-    $p = $pillars[$k]
-    $suggestedMilestones += "$idx. $($p.Name)"
+foreach ($k in $universalTiers.Keys) {
+    $tier = $universalTiers[$k]
+    $milestonesList += "$idx. $($tier.Name)"
     $idx++
 }
-$suggestedMilestones += "$idx. Verificación Adversarial Integral, Visión 1:1 & Entrega"
+$milestonesList += "$idx. Batería de Pruebas de Calidad, Auditoría Adversarial & Certificación Final"
 
-$specData = [PSCustomObject]@{
-    goal_objective          = $GoalObjective
-    category                = $Category
-    created_at              = (Get-Date -Format "o")
-    canonical_pillars_count = $pillars.Count
-    canonical_pillars       = $pillars
-    anti_toy_pre_mortem     = $antiToyRisks
-    recommended_milestones  = ($suggestedMilestones -join "; ")
-    execution_mandate       = "Queda terminantemente prohibido omitir cualquiera de los 6 pilares canónicos. Toda entrega parcial que carezca de menús reales, entidades autónomas o mecánicas completas será vetada por el Auditor."
+# Extraer defensas anti-juguete
+$defenses = @()
+foreach ($tier in $universalTiers.Values) {
+    $defenses += $tier.Anti_Toy_Defenses
 }
 
-$json = $specData | ConvertTo-Json -Depth 10
+$specObj = [PSCustomObject]@{
+    goal_objective          = $GoalObjective
+    detected_category       = $Category
+    architecture_framework  = "UltraGoal 7-Tier Universal Engineering Framework"
+    created_at              = (Get-Date -Format "o")
+    total_tiers             = $universalTiers.Count
+    tiers                   = $universalTiers
+    anti_toy_defenses       = $defenses
+    recommended_milestones  = ($milestonesList -join "; ")
+    autonomous_rule         = "AUTODETERMINACIÓN TOTAL: El agente NO debe pedir feedback al usuario para corregir defectos. Debe ejecutar el bucle Constructor-Auditor internamente hasta superar el umbral de 95/100 en todas las dimensiones."
+}
+
+$json = $specObj | ConvertTo-Json -Depth 10
 [System.IO.File]::WriteAllText($OutputPath, $json, [System.Text.Encoding]::UTF8)
 Write-Output $json

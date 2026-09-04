@@ -1,14 +1,18 @@
 ﻿<#
 .SYNOPSIS
-    UltraGoal Quality & Anti-Toy Rubric Evaluator v3.0 (Domain Depth & Anti-Toy Gate)
+    UltraGoal Universal Quality & Anti-Toy Rubric Evaluator v3.1
 .DESCRIPTION
-    Motor de auditoría rigurosa y evaluación de calidad para proyectos complejos en Antigravity.
-    Incluye:
-    - Análisis de Profundidad de Dominio y Barrera Anti-Juguete (Anti-Toy Pre-Mortem Gate).
-    - Detección de omisión de menús de inicio, falta de mobs/animales, carencia de 3ra persona y crafteo falso.
-    - Detección de fugas de rendimiento en bucles de render (animaciones).
-    - Desconexión de eventos de interacción (drag-and-drop huérfano).
-    - Umbral inquebrantable de aprobación: 95/100 ("No se conforma con cualquier resultado").
+    Motor de auditoría rigurosa y evaluación de calidad universal para proyectos en Antigravity.
+    Agnóstico de tecnología: evalúa proyectos en JavaScript, TypeScript, Python, C#, Rust, Go,
+    PowerShell, Java, C++, HTML/CSS, etc.
+    Audita:
+    - Profundidad de dominio (penaliza maquetas de juguete con datos planos hardcodeados).
+    - Shell de usuario y navegación (evita interfaces de 1 sola pantalla sin ajustes ni salida).
+    - Higiene de recursos y rendimiento (fugas de memoria, asignaciones en bucles intensivos).
+    - Reactividad y sincronización de estado (interacciones que no actualizan el modelo).
+    - Robustez y blindaje de errores (cero silenciamiento de excepciones o catch vacíos).
+    - Batería de pruebas automatizadas con aserciones verificadas.
+    Umbral inquebrantable de aprobación: 95/100 ("No se conforma con cualquier resultado").
 #>
 
 [CmdletBinding()]
@@ -57,12 +61,12 @@ if ($targetItem.PSIsContainer) {
 }
 
 $scores = [ordered]@{
-    "Functional_Completeness"     = 20
-    "Domain_Depth_Anti_Toy"       = 15
-    "Performance_Render_Budget"   = 15
-    "Interaction_Tracking_UX"     = 10
+    "Domain_Depth_Extensibility"  = 20
+    "Presentation_Shell_UX"       = 15
+    "Performance_Resource_Hygiene"= 15
     "Robustness_Error_Handling"   = 15
-    "Architecture_Cleanliness"    = 10
+    "Interaction_State_Sync"      = 10
+    "Functional_Completeness"     = 10
     "Automated_Testing"           = 15
 }
 
@@ -72,19 +76,18 @@ $assertionCount = 0
 $totalCodeLines = 0
 $allCodeTextBuilder = [System.Text.StringBuilder]::new()
 
-# Expresiones regulares de detección
+# Expresiones regulares universales de detección
 $todoRegex = [regex]'(?i)\b(TODO|FIXME|HACK|XXX|TBD|PLACEHOLDER)\b'
 $stubRegex = [regex]'(?i)(NotImplementedError|NotImplementedException|throw new Error\("Not implemented"\)|pass\s*$|\bSTUB\b)'
 $emptyCatchRegex = [regex]'(?i)(catch\s*\([^)]*\)\s*\{\s*\}|except:\s*pass|except\s+Exception:\s*pass)'
 $debugDebrisRegex = [regex]'(?i)(console\.log\("debug|print\("test|System\.out\.println\("here|Debugger\.Break)'
 $secretRegex = [regex]'(?i)(sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}|BEGIN PRIVATE KEY|api_key\s*=\s*["''][a-zA-Z0-9_-]{16,}["''])'
 
-# Rendimiento y bucles de render
-$allocInRenderRegex = [regex]'(?i)(function\s+(animate|render|update|tick|loop)\b|requestAnimationFrame)'
-$naiveLoopMeshRegex = [regex]'(?i)(for\s*\([^)]*\)\s*\{[^}]*for\s*\([^)]*\)\s*\{[^}]*new\s+(THREE\.Mesh|GameObject|MeshRenderer))'
+# Rendimiento universal: bucles intensivos (animación, rendering, tick, polling)
+$allocInHotLoopRegex = [regex]'(?i)(function\s+(animate|render|update|tick|loop|draw|onAnimationFrame)\b|requestAnimationFrame)'
 
-# Seguimiento de interacción
-$orphanDragRegex = [regex]'(?i)(draggedItem|selectedItem|activeSlot)\s*=[^;]+;(?!.*(clientX|clientY|pageX|pageY|cursor\.position|pointer))'
+# Interacción y estado: eventos desconectados
+$orphanActionRegex = [regex]'(?i)(draggedItem|selectedItem|activeElement|activeTab)\s*=[^;]+;(?!.*(clientX|clientY|position|target|id|emit|dispatch))'
 
 foreach ($file in $files) {
     $lines = @(Get-Content -LiteralPath $file.FullName -ErrorAction SilentlyContinue)
@@ -97,45 +100,34 @@ foreach ($file in $files) {
         $testFilesFound++
     }
 
-    # Bucle de mallas anidadas sin batching
-    if ($fullContent -match $naiveLoopMeshRegex) {
-        $violations.Add([PSCustomObject]@{
-            Category    = "Performance_Render_Budget"
-            Penalty     = 8
-            File        = $file.FullName
-            Line        = 1
-            Snippet     = "Bucle anidado instanciando mallas individuales"
-            Issue       = "Grave cuello de botella de rendimiento: Creación de mallas individuales en bucles de terreno en lugar de InstancedMesh o Chunk Geometry merging."
-        })
-    }
-
-    # Analisis linea por linea
-    $inRenderFunc = $false
-    $renderBraceCount = 0
+    $inHotFunc = $false
+    $hotBraceCount = 0
 
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $lineNum = $i + 1
         $line = $lines[$i]
 
-        if ($line -match $allocInRenderRegex) {
-            $inRenderFunc = $true
-            $renderBraceCount = 0
+        # Rastrear funciones de alta frecuencia (animación, renderizado, polling)
+        if ($line -match $allocInHotLoopRegex) {
+            $inHotFunc = $true
+            $hotBraceCount = 0
         }
-        if ($inRenderFunc) {
-            if ($line -match '\{') { $renderBraceCount++ }
+        if ($inHotFunc) {
+            if ($line -match '\{') { $hotBraceCount++ }
             if ($line -match '\}') {
-                $renderBraceCount--
-                if ($renderBraceCount -le 0) { $inRenderFunc = $false }
+                $hotBraceCount--
+                if ($hotBraceCount -le 0) { $inHotFunc = $false }
             }
 
-            if ($line -match 'new\s+(THREE\.|Vector|Matrix|Object|Array)\b' -and -not ($line -match 'new\s+Promise')) {
+            # Asignaciones continuas de objetos/arrays/vectores en bucle caliente (causa GC spikes)
+            if ($line -match 'new\s+(Object|Array|THREE\.|Vector|Matrix|[A-Z][a-zA-Z0-9]+)\b' -and -not ($line -match 'new\s+Promise')) {
                 $violations.Add([PSCustomObject]@{
-                    Category    = "Performance_Render_Budget"
+                    Category    = "Performance_Resource_Hygiene"
                     Penalty     = 6
                     File        = $file.FullName
                     Line        = $lineNum
                     Snippet     = $line.Trim()
-                    Issue       = "Instanciación dentro del bucle de renderizado/animación (Causa GC pauses y caídas de FPS)."
+                    Issue       = "Asignación de memoria dentro de bucle de alta frecuencia (Causa pausas de recolección de basura y degradación de rendimiento)."
                 })
             }
         }
@@ -155,14 +147,14 @@ foreach ($file in $files) {
         if ($line -match $stubRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Functional_Completeness"
-                Penalty     = 8
+                Penalty     = 6
                 File        = $file.FullName
                 Line        = $lineNum
                 Snippet     = $line.Trim()
                 Issue       = "Stub o código sin implementar (NotImplemented / pass)"
             })
         }
-        # Empty Catch
+        # Catch vacíos
         if ($line -match $emptyCatchRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Robustness_Error_Handling"
@@ -176,7 +168,7 @@ foreach ($file in $files) {
         # Debug Debris
         if ($line -match $debugDebrisRegex) {
             $violations.Add([PSCustomObject]@{
-                Category    = "Architecture_Cleanliness"
+                Category    = "Robustness_Error_Handling"
                 Penalty     = 2
                 File        = $file.FullName
                 Line        = $lineNum
@@ -184,7 +176,7 @@ foreach ($file in $files) {
                 Issue       = "Residuo de depuración temporal en código de producción"
             })
         }
-        # Secrets
+        # Secretos
         if ($line -match $secretRegex) {
             $violations.Add([PSCustomObject]@{
                 Category    = "Robustness_Error_Handling"
@@ -196,68 +188,43 @@ foreach ($file in $files) {
             })
         }
 
-        # Aserciones de tests
+        # Aserciones en tests
         $assertionMatches = [regex]::Matches($line, '(?i)(assert|expect\(|should|Assert\.|AssertTrue|AssertEqual)')
         $assertionCount += $assertionMatches.Count
     }
 }
 
-# --- EVALUACIÓN DE PROFUNDIDAD DE DOMINIO & BARRERA ANTI-JUGUETE (Anti-Toy Gate) ---
+# --- EVALUACIÓN UNIVERSAL DE PROFUNDIDAD Y SHELL DE USUARIO ---
 $totalCodeString = $allCodeTextBuilder.ToString()
-$isGameOrVoxel = ($Category -eq "Interactive_Game") -or ($totalCodeString -match '(?i)(THREE\.|voxel|minecraft|PointerLockControls|raycast|chunk|blockType)')
 
-if ($isGameOrVoxel) {
-    # 1. Chequeo de Menú de Inicio / Shell
-    $hasMenu = ($totalCodeString -match '(?i)(startMenu|titleScreen|mainMenu|menuOverlay|optionsMenu|pauseMenu|settingsScreen)')
-    if (-not $hasMenu) {
+# 1. Comprobación de Shell de Usuario / Punto de Entrada (Presentation & Shell)
+$isUIOrWebOrGame = ($totalCodeString -match '(?i)(document\.|window\.|html|<div|<app|THREE\.|canvas|screen|view|render|component)')
+if ($isUIOrWebOrGame) {
+    $hasShellOrMenu = ($totalCodeString -match '(?i)(menu|start|title|header|navbar|nav|settings|options|pause|modal|viewRouter|router|route)')
+    if (-not $hasShellOrMenu) {
         $violations.Add([PSCustomObject]@{
-            Category    = "Domain_Depth_Anti_Toy"
+            Category    = "Presentation_Shell_UX"
             Penalty     = 8
             File        = $TargetPath
             Line        = 0
-            Snippet     = "Sin subsistema de menús de inicio/pausa"
-            Issue       = "Trampa de Demo de Juguete: No existe menú de inicio ni pausa con opciones. Se redujo la interfaz a un simple click para continuar."
+            Snippet     = "Sin estructura de navegación ni shell de usuario"
+            Issue       = "Trampa de Demo de Juguete: No se encontró barra de navegación, menú de inicio ni vistas de configuración/opciones. La interfaz es un contenedor plano sin opciones reales."
         })
     }
+}
 
-    # 2. Chequeo de Entidades / Mobs / IA
-    $hasMobs = ($totalCodeString -match '(?i)(mob|entity|npc|creature|animal|zombie|cow|pig|sheep|stateMachine|wander|spawnMob)')
-    if (-not $hasMobs) {
-        $violations.Add([PSCustomObject]@{
-            Category    = "Domain_Depth_Anti_Toy"
-            Penalty     = 6
-            File        = $TargetPath
-            Line        = 0
-            Snippet     = "Sin entidades vivas ni mobs"
-            Issue       = "Trampa de Demo de Juguete: Mundo completamente estático y desierto. No se implementaron animales ni criaturas con IA de deambulación."
-        })
-    }
-
-    # 3. Chequeo de Perspectivas Múltiples (1ra y 3ra persona / F5)
-    $hasPerspectives = ($totalCodeString -match '(?i)(thirdPerson|firstPerson|toggleCamera|viewMode|cameraDistance|F5)')
-    if (-not $hasPerspectives) {
-        $violations.Add([PSCustomObject]@{
-            Category    = "Domain_Depth_Anti_Toy"
-            Penalty     = 4
-            File        = $TargetPath
-            Line        = 0
-            Snippet     = "Sin soporte de tercera persona"
-            Issue       = "Trampa de Demo de Juguete: Cámara fija en primera persona sin soporte para alternar a tercera persona (F5)."
-        })
-    }
-
-    # 4. Chequeo de Crafteo Real y Matriz de Recetas
-    $hasCrafting = ($totalCodeString -match '(?i)(craftingTable|recipeGrid|craftRecipe|recipes\s*=|craftingMatrix|recipeBook)')
-    if (-not $hasCrafting) {
-        $violations.Add([PSCustomObject]@{
-            Category    = "Domain_Depth_Anti_Toy"
-            Penalty     = 5
-            File        = $TargetPath
-            Line        = 0
-            Snippet     = "Sin motor de recetas ni crafteo matricial"
-            Issue       = "Trampa de Demo de Juguete: Crafteo inexistente o botón hardcodeado falso en lugar de cuadrícula y motor de recetas."
-        })
-    }
+# 2. Comprobación de Profundidad de Dominio y Modelado (Domain Depth)
+# Si el proyecto simula una aplicación compleja (tienda, juego, dashboard, gestor), debe poseer estructuras de datos o colecciones tipadas
+$hasExtensibleModel = ($totalCodeString -match '(?i)(class\s+[A-Z]|interface\s+[A-Z]|type\s+[A-Z]|struct\s+[A-Z]|def\s+[a-z_]+|Map<|Dictionary<|new\s+Map|items\s*:\s*\[|recipes|models|entities|collection)')
+if (-not $hasExtensibleModel -and $files.Count -gt 0) {
+    $violations.Add([PSCustomObject]@{
+        Category    = "Domain_Depth_Extensibility"
+        Penalty     = 8
+        File        = $TargetPath
+        Line        = 0
+        Snippet     = "Sin modelos de dominio estructurados"
+        Issue       = "Trampa de Demo de Juguete: Código plano sin modelos de datos, entidades ni estructuras extensibles."
+    })
 }
 
 # Aplicar deducciones

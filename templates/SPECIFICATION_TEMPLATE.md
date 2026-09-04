@@ -1,38 +1,39 @@
-﻿# 📐 Especificación Técnica Exhaustiva & Análisis Pre-Mortem (UltraGoal Spec v3.0)
+﻿# 📐 Especificación Técnica Universal & Análisis Pre-Mortem (UltraGoal Universal v3.1)
 
-> **Invariante Anti-Juguete:** Toda meta compleja debe expandirse en sus **6 Pilares Canónicos** antes de escribir código. Se prohíbe terminantemente reducir una aplicación completa a una demo superficial de 2 pantallas.
+> **Invariante de Autodeterminación:** El agente ejecuta de forma completamente autónoma sin solicitar feedback constante al usuario, resolviendo internamente los defectos mediante el bucle Constructor-Auditor hasta cumplir los 7 Niveles Universales con una calificación >= 95/100.
 
 ---
 
-## 1. Identificación del Objetivo & Dominio Canónico
-- **Objetivo del Usuario:** [Texto exacto del usuario, ej. "has un clon de minecraft tal cual"]
-- **Categoría Detectada:** `[ Interactive_Game / Web_Application / Backend_Service / General_Software ]`
-- **Software Canónico de Referencia:** [Ej. Minecraft Java Edition / Trello / Stripe API]
+## 1. Identificación del Proyecto & Clasificación de Dominio
+- **Objetivo del Usuario:** [Texto exacto del usuario]
+- **Categoría Detectada:** `[ Web_or_FullStack_Application / Backend_Service_or_API / CLI_or_Systems_Tool / Desktop_Application / Interactive_Simulation_or_Game / General_Software_System ]`
+- **Patrón de Arquitectura:** [Ej. Clean Architecture, MVC, Hexagonal, Event-Driven, Micro-Frontend]
 
 ---
 
 ## 2. Análisis Pre-Mortem: Las 5 Trampas de "Demo de Juguete"
-*¿De qué maneras este proyecto podría quedar como una maqueta mediocre si no nos auto-exigimos?*
-1. **Trampa 1 (Shell/Menús):** [Ej. Poner solo "Haz clic para continuar" en vez de un menú con título, opciones y música] -> **Defensa Obligatoria:** [Menú de inicio completo con settings]
-2. **Trampa 2 (Entidades/Vida):** [Ej. Dejar el mundo completamente estático sin animales] -> **Defensa Obligatoria:** [Al menos 2 mobs con máquina de estados de deambulación]
-3. **Trampa 3 (Perspectiva):** [Ej. Solo cámara en primera persona] -> **Defensa Obligatoria:** [Soporte para 1ra y 3ra persona con tecla F5]
-4. **Trampa 4 (Pobreza de Contenido):** [Ej. Solo 2 o 3 tipos de bloques] -> **Defensa Obligatoria:** [Catálogo de al menos 10 bloques con caras y propiedades distintas]
-5. **Trampa 5 (Mecánicas Incompletas):** [Ej. Crafteo de 1 botón hardcodeado] -> **Defensa Obligatoria:** [Cuadrícula de crafteo 2x2 y 3x3 con motor de recetas]
+*¿De qué 5 maneras este proyecto parecería una maqueta de juguete si tomáramos atajos?*
+1. **Trampa 1 (Shell & Navegación):** [Ej. Contenedor plano sin rutas, sin menú de inicio ni opciones de configuración] -> **Defensa Obligatoria:** [Shell estructurado con navegación completa y ajustes]
+2. **Trampa 2 (Profundidad de Lógica):** [Ej. Lógica hardcodeada para 1 solo caso estático] -> **Defensa Obligatoria:** [Modelos tipados y registros extensibles]
+3. **Trampa 3 (Interacción & Estado):** [Ej. Clics que no actualizan el estado o arrastre que no acompaña al cursor] -> **Defensa Obligatoria:** [Sincronización bidireccional reactiva verificable con mapas diferenciales]
+4. **Trampa 4 (Pobreza de Contenido):** [Ej. Solo 2 o 3 elementos de prueba] -> **Defensa Obligatoria:** [Catálogo de al menos 8 a 15 entidades o datos realistas]
+5. **Trampa 5 (Resiliencia):** [Ej. Silenciamiento de errores o pantallas en blanco al fallar] -> **Defensa Obligatoria:** [Error boundaries, reintentos con backoff y validación de entradas]
 
 ---
 
-## 3. Desglose de los 6 Pilares Canónicos de Ingeniería
+## 3. Desglose de los 7 Niveles Universales de Ingeniería
 
-| Pilar Canónico | Requisitos No Negociables | Responsable | Criterio de Verificación Empírica |
-| :--- | :--- | :--- | :--- |
-| **P1: Shell, Menús & Audio** | Menú de inicio real, menú de pausa (ESC), ajustes y audio | Builder | Captura visual del menú y comprobación de eventos de botón |
-| **P2: Controles & Perspectiva** | 1ra/3ra persona (F5), mira con wireframe, física sólida AABB | Builder | Pruebas de movimiento y toggling de cámara |
-| **P3: Entidades & IA** | Al menos 2 criaturas vivas con IA de deambulación y colisión | Builder | Test de spawn y actualización de coordenadas de mobs |
-| **P4: Riqueza de Contenido** | >= 10 tipos de bloques/materiales con texturas diferenciadas | Builder | Verificación de array de texturas y registro de bloques |
-| **P5: Mecánicas & Crafteo** | Cuadrícula 2x2 / 3x3, motor de recetas, inventario drag & drop | Builder | Prueba diferencial con compare_visuals y unit tests de recetas |
-| **P6: Ambiente & Guardado** | Ciclo día/noche, partículas y guardado en disco/LocalStorage | Builder | Test de serialización JSON y recarga de estado |
+| Nivel Universal | Requisitos Técnicos Obligatorios | Criterio de Aceptación Empírico |
+| :--- | :--- | :--- |
+| **N1: Shell & Presentación** | Menú/Navbar, opciones de configuración, feedback de carga y pantallas de error | Interfaz navegable con rutas y ajustes funcionales |
+| **N2: Dominio & Reglas** | Entidades tipadas, validación de esquemas y lógica desacoplada de la vista | Cobertura de pruebas unitarias de todas las reglas |
+| **N3: Interacción & Estado** | Drag-and-drop, filtros en vivo, atajos y reactividad fluida | Mapa diferencial de interacción verificado sin desfase |
+| **N4: Contenido & Variedad** | Catálogo rico (>= 8-15 variantes representativas) | Registro de datos poblado con propiedades diversas |
+| **N5: Resiliencia & Fallos** | Manejo de excepciones, error boundaries y reintentos en red/E/S | Pruebas de estrés ante entradas inválidas |
+| **N6: Rendimiento & Higiene** | Cero allocations en bucles calientes, cancelación de listeners, fluidez 60 FPS / <100ms | Escáner de rúbrica sin alertas de allocations en render |
+| **N7: Persistencia & Ciclo** | Persistencia entre sesiones (LocalStorage/DB/JSON) y cierre limpio | El estado se recupera intacto tras reiniciar el proceso |
 
 ---
 
-## 4. Desglose de Hitos en goal_state.json
-*El proyecto se ejecuta en un mínimo de 6 a 7 hitos profundos, asegurando la cobertura total del dominio.*
+## 4. Compromiso de Autonomía Total (Zero Babysitting)
+El Constructor y el Auditor se comprometen a iterar de manera continua hasta que todos los hitos alcancen el estado `APPROVED` con puntaje >= 95/100, sin trasladar la carga de validación al usuario.

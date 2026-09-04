@@ -1,84 +1,92 @@
 ﻿<div align="center">
 
-# ⚡ UltraGoal Engine v3.0
-### The Relentless Multi-Agent Perfectionist Harness for Google Antigravity & OpenClaw
-**Deep Domain Research • Anti-Toy Pre-Mortem • AVS 1:1 Vision • Uncompromising Quality Gate**
+# ⚡ UltraGoal Universal Engine v3.1
+### The Autonomous Software Engineering Triad for Google Antigravity & OpenClaw
+**Universal 7-Tier Architecture • Zero Babysitting (Closed-Loop Self-Healing) • AVS 1:1 Vision • Quality Gate Score ≥ 95**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Antigravity](https://img.shields.io/badge/Antigravity-2.0%20Ready-blue.svg)](https://deepmind.google/technologies/gemini/)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Compatible-purple.svg)](https://github.com/openclaw)
-[![Architecture](https://img.shields.io/badge/Architecture-Deep%206--Pillar%20Census-orange.svg)](#-los-6-pilares-canónicos-de-ingeniería)
-[![Vision](https://img.shields.io/badge/Vision%20Engine-AVS%20MultiSector%201%3A1-magenta.svg)](#-escrutinio-visual-adversarial-avs-11)
-[![Quality Gate](https://img.shields.io/badge/Quality%20Gate-Score%20%E2%89%A5%2095%2F100-success.svg)](#-rúbrica-y-barrera-anti-juguete)
+[![Universal](https://img.shields.io/badge/Domain-Universal%207--Tier-orange.svg)](#-los-7-niveles-universales-de-ingeniería)
+[![Vision](https://img.shields.io/badge/Vision%20Engine-AVS%20MultiSector%201%3A1-magenta.svg)](#-validación-multimodal-visión-11--pruebas-cli)
+[![Quality Gate](https://img.shields.io/badge/Quality%20Gate-Score%20%E2%89%A5%2095%2F100-success.svg)](#-la-barrera-de-calidad-en-la-rúbrica)
 [![Tests](https://img.shields.io/badge/Tests-14%2F14%20Passing-brightgreen.svg)](#-verification-suite)
 
-**Autonomous, unstoppable engineering harness. Eliminates the "Toy Demo Syndrome", detects invisible ground bugs, audits real-time drag-and-drop interactions, and enforces 60 FPS fluidity.**
+**Build production-grade software across any domain (Web SaaS, Backend APIs, CLI Tools, Desktop Apps, Games) without constant user supervision.**
 
-[Español](#-visión-general-en-español-v30) • [English](#-english-overview-v30) • [Deep Planner & Anti-Toy](#-el-motor-de-planificación-profunda-deep_plannerps1) • [AVS Vision](#-escrutinio-visual-adversarial-avs-11) • [Architecture](#-architecture) • [Installation](#-quick-installation)
+[Español](#-visión-general-en-español-v31) • [English](#-english-overview-v31) • [Universal 7 Tiers](#-los-7-niveles-universales-de-ingeniería) • [Zero Babysitting](#-el-principio-de-cero-babysitting) • [Architecture](#-architecture) • [Installation](#-quick-installation)
 
 ---
 
 </div>
 
-## 🇪🇸 Visión General en Español (v3.0)
+## 🇪🇸 Visión General en Español (v3.1)
 
-**UltraGoal v3.0 (Deep Exhaustive Architecture)** ataca y destruye el mayor vicio de los modelos de lenguaje: el **Síndrome de la Demo de Juguete (Toy Demo Syndrome)**. Cuando un usuario le pide a una IA una meta ambiciosa con un prompt corto (ej. *"haz un clon de Minecraft tal cual"* o *"haz un clon de Trello"*), los modelos tradicionales toman atajos mediocres:
-- Crean un juego sin menú de inicio real (solo un cartel feo de "click para continuar").
-- Dejan el mundo completamente vacío y muerto, sin animales ni enemigos con IA.
-- Omiten la cámara en tercera persona (solo primera persona fija).
-- Ponen solo 2 o 3 tipos de bloques en vez de un catálogo geológico completo.
-- Falsifican el crafteo con un botón simulado en lugar de una cuadrícula matricial con recetas.
+**UltraGoal Universal v3.1** es un arnés autónomo de ingeniería de software para **Google Antigravity** y **OpenClaw** diseñado para operar con **autonomía completa y sin necesidad de que el usuario tenga que dar feedback cada 5 minutos**.
 
-### 🛡️ ¿Cómo lo soluciona UltraGoal v3.0?
-1. **Investigación Profunda & Mapeo Canónico (`deep_planner.ps1`):**
-   - Antes de escribir una sola línea de código, descompone la meta en los **6 Pilares Canónicos de Ingeniería**.
-   - Prohíbe planes superficiales de 3 hitos. Genera automáticamente **6 a 7 hitos profundos** que cubren todo el espectro del software.
-2. **Análisis Pre-Mortem Anti-Juguete:**
-   - Anticipa las 5 formas en que el proyecto podría quedar como una maqueta mediocre y redacta **Cláusulas de Defensa No Negociables** en el contrato.
-3. **Barrera Anti-Juguete en la Rúbrica (`evaluate_rubric.ps1`):**
-   - Si el código de un juego carece de menús de inicio con ajustes, de criaturas vivas con IA, de cambio de cámara F5 o de motor de recetas, la rúbrica le descuenta puntos automáticamente y **RECHAZA la entrega** (Score < 95).
-4. **Escrutinio Visual Adversarial (AVS 1:1) & Heatmap Diferencial:**
-   - Recortes nativos 1:1 (`sector_ground.png`, `sector_hud.png`) para auditar bloques a nivel de píxel en el suelo y mapas de calor (`compare_visuals.ps1`) para verificar que los ítems sigan al cursor en el inventario.
+Es **100% universal**: aplica la misma rigurosidad técnica ya sea que le pidas:
+- 🌐 Una plataforma SaaS Web o Full-Stack (React, Vue, Node, bases de datos, auth).
+- ⚙️ Un microservicio backend o API REST/GraphQL resiliente.
+- 💻 Una herramienta de línea de comandos (CLI) o daemon del sistema.
+- 🖥️ Una aplicación de escritorio moderna (Electron, Tauri, Win32).
+- 🎮 Un videojuego 2D/3D o simulación interactiva.
 
 ---
 
-## 🏛️ Los 6 Pilares Canónicos de Ingeniería
+## 🎯 El Principio de Cero Babysitting
 
-Todo proyecto bajo UltraGoal se desglosa rigurosamente en 6 subsistemas obligatorios:
+> 💎 **Autodeterminación y Autocorrección Interna:**
+> La IA no debe ser una carga para el usuario. Queda terminantemente prohibido detenerse a preguntar si debe corregir un fallo o pedirle al usuario que pruebe código a medias.
+> 
+> Si el Auditor detecta un defecto visual, un test fallido, código no optimizado o falta de opciones de navegación:
+> 1. **El Auditor rechaza el hito internamente.**
+> 2. **El Constructor recibe las correcciones exactas.**
+> 3. **El Constructor repara el código en el mismo turno.**
+> 4. **El Auditor reevalúa hasta superar el umbral de 95/100.**
+> El usuario solo recibe la entrega final cuando el proyecto funciona impecablemente de punta a punta.
+
+---
+
+## 🏛️ Los 7 Niveles Universales de Ingeniería
+
+Antes de escribir código, `scripts/deep_planner.ps1` desglosa cualquier meta en los 7 niveles de software canónico:
 
 ```mermaid
 graph TD
-    Goal[Objetivo del Usuario: /goal] --> DeepPlanner[deep_planner.ps1]
+    Goal[Usuario: /goal <cualquier proyecto>] --> DeepPlanner[deep_planner.ps1]
     
-    subgraph "Los 6 Pilares Canónicos (Zero-Omission)"
-        DeepPlanner --> P1[Pilar 1: Shell, Menú de Inicio & Audio]
-        DeepPlanner --> P2[Pilar 2: Perspectiva & Controles Fluidos]
-        DeepPlanner --> P3[Pilar 3: Entidades Vivas & Sistema de IA]
-        DeepPlanner --> P4[Pilar 4: Riqueza de Materiales / Contenido]
-        DeepPlanner --> P5[Pilar 5: Mecánicas & Crafteo Matricial]
-        DeepPlanner --> P6[Pilar 6: Persistencia, Ciclo Ambiental & Guardado]
+    subgraph "Los 7 Niveles Universales de Software"
+        DeepPlanner --> T1[Nivel 1: Shell de Entrada, Navegación & Ajustes]
+        DeepPlanner --> T2[Nivel 2: Modelo de Dominio & Reglas de Negocio]
+        DeepPlanner --> T3[Nivel 3: Interacción Fluida & Sincronización de Estado]
+        DeepPlanner --> T4[Nivel 4: Amplitud de Contenido & Variedad de Datos]
+        DeepPlanner --> T5[Nivel 5: Resiliencia, Fallos & Error Boundaries]
+        DeepPlanner --> T6[Nivel 6: Rendimiento, Concurrencia & Cero Fugas]
+        DeepPlanner --> T7[Nivel 7: Persistencia, Ciclo de Vida & Cierre Limpio]
     end
     
-    P1 & P2 & P3 & P4 & P5 & P6 --> MasterContract[Contrato Maestro de 7 Hitos]
+    T1 & T2 & T3 & T4 & T5 & T6 & T7 --> MasterContract[Contrato Maestro de 7 Hitos]
     MasterContract --> Execution[Bucle Autónomo Constructor-Auditor-Visión]
 ```
 
-1. **Pilar 1 (Shell, Menús & Audio):** Pantalla de título profesional con fondo animado, botón 'Jugar', botón 'Opciones' (audio, FOV, distancia), menú de pausa (ESC) y efectos de sonido SFX.
-2. **Pilar 2 (Perspectiva & Controles):** Primera y Tercera Persona (F5), mira con wireframe delimitador y física sólida AABB con gravedad.
-3. **Pilar 3 (Entidades Vivas & IA):** Animales pasivos (vacas, cerdos, ovejas) y enemigos hostiles con máquina de estados finitos (Wander, Idle, Chase, Attack).
-4. **Pilar 4 (Riqueza de Materiales - Zero-Paucity):** Catálogo mínimo de 8 a 12 bloques con texturas diferenciadas por cara y capas geológicas en el terreno.
-5. **Pilar 5 (Mecánicas Profundas & Crafteo Real):** Cuadrícula de crafteo 2x2 en inventario + 3x3 en Mesa de Trabajo con motor de recetas por diccionario, arrastre drag-and-drop con seguimiento de cursor y apilamiento (x64).
-6. **Pilar 6 (Ambiente & Persistencia):** Ciclo día/noche con sol y luna, partículas de ruptura y guardado en disco / LocalStorage.
+1. **Nivel 1 (Shell & Navegación):** Menú de inicio, barra de navegación, panel de ajustes/opciones y feedback visual. *(Prohibido una pantalla plana sin opciones)*.
+2. **Nivel 2 (Dominio & Reglas):** Modelos de datos estructurados, tipado y lógica desacoplada de la vista. *(Prohibido código hardcodeado para 1 solo caso)*.
+3. **Nivel 3 (Interacción & Estado):** Drag-and-drop, filtrado reactivo en vivo, atajos de teclado y sincronización inmediata verificable con mapas diferenciales.
+4. **Nivel 4 (Amplitud de Contenido - Zero-Paucity):** Catálogo representativo con múltiples variantes reales (mínimo 8 a 15 datos/materiales/entidades).
+5. **Nivel 5 (Resiliencia & Error Boundaries):** Límites de error que aíslan caídas, reintentos con backoff exponencial y mensajes descriptivos.
+6. **Nivel 6 (Rendimiento & Cero Fugas):** Cancelación de listeners, eliminación de allocations en bucles de alta frecuencia y tiempos de respuesta < 100ms / 60 FPS estables.
+7. **Nivel 7 (Persistencia & Durabilidad):** El estado se recuerda intacto entre reinicios (LocalStorage, DB o JSON).
 
 ---
 
-## 🇺🇸 English Overview (v3.0)
+## 🇺🇸 English Overview (v3.1)
 
-**UltraGoal v3.0** eradicates the **Toy Demo Syndrome** where AI agents generate hollow caricatures of complex software:
-- **Autonomous Domain Expansion (`deep_planner.ps1`):** Decomposes ambiguous requests into an exhaustive 6-Pillar technical specification before code generation.
-- **Anti-Toy Pre-Mortem Gate:** Identifies the top 5 ways the project could degrade into a naive mockup and turns them into binding verification contracts.
-- **Anti-Toy Rubric Veto:** Deducts points and rejects pull requests lacking start menus, mob AI, multi-perspective cameras, or extensible recipe engines.
-- **AVS 1:1 Multi-Sector Vision:** Native pixel crops to inspect ground-level geometry, HUD typography, and differential interaction heatmaps.
+**UltraGoal Universal v3.1** is a domain-agnostic autonomous engineering harness for **Google Antigravity** and **OpenClaw** designed to deliver production-grade software **without requiring constant user feedback or babysitting**.
+
+- **Zero Babysitting (Closed-Loop Self-Healing):** The agent never asks the user to test broken code or verify minor fixes. If a defect is found, the Auditor rejects the milestone internally, the Builder applies the remediation, and verification runs until quality meets the ≥ 95/100 threshold.
+- **Universal 7-Tier Architecture (`deep_planner.ps1`):** Decomposes any software objective into Presentation Shell, Core Domain Logic, Dynamic State Sync, Content Breadth, Resilience, Performance, and Persistence.
+- **AVS 1:1 Vision & Interaction Heatmaps (`capture_vision.ps1` & `compare_visuals.ps1`):** Native pixel crops to audit micro-details, and differential heatmaps to prove drag-and-drop and state tracking.
+- **100-Point Quantitative Rubric (`evaluate_rubric.ps1`):** Enforces modularity, error boundaries, test coverage, and clean memory hygiene.
 
 ---
 
@@ -86,21 +94,21 @@ graph TD
 
 ```text
 antigravity-ultra-goal/
-├── SKILL.md                          # Core Skill Definition (v3.0)
+├── SKILL.md                          # Universal Skill Definition (v3.1)
 ├── LICENSE                           # MIT License
 ├── README.md                         # Documentation & Architecture Guide
 ├── CONTRIBUTING.md                   # Contribution Guidelines
 ├── scripts/
-│   ├── deep_planner.ps1              # Deep domain decomposition & anti-toy pre-mortem
+│   ├── deep_planner.ps1              # Universal 7-Tier domain decomposition & anti-toy pre-mortem
 │   ├── capture_vision.ps1            # Multi-Sector 1:1 crops, Grid Overlay & Burst capture
 │   ├── compare_visuals.ps1           # Differential heatmap & interaction tracker
-│   ├── evaluate_rubric.ps1           # Anti-sloth, anti-toy & performance quality scanner
+│   ├── evaluate_rubric.ps1           # Universal 100-point software quality & performance scanner
 │   └── milestone_tracker.ps1         # State machine & auditable milestone ledger
 ├── templates/
-│   ├── SPECIFICATION_TEMPLATE.md     # Exhaustive 6-Pillar domain technical specification
+│   ├── SPECIFICATION_TEMPLATE.md     # Universal 7-Tier technical specification template
 │   ├── CONTRACT_TEMPLATE.md          # Acceptance criteria master contract
 │   ├── AUDIT_REPORT_TEMPLATE.md      # Adversarial audit report format
-│   └── VISION_AUDIT_TEMPLATE.md      # 7-Vector adversarial visual scrutiny format
+│   └── VISION_AUDIT_TEMPLATE.md      # Multi-Sector adversarial visual scrutiny format
 └── examples/
     ├── demo_workflow.md              # Real-world walkthrough scenario
     └── test_verification_suite.ps1   # 14/14 automated integration test suite
@@ -134,22 +142,22 @@ powershell -ExecutionPolicy Bypass -File examples/test_verification_suite.ps1
 Output:
 ```text
 =================================================
-   ULTRAGOAL HARNESS INTEGRATION TEST SUITE v3.0 
+   ULTRAGOAL UNIVERSAL HARNESS TEST SUITE v3.1   
 =================================================
 
-[Test 1] Evaluando Deep Domain Planner & Anti-Toy Pre-Mortem...
-  [PASS] Deep Planner Generates Spec File
-  [PASS] Deep Planner Detects Game Domain
-  [PASS] Deep Planner Decomposes 6 Pillars
-  [PASS] Deep Planner Formulates Anti-Toy Defenses
+[Test 1] Evaluando Universal Deep Domain Planner (Web SaaS & CLI Tool)...
+  [PASS] Planner Identifies Web/FullStack SaaS Domain
+  [PASS] Planner Decomposes 7 Universal Tiers for Web
+  [PASS] Planner Identifies CLI/Systems Domain
+  [PASS] Planner Formulates Universal Anti-Toy Defenses
 
-[Test 2] Evaluando Milestone Tracker State Machine...
-  [PASS] Tracker Init with Deep Milestones
-  [PASS] Tracker Has 7 Deep Milestones
+[Test 2] Evaluando Milestone Tracker con los 7 Niveles...
+  [PASS] Tracker Init with Universal Milestones
+  [PASS] Tracker Has >= 7 Universal Milestones
 
-[Test 3] Evaluando Rubric Anti-Toy & Performance Gate...
-  [PASS] Rubric Rejects Shallow Toy Demo (Score < 95 REJECTED)
-  [PASS] Rubric Approves Deep Architecture Code (Score 100 APPROVED)
+[Test 3] Evaluando Rubric Universal Gate (Agnóstico de Tecnología)...
+  [PASS] Rubric Rejects Shallow Toy Mockup (Score < 95 REJECTED)
+  [PASS] Rubric Approves Deep Universal Architecture (Score 100 APPROVED)
 
 [Test 4] Evaluando MultiSector Vision Engine...
   [PASS] MultiSector Full Image Generated
@@ -170,4 +178,4 @@ Output:
 
 ## 📜 License
 
-Distributed under the **MIT License**. Created with precision by **BryanGM12 & Antigravity Autonomous Systems**.
+Distributed under the **MIT License**. Created by **BryanGM12 & Antigravity Autonomous Systems**.
