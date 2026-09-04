@@ -1,95 +1,114 @@
 ﻿---
 name: goal
-description: "Motor Autónomo Perfeccionista Universal v3.2 (UltraGoal Engine - Live Boot & Multi-Photo Scrutiny). Erradica los proyectos rotos que no inician o quedan en pantalla negra. Incorpora Verificación de Arranque en Vivo (verify_runtime_boot.ps1), Detección de Pantalla Negra (BSOD Gate), Galería de Múltiples Fotos (capture_vision MultiStateAudit), Autocorrección Autónoma (Cero Babysitting) y Rúbrica >= 95/100."
+description: "Motor Autónomo Perfeccionista Universal v3.3 (UltraGoal Engine - Kinetic, Texture & Boot Integrity). Erradica los proyectos que no inician, cámaras rotas que se dan vuelta, movimientos con bugs que vuelan al mirar arriba y texturas borrosas o plásticas. Incorpora Barrera Cinética & Texturas (Kinetic_Asset_Integrity), Verificación de Arranque en Vivo (verify_runtime_boot.ps1), Detección de Pantalla Negra (BSOD Gate), Galería Multi-Foto (MultiStateAudit) y Rúbrica >= 95/100."
 author: BryanGM12 & Antigravity Autonomous Systems
-version: 3.2.0
+version: 3.3.0
 metadata:
   category: orchestration
-  skills: ["goal", "live-runtime-boot", "dead-screen-gate", "multi-photo-vision", "universal-engineering", "autonomous-self-healing", "quality-gate"]
+  skills: ["goal", "kinetic-integrity", "texture-filtering", "live-runtime-boot", "dead-screen-gate", "multi-photo-vision", "quality-gate"]
 ---
 
-# ⚡ UltraGoal Universal Engine v3.2
-### Live Runtime Boot Verification • Dead-Screen Gate • Multi-Photo Visual Scrutiny
+# ⚡ UltraGoal Universal Engine v3.3
+### Kinetic & Camera Stability • Pixel-Art Texture Integrity • Live Boot & Multi-Photo Scrutiny
 
-Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v3.2**. Esta versión incorpora una barrera inquebrantable contra el fallo más frustrante en desarrollo autónomo: **entregar código que ni siquiera inicia o que genera una pantalla negra/blanca congelada (Black Screen of Death)**.
+Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v3.3**. Esta versión erradica de forma definitiva los dos fallos más comunes reportados en simulaciones y juegos 3D:
+1. **Cámara y Movimiento Rotos:** Cámaras que se dan vuelta boca abajo al mover el ratón, personajes que vuelan al mirar hacia arriba o se hunden al mirar al suelo, y velocidad errática sin `DeltaTime`.
+2. **Texturas Horribles / Plásticas:** Bloques de un solo color plano o texturas borrosas tipo smudge causadas por la falta de filtrado `NearestFilter`.
+
+---
+
+## 🕹️ EL INVARIANTE CINÉTICO Y DE TEXTURAS (ZERO-BROKEN-CONTROLS)
+
+> 🛑 **REGLAS NO NEGOCIABLES DE MOVIMIENTO, CÁMARA Y TEXTURAS:**
+> En todo proyecto interactivo, el Constructor DEBE cumplir obligatoriamente con los siguientes estándares de ingeniería. La rúbrica [evaluate_rubric.ps1](file:///C:/Users/Administrator/.gemini/config/skills/goal/scripts/evaluate_rubric.ps1) audita y **VETA AUTOMÁTICAMENTE** cualquier código que viole estas reglas:
+
+### 1. Bloqueo de Cabeceo de Cámara (Anti-Flip Clamping)
+- **El Bug:** Al mover el ratón hacia arriba o abajo, la cámara sobrepasa los 90° e invierte la vista del mundo de cabeza.
+- **La Solución Obligatoria:** Limitar el cabeceo vertical con `Math.max(-1.5, Math.min(1.5, pitch))` o `THREE.MathUtils.clamp(camera.rotation.x, -Math.PI / 2.05, Math.PI / 2.05)`.
+
+### 2. Neutralización del Eje Y en Avance (Anti-Flying Bug)
+- **El Bug:** Al presionar W mirando hacia el cielo, el vector de avance apunta hacia arriba y el personaje "vuela" sin control; o al mirar al suelo, se hunde en la tierra.
+- **La Solución Obligatoria:** Extraer el vector de vista del jugador, pero **neutralizar el componente Y a cero** antes de normalizar y aplicar velocidad:
+  ```javascript
+  camera.getWorldDirection(moveDirection);
+  moveDirection.y = 0;
+  moveDirection.normalize();
+  camera.position.addScaledVector(moveDirection, speed * dt);
+  ```
+
+### 3. Físicas con DeltaTime (Anti-Framerate Stutter)
+- **El Bug:** Desplazamientos fijos (`pos.x += speed`) que hacen que el juego vaya 3 veces más rápido en pantallas de 144Hz que en 60Hz.
+- **La Solución Obligatoria:** Integrar siempre el delta de tiempo: `const dt = clock.getDelta();` y escalar cada traslación y salto por `dt`.
+
+### 4. Texturas Vóxel Nítidas (Anti-Blurry Textures)
+- **El Bug:** Texturas de 16x16 generadas en canvas o cargadas que se ven como manchas borrosas porque Three.js usa por defecto filtrado bilineal (`LinearFilter`).
+- **La Solución Obligatoria:** Forzar filtrado de vecino más cercano en todas las texturas de vóxel:
+  ```javascript
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
+  ```
+- **Mapeo por Caras Diferenciadas:** Prohibido usar el mismo color para todo el cubo. El césped debe tener cara superior verde con ruido procedural, laterales de tierra con capa de hierba y cara inferior de tierra pura.
 
 ---
 
 ## 🚫 EL INVARIANTE DE ARRANQUE EN VIVO (ZERO-BROKEN-BOOT)
 
-> 🛑 **PROHIBICIÓN ABSOLUTA DE ENTREGA CIEGA:**
-> Queda **TERMINANTEMENTE PROHIBIDO** marcar una meta como completada o entregar código al usuario sin haber ejecutado la aplicación en un entorno de ejecución real.
-> Antes de cualquier entrega, el arnés ejecuta:
-> ```powershell
-> powershell -ExecutionPolicy Bypass -File scripts/verify_runtime_boot.ps1 -TargetDirectory "<Ruta_del_Proyecto>"
-> ```
-> 
-> **Criterios de Rechazo Inmediato:**
-> 1. **Fallo de Sintaxis / Módulos:** Declaración de `import ... from` dentro de un `<script>` tradicional sin `type="module"`.
-> 2. **Archivos Faltantes:** Scripts locales o texturas referenciadas en HTML que no existen en el disco.
-> 3. **Pantallazo Negro/Blanco (Dead Screen):** Si la varianza de luminancia de los píxeles es menor a 3.0 o más del 98% de la pantalla es negra o blanca, **el sistema veta la entrega de inmediato**. El Constructor está obligado a reparar el motor de render antes de continuar.
+Queda **TERMINANTEMENTE PROHIBIDO** entregar una meta sin antes verificar que arranque en un entorno real con:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/verify_runtime_boot.ps1 -TargetDirectory "<Ruta_del_Proyecto>"
+```
+- **Detección de Pantallazo Negro:** Si el 98%+ de la pantalla es negra (`#000000`) o la desviación estándar de luminancia es menor a 3.0, **la entrega queda vetada de inmediato**.
+- **Inspección Pre-Vuelo:** Veta scripts con `import` sin `type="module"` y archivos referenciados inexistentes.
 
 ---
 
-## 📸 PROTOCOLO DE AUDITORÍA DE MÚLTIPLES FOTOS (MULTI-STAGE VISUAL SCRUTINY)
+## 📸 PROTOCOLO DE AUDITORÍA MULTI-FOTO (MULTI-STATE VISUAL SCRUTINY)
 
-> 👁️ **OBLIGACIÓN DE ANÁLISIS MULTI-FOTO CON `view_file`:**
-> No se permite una sola captura aislada. El Auditor debe ejecutar:
-> ```powershell
-> powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -Mode MultiStateAudit
-> ```
-> Esto genera una **Galería de Inspección de 4 Fotos Críticas**:
-> 1. **`1_overview_grid.png`:** Captura panorámica con cuadrícula `[A1]..[C3]` para ubicar componentes y validar balance general.
-> 2. **`2_sector_center.png`:** Recorte nativo 1:1 del centro de la pantalla (mira, raycast, mallas y horizonte).
-> 3. **`3_sector_ground.png`:** Recorte nativo 1:1 del suelo para **verificar empíricamente que los bloques, personajes u objetos toquen el piso real (Y=0)** y no floten en el vacío.
-> 4. **`4_sector_hud.png`:** Recorte nativo 1:1 de la interfaz inferior (hotbar, números de cantidad x64, tipografía y bordes).
-> 
-> El Agente Auditor **DEBE llamar a la herramienta `view_file` para cada una de las imágenes de la galería** y verificar que no haya glitches, desalineaciones ni pantallas vacías.
+El Auditor debe ejecutar:
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -Mode MultiStateAudit
+```
+Esto genera una **Galería de 4 Fotos Críticas**:
+1. **`1_overview_grid.png`:** Panorama general con cuadrícula de coordenadas `[A1]..[C3]`.
+2. **`2_sector_center.png`:** Recorte 1:1 del centro (mira, wireframe del bloque seleccionado y horizonte).
+3. **`3_sector_ground.png`:** Recorte 1:1 del suelo para **verificar empíricamente que los bloques toquen el piso Y=0 y que las texturas sean nítidas**.
+4. **`4_sector_hud.png`:** Recorte 1:1 del inventario y números de ítems.
 
----
-
-## 🎯 EL PRINCIPIO DE CERO BABYSITTING ("SOLUCIONAR TODO ANTES DE ENTREGAR")
-
-> 💎 **Autocorrección Interna en Bucle Cerrado:**
-> Si la prueba de arranque en vivo falla o la captura es negra:
-> 1. **El Auditor emite el rechazo internamente** con el diagnóstico exacto de `verify_runtime_boot.ps1`.
-> 2. **El Constructor repara el código en el mismo ciclo** (corrige las etiquetas `<script type="module">`, inicializa el canvas en el DOM, agrega luces y texturas de respaldo).
-> 3. **El Auditor vuelve a arrancar la aplicación y re-captura la galería.**
-> 4. El usuario **NUNCA recibe código roto ni tiene que intervenir para que la app empiece a funcionar**.
+El Auditor **DEBE abrir cada imagen con `view_file`** para verificar la calidad visual a nivel microscópico.
 
 ---
 
-## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v3.2
+## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v3.3
 
 ```mermaid
 graph TD
     User([Usuario: /goal <objetivo>]) --> Master[Gemini Master Orchestrator]
     
     subgraph "Fase 0: Mapeo de 7 Niveles"
-        Master --> UniversalPlanner["deep_planner.ps1 (7 Niveles Universales)"]
+        Master --> UniversalPlanner["deep_planner.ps1 (Cinética, Cámara & Texturas)"]
         UniversalPlanner --> Spec["SPECIFICATION.json & Contrato"]
     end
     
-    subgraph "Bucle Autónomo de Ejecución & Arranque en Vivo"
+    subgraph "Bucle Autónomo de Construcción & Verificación"
         Spec --> StateInit[milestone_tracker.ps1 -Action init]
-        StateInit --> Builder[Agente Constructor / Worker]
-        Builder --> Code[Código, Estilos, Módulos & Assets]
+        StateInit --> Builder[Constructor: Cámara Clamp, DeltaTime & NearestFilter]
         
-        Code --> LiveBoot["verify_runtime_boot.ps1 (Headless Boot & BSOD Check)"]
-        LiveBoot -- "Pantalla Negra o Syntax Error" --> AutoFix[Corrección Autónoma Inmediata]
+        Builder --> LiveBoot["verify_runtime_boot.ps1 (Arranque en Vivo & BSOD)"]
+        LiveBoot -- "Pantalla Negra o Error de Sintaxis" --> AutoFix[Corrección Autónoma Inmediata]
         AutoFix --> Builder
         
-        LiveBoot -- "Arranque Exitoso (BOOT_SUCCESS)" --> MultiVision["capture_vision.ps1 -Mode MultiStateAudit"]
-        MultiVision --> PhotoGallery["Galería de 4 Fotos 1:1 (Overview, Center, Ground, HUD)"]
-        PhotoGallery --> VisualInspection["Auditoría Visual Rigurosa con view_file"]
+        LiveBoot -- "BOOT_SUCCESS" --> MultiVision["capture_vision.ps1 -Mode MultiStateAudit"]
+        MultiVision --> PhotoGallery["Galería 1:1: Overview, Center, Ground, HUD"]
+        PhotoGallery --> VisualInspection["Auditoría Visual con view_file"]
         
-        VisualInspection --> Rubric["evaluate_rubric.ps1 -LiveBootCheck (Score >= 95)"]
-        Rubric -- "Score < 95" --> AutoFix
-        Rubric -- "Score >= 95" --> Advance[Aprobación de Hito]
+        VisualInspection --> Rubric["evaluate_rubric.ps1 (Kinetic_Asset_Integrity >= 95)"]
+        Rubric -- "Falta Clamp / DeltaTime / Texturas Borrosas" --> AutoFix
+        Rubric -- "Aprobado >= 95" --> Advance[Aprobación de Hito]
         
         Advance --> Next{¿Quedan más hitos?}
         Next -- Sí --> Builder
-        Next -- No --> EndToEnd[Verificación Final End-to-End]
+        Next -- No --> EndToEnd[Verificación Final de Punta a Punta]
     end
     
     EndToEnd --> Complete([<!-- GOAL_COMPLETE -->])
@@ -99,15 +118,20 @@ graph TD
 
 ## 📋 PROTOCOLO DE EJECUCIÓN OBLIGATORIO
 
-1. **Paso 1: Planificación Canónica (7 Niveles Universales):**
-   - Ejecuta `deep_planner.ps1` con el objetivo del usuario.
-   - Inicializa el rastreador de hitos con `milestone_tracker.ps1 -Action init`.
-2. **Paso 2: Construcción & Blindaje Pre-Arranque:**
-   - El Constructor programa asegurando compatibilidad nativa (etiquetas `<script type="module">` para ES modules, canvas añadido al DOM, sin rutas relativas rotas).
-3. **Paso 3: Verificación de Arranque en Vivo & Multi-Foto:**
-   - Ejecuta `verify_runtime_boot.ps1 -TargetDirectory <dir>`.
+1. **Paso 1: Planificación con Defensas Cinéticas y de Texturas:**
+   - Ejecuta `deep_planner.ps1`.
+   - Inicializa el estado con `milestone_tracker.ps1 -Action init`.
+2. **Paso 2: Construcción Blindada:**
+   - El Constructor implementa:
+     - Pitch clamp en la cámara ($-1.5$ a $1.5$ rad).
+     - Desplazamiento horizontal neutro (`dir.y = 0`).
+     - Física escalada con `dt = clock.getDelta()`.
+     - Texturas con `NearestFilter` y caras diferenciadas.
+     - Etiquetas `<script type="module">`.
+3. **Paso 3: Verificación de Arranque en Vivo & Auditoría Multi-Foto:**
+   - Ejecuta `verify_runtime_boot.ps1`.
    - Ejecuta `capture_vision.ps1 -Mode MultiStateAudit`.
-   - El Auditor examina cada recorte con `view_file`.
-   - Ejecuta `evaluate_rubric.ps1 -TargetPath <dir> -LiveBootCheck`.
-4. **Paso 4: Entrega Únicamente con Garantía de Funcionamiento:**
-   - Solo cuando la aplicación arranca de verdad, renderiza gráficos activos (StdDev > 10, Black < 90%) y la rúbrica es >= 95/100, se emite `<!-- GOAL_COMPLETE -->`.
+   - El Auditor inspecciona cada recorte con `view_file`.
+   - Ejecuta `evaluate_rubric.ps1 -LiveBootCheck`.
+4. **Paso 4: Entrega:**
+   - Solo cuando el juego arranca, los controles responden sin volteos de cámara, las texturas son nítidas y la rúbrica alcanza >= 95/100, se emite `<!-- GOAL_COMPLETE -->`.

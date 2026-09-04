@@ -64,13 +64,13 @@ if ($targetItem.PSIsContainer) {
 }
 
 $scores = [ordered]@{
-    "Domain_Depth_Extensibility"  = 20
-    "Presentation_Shell_UX"       = 15
-    "Performance_Resource_Hygiene"= 15
-    "Robustness_Error_Handling"   = 15
-    "Interaction_State_Sync"      = 10
-    "Functional_Completeness"     = 10
-    "Automated_Testing"           = 15
+    "Domain_Depth_Extensibility"   = 15
+    "Presentation_Shell_UX"        = 15
+    "Kinetic_Asset_Integrity"      = 15
+    "Performance_Resource_Hygiene" = 15
+    "Robustness_Error_Handling"    = 15
+    "Functional_Completeness"      = 10
+    "Automated_Testing"            = 15
 }
 
 $violations = [System.Collections.Generic.List[PSCustomObject]]::new()
@@ -287,6 +287,66 @@ if ($LiveBootCheck -and ($targetItem.PSIsContainer)) {
                     }
                 }
             } catch {}
+        }
+    }
+}
+
+# 5. Comprobación de Cinética, Cámara y Texturas (Kinetic & Asset Integrity Gate)
+$is3DOrGameOrCanvas = ($totalCodeString -match '(?i)(THREE\.|PointerLock|camera\.|controls\.|voxel|canvas|keydown|keyup)')
+
+if ($is3DOrGameOrCanvas) {
+    # A. Comprobación de Bloqueo de Cabeceo de Cámara (Evita que la cámara se invierta boca abajo)
+    $hasPitchClamp = ($totalCodeString -match '(?i)(Math\.(max|min)\s*\([^)]*(-1\.5|-Math\.PI|clamp|maxPolarAngle|minPolarAngle)|\.clamp|\bpolarAngle\b)')
+    if (-not $hasPitchClamp) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Kinetic_Asset_Integrity"
+            Penalty     = 6
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Sin limitación de cabeceo de cámara"
+            Issue       = "Fallo Crítico de Cámara: Falta limitación de ángulo vertical (Pitch Clamping). La cámara gira sin límite y se invierte de cabeza (flip upside down), arruinando la vista."
+        })
+    }
+
+    # B. Comprobación de Movimiento Direccional sin Hundimiento (dir.y = 0)
+    $hasYFlattening = ($totalCodeString -match '(?i)(direction\.y\s*=\s*0|dir\.y\s*=\s*0|moveForward|moveRight|\.setFromAxisAngle)')
+    if (-not $hasYFlattening) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Kinetic_Asset_Integrity"
+            Penalty     = 6
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Movimiento sin neutralización del eje Y"
+            Issue       = "Fallo Crítico de Movimiento: La dirección de avance no neutraliza el eje Y (dir.y = 0 o moveForward). El personaje vuela hacia arriba al mirar al cielo o se hunde al mirar al suelo."
+        })
+    }
+
+    # C. Comprobación de Física con DeltaTime (Evita velocidades erráticas por tasa de refresco)
+    $hasDeltaTime = ($totalCodeString -match '(?i)(getDelta\(\)|delta\s*\*|dt\s*\*|\*\s*delta|\*\s*dt|deltaTime)')
+    if (-not $hasDeltaTime) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Kinetic_Asset_Integrity"
+            Penalty     = 5
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Física sin DeltaTime"
+            Issue       = "Fallo Crítico de Movimiento: El desplazamiento no multiplica por DeltaTime (dt/delta). La velocidad varía de forma descontrolada según los Hz del monitor."
+        })
+    }
+
+    # D. Comprobación de Filtro de Texturas Nítidas (NearestFilter)
+    $isVoxelOrPixel = ($totalCodeString -match '(?i)(voxel|block|minecraft|pixel|tile|textureLoader|createTexture|canvasTexture)')
+    if ($isVoxelOrPixel) {
+        $hasNearestFilter = ($totalCodeString -match '(?i)(NearestFilter|image-rendering\s*:\s*pixelated|magFilter\s*=\s*THREE\.NearestFilter)')
+        if (-not $hasNearestFilter) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 6
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Texturas sin NearestFilter"
+                Issue       = "Fallo Crítico de Texturas: Texturas borrosas o sin nitidez de vóxel. Falta configurar magFilter = THREE.NearestFilter y minFilter = THREE.NearestFilter."
+            })
         }
     }
 }

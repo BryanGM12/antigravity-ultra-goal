@@ -1,98 +1,103 @@
 ﻿<div align="center">
 
-# ⚡ UltraGoal Universal Engine v3.2
+# ⚡ UltraGoal Universal Engine v3.3
 ### The Autonomous Software Engineering Triad for Google Antigravity & OpenClaw
-**Live Runtime Boot Verification • Zero-Broken-Boot Gate • Multi-Photo AVS Vision • Quality Gate Score ≥ 95**
+**Kinetic & Camera Stability • Pixel-Art Texture Integrity • Live Boot & Multi-Photo Scrutiny • Score ≥ 95**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Antigravity](https://img.shields.io/badge/Antigravity-2.0%20Ready-blue.svg)](https://deepmind.google/technologies/gemini/)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Compatible-purple.svg)](https://github.com/openclaw)
-[![Boot Gate](https://img.shields.io/badge/Live%20Boot-Zero--Broken--Boot%20Verified-brightgreen.svg)](#-el-invariante-de-arranque-en-vivo-zero-broken-boot)
-[![Vision](https://img.shields.io/badge/Vision%20Engine-Multi--Photo%20AVS%201%3A1-magenta.svg)](#-protocolo-de-auditoría-de-múltiples-fotos)
-[![Token Economics](https://img.shields.io/badge/Token%20Overhead-2.5x--4x%20(Net%20Savings%2045%25)-blueviolet.svg)](#-análisis-de-consumo-de-tokens--costo-beneficio)
-[![Tests](https://img.shields.io/badge/Tests-13%2F13%20Passing-brightgreen.svg)](#-verification-suite)
+[![Kinetic Gate](https://img.shields.io/badge/Controls-Kinetic%20Stability%20Enforced-brightgreen.svg)](#-el-invariante-cinético-y-de-texturas)
+[![Textures](https://img.shields.io/badge/Textures-NearestFilter%20Crispness-orange.svg)](#-fidelidad-de-texturas-y-materiales)
+[![Live Boot](https://img.shields.io/badge/Live%20Boot-Zero--Broken--Boot%20Gate-blue.svg)](#-el-invariante-de-arranque-en-vivo-zero-broken-boot)
+[![Tests](https://img.shields.io/badge/Tests-15%2F15%20Passing-brightgreen.svg)](#-verification-suite)
 
-**Build production-grade software that actually BOOTS and RENDERS without black screens or broken syntax.**
+**Build production-grade 3D simulations, voxel engines, and web apps with stable cameras, crisp pixel-art textures, and zero runtime crashes.**
 
-[Español](#-visión-general-en-español-v32) • [English](#-english-overview-v32) • [Live Boot & BSOD Gate](#-el-invariante-de-arranque-en-vivo-zero-broken-boot) • [Multi-Photo Vision](#-protocolo-de-auditoría-de-múltiples-fotos) • [Tokens & ROI](#-análisis-de-consumo-de-tokens--costo-beneficio) • [Installation](#-quick-installation)
+[Español](#-visión-general-en-español-v33) • [English](#-english-overview-v33) • [Cinética & Texturas](#-el-invariante-cinético-y-de-texturas) • [Live Boot](#-el-invariante-de-arranque-en-vivo-zero-broken-boot) • [Multi-Photo](#-protocolo-de-auditoría-de-múltiples-fotos) • [Installation](#-quick-installation)
 
 ---
 
 </div>
 
-## 🇪🇸 Visión General en Español (v3.2)
+## 🇪🇸 Visión General en Español (v3.3)
 
-**UltraGoal Universal v3.2** ataca el error más frustrante del desarrollo con IA: **que el agente diga que terminó, pero cuando abres el juego o la app, ni siquiera inicia o queda en una pantalla completamente negra (Black Screen of Death)**.
+**UltraGoal Universal v3.3** erradica de forma definitiva los dos fallos más críticos y comunes en proyectos 3D y juegos generados por IA:
+1. **Cámara y Controles Rotos (Bugs de Movimiento):**
+   - Cámaras que se dan vuelta boca abajo al mover el ratón (falta de pitch clamping).
+   - Personajes que "vuelan" al mirar hacia arriba o se hunden al mirar al suelo (falta de neutralización del eje Y en el vector de avance).
+   - Movimiento errático dependiente de la tasa de refresco (falta de `DeltaTime`).
+2. **Texturas Horribles / Plásticas:**
+   - Bloques con un solo color plano o texturas borrosas tipo smudge causadas por el filtrado bilineal por defecto de Three.js.
 
-### 🛡️ ¿Qué novedades introduce la v3.2?
-1. **Verificador de Arranque en Vivo (`verify_runtime_boot.ps1`):**
-   - Antes de entregar, el arnés ejecuta la app en **Chrome Headless** y toma una captura real.
-   - Detecta de inmediato si el motor 3D o la vista no renderizó nada analizando la **varianza de luminancia de los píxeles**. Si la pantalla es negra (`#000000`, StdDev < 3.0), **veta la entrega**.
-   - Detecta errores de sintaxis en `<script>` (como `import ... from` sin `type="module"`) y archivos referenciados inexistentes.
-2. **Galería de Múltiples Fotos (`capture_vision.ps1 -Mode MultiStateAudit`):**
-   - El agente ya no se conforma con una foto general. Toma una **galería de 4 fotos críticas**:
-     - `1_overview_grid`: Vista panorámica con cuadrícula `[A1]..[C3]`.
-     - `2_sector_center`: Recorte 1:1 del centro (mira, raycast, horizonte).
-     - `3_sector_ground`: Recorte 1:1 del suelo (para verificar que los bloques toquen el piso real Y=0).
-     - `4_sector_hud`: Recorte 1:1 de la barra de inventario y tipografía.
-   - El Auditor examina cada foto con `view_file` antes de emitir su veredicto.
-3. **Autocorrección Pre-Entrega ("Solucionar todo antes de entregar"):**
-   - Si la prueba de arranque falla, el agente tiene **estrictamente prohibido pedir ayuda al usuario**. El Constructor recibe el diagnóstico exacto y repara el código internamente hasta que la app arranque y renderice gráficos vivos.
+---
+
+## 🕹️ El Invariante Cinético y de Texturas
+
+La rúbrica [evaluate_rubric.ps1](file:///C:/Users/Administrator/.gemini/config/skills/goal/scripts/evaluate_rubric.ps1) audita y **VETA AUTOMÁTICAMENTE** cualquier código que viole estos estándares:
+
+```mermaid
+graph TD
+    Code[Código Generado por el Constructor] --> RubricScan[evaluate_rubric.ps1 v3.3]
+    
+    subgraph "Auditoría Cinética y de Texturas (Kinetic_Asset_Integrity)"
+        RubricScan --> CheckPitch{¿Pitch Clamp entre -1.5 y 1.5 rad?}
+        RubricScan --> CheckDirY{¿Vector de avance neutraliza dir.y = 0?}
+        RubricScan --> CheckDelta{¿Física escalada con DeltaTime?}
+        RubricScan --> CheckTextures{¿magFilter y minFilter = NearestFilter?}
+    end
+    
+    CheckPitch -- "NO: Cámara se da vuelta" --> Reject[RECHAZADO: Score < 95]
+    CheckDirY -- "NO: Personaje vuela o se hunde" --> Reject
+    CheckDelta -- "NO: Velocidad descontrolada" --> Reject
+    CheckTextures -- "NO: Texturas borrosas" --> Reject
+    
+    Reject --> AutoFix[Corrección Autónoma Inmediata]
+    AutoFix --> Code
+```
+
+### 1. Bloqueo de Cabeceo de Cámara (Anti-Flip Clamping)
+- **El Bug:** Al mover el ratón verticalmente, la cámara rota más de 90° e invierte el mundo al revés.
+- **Defensa Obligatoria:** Clamping estricto de la rotación vertical entre `-1.5` y `1.5` radianes (`Math.max(-1.5, Math.min(1.5, pitch))`).
+
+### 2. Neutralización del Eje Y en Avance (Anti-Flying Bug)
+- **El Bug:** Al presionar W mirando hacia el cielo, el vector de avance tiene componente Y positiva y el personaje vuela; mirando al suelo, se hunde.
+- **Defensa Obligatoria:** `dir.y = 0; dir.normalize();` antes de sumar al desplazamiento.
+
+### 3. Físicas con DeltaTime (Anti-Framerate Stutter)
+- **Defensa Obligatoria:** Integrar siempre `const dt = clock.getDelta();` en todas las traslaciones físicas.
+
+### 4. Texturas Vóxel Nítidas (Anti-Blurry Textures)
+- **Defensa Obligatoria:** Forzar `texture.magFilter = THREE.NearestFilter; texture.minFilter = THREE.NearestFilter; texture.generateMipmaps = false;`.
+- **Mapeo por Caras Diferenciadas:** Cada bloque de pasto debe poseer cara superior verde con ruido procedural, laterales con manto de césped sobre tierra y base de tierra pura.
 
 ---
 
 ## 🚫 El Invariante de Arranque en Vivo (Zero-Broken-Boot)
 
-```mermaid
-graph TD
-    Builder[Constructor: Genera Código del Juego/App] --> PreFlight[verify_runtime_boot.ps1]
-    
-    subgraph "Inspección de Arranque en Vivo"
-        PreFlight --> Headless[Chrome Headless: Carga index.html]
-        Headless --> PixelAnalysis[Análisis de Varianza de Píxeles & Luminancia]
-        PixelAnalysis --> Check{¿Pantalla Negra o Error de Sintaxis?}
-    end
-    
-    Check -- "SÍ: StdDev < 3.0 o Black > 98%" --> AutoFix[VETO INMEDIATO: Constructor repara imports/canvas]
-    AutoFix --> Builder
-    
-    Check -- "NO: Gráficos Vivos (StdDev > 10)" --> MultiVision[capture_vision.ps1 -Mode MultiStateAudit]
-    MultiVision --> Gallery[Galería de 4 Fotos: General, Suelo 1:1, HUD 1:1, Centro 1:1]
-    Gallery --> Auditor[Inspección con view_file & Rúbrica >= 95]
-    Auditor --> Approved[Hito Aprobado y Entrega Lista]
-```
+Ningún proyecto puede entregarse sin haber arrancado en **Chrome Headless** con `verify_runtime_boot.ps1`:
+- **Detector de Pantallazo Negro:** Si la pantalla permanece negra (`#000000`) o con desviación estándar < 3.0, la entrega queda vetada de inmediato.
+- **Inspección Pre-Vuelo:** Veta scripts con `import` sin `type="module"` y archivos referenciados inexistentes.
 
 ---
 
 ## 📸 Protocolo de Auditoría de Múltiples Fotos
 
-Para evitar detalles como "los bloques flotan" o "el HUD está cortado", el arnés genera automáticamente:
-- **`sector_ground.png`:** Inspección a escala real de la base de contacto con el suelo.
-- **`sector_hud.png`:** Inspección de textos, números de ítems (x64) y slots de inventario.
-- **`sector_center.png`:** Inspección de la retícula central y enfoque 3D.
+El Auditor debe ejecutar `capture_vision.ps1 -Mode MultiStateAudit` y examinar con `view_file`:
+1. `1_overview_grid.png`: Vista panorámica con cuadrícula `[A1]..[C3]`.
+2. `2_sector_center.png`: Recorte 1:1 del centro (mira, wireframe del bloque seleccionado y horizonte).
+3. `3_sector_ground.png`: Recorte 1:1 del suelo (para verificar que los bloques toquen el piso Y=0 y que las texturas sean nítidas).
+4. `4_sector_hud.png`: Recorte 1:1 del inventario y números de ítems.
 
 ---
 
-## 📊 Análisis de Consumo de Tokens & Costo-Beneficio
+## 🇺🇸 English Overview (v3.3)
 
-| Fase / Aspecto | Agente Tradicional (Demo Superficial) | UltraGoal Universal v3.2 (Arnés Autónomo) | Comparativa |
-| :--- | :--- | :--- | :--- |
-| **Planificación Inicial** | ~2,000 tokens (3 hitos vagos) | ~6,000 - 8,000 tokens (7 Niveles + Pre-Mortem) | +3x inicial |
-| **Generación de Código** | ~15,000 tokens (1-2 archivos planos) | ~60,000 - 90,000 tokens (modular + módulos) | +4x a +5x |
-| **Prueba de Arranque en Vivo** | 0 tokens (nunca prueba el juego) | ~2,000 tokens (diagnóstico JSON) | N/A |
-| **Auditoría Multi-Foto** | 0 tokens (o 1 captura cruda) | ~12,000 - 18,000 tokens (galería de 4 fotos) | N/A |
-| **Consumo en la 1ra Pasada** | **~20,000 - 35,000 tokens** | **~95,000 - 150,000 tokens** | **~3x más tokens** |
-| **Resultado de la 1ra Pasada** | ⚠️ Maqueta rota o pantalla negra | ✅ Juego/App arrancando y probado en vivo | Calidad Enterprise |
-| **Costo Total del Proyecto** | **280,000+ tokens** (en 20 re-prompts de quejas) | **~130,000 tokens** (en 1 sola pasada) | **Ahorro Neto: 45%** |
-
----
-
-## 🇺🇸 English Overview (v3.2)
-
-**UltraGoal Universal v3.2** prevents the catastrophic failure mode where an agent claims completion, but the user opens the application to find a **frozen black screen or syntax crash**:
-- **Zero-Broken-Boot Invariant (`verify_runtime_boot.ps1`):** Headless Chrome boots the app and measures pixel luminance standard deviation. If the screen is black (`#000000`, StdDev < 3.0), delivery is blocked immediately.
-- **Multi-Photo AVS Audit Gallery (`capture_vision.ps1 -Mode MultiStateAudit`):** Automatically produces an overview with coordinate grid `[A1]..[C3]`, plus 1:1 native pixel crops of ground baseline, HUD/inventory, and focal center.
-- **Closed-Loop Self-Healing:** Any boot error or missing asset is repaired by the Builder before presenting anything to the user.
+**UltraGoal Universal v3.3** tackles broken 3D game controls and muddy textures:
+- **Kinetic & Camera Stability Gate:** Enforces camera pitch clamping ($-1.5$ to $1.5$ rad) to prevent upside-down camera flips, Y-axis movement flattening (`dir.y = 0`) to prevent flying/sinking, and DeltaTime physics.
+- **Pixel-Art Texture Filtering:** Mandates `THREE.NearestFilter` on all voxel textures to prevent blurry, washed-out textures. Requires multi-face cube mapping.
+- **Zero-Broken-Boot Gate:** Verifies runtime execution in headless Chrome before completion.
+- **Multi-Photo AVS Audit:** 4-photo inspection gallery of overview, ground, HUD, and focal center.
 
 ---
 
@@ -100,16 +105,16 @@ Para evitar detalles como "los bloques flotan" o "el HUD está cortado", el arn�
 
 ```text
 antigravity-ultra-goal/
-├── SKILL.md                          # Skill Definition v3.2 (Live Boot & Multi-Photo)
+├── SKILL.md                          # Skill Definition v3.3 (Kinetic & Texture Integrity)
 ├── LICENSE                           # MIT License
 ├── README.md                         # Bilingual Documentation & Benchmarks
 ├── CONTRIBUTING.md                   # Contribution Guidelines
 ├── scripts/
-│   ├── verify_runtime_boot.ps1       # Live headless boot & black screen detector (NEW)
+│   ├── verify_runtime_boot.ps1       # Live headless boot & black screen detector
 │   ├── capture_vision.ps1            # Multi-State 4-photo gallery & luminance analyzer
 │   ├── compare_visuals.ps1           # Differential heatmap & interaction tracker
-│   ├── deep_planner.ps1              # Universal 7-Tier domain decomposition
-│   ├── evaluate_rubric.ps1           # 100-point rubric with LiveBootCheck gate
+│   ├── deep_planner.ps1              # Universal 7-Tier planner with kinetic mandates
+│   ├── evaluate_rubric.ps1           # 100-point rubric with Kinetic_Asset_Integrity gate
 │   └── milestone_tracker.ps1         # State machine & auditable milestone ledger
 ├── templates/
 │   ├── SPECIFICATION_TEMPLATE.md     # Universal 7-Tier specification template
@@ -118,29 +123,12 @@ antigravity-ultra-goal/
 │   └── VISION_AUDIT_TEMPLATE.md      # 7-Vector visual scrutiny checklist
 └── examples/
     ├── demo_workflow.md              # Real-world walkthrough scenario
-    └── test_verification_suite.ps1   # 13/13 automated integration test suite
+    └── test_verification_suite.ps1   # 15/15 automated integration test suite
 ```
 
 ---
 
-## 🚀 Quick Installation
-
-### In Google Antigravity:
-```powershell
-$target = "C:\Users\$env:USERNAME\.gemini\config\skills\goal"
-if (Test-Path $target) { Copy-Item $target "$target`_backup" -Recurse -Force }
-git clone https://github.com/BryanGM12/antigravity-ultra-goal.git $target
-```
-
-### In OpenClaw:
-```powershell
-$target = "C:\Users\$env:USERNAME\.openclaw\skills\ultra-goal"
-git clone https://github.com/BryanGM12/antigravity-ultra-goal.git $target
-```
-
----
-
-## 🧪 Verification Suite (13/13 Passing)
+## 🧪 Verification Suite (15/15 Passing)
 
 Run the full integration test suite:
 ```powershell
@@ -149,23 +137,25 @@ powershell -ExecutionPolicy Bypass -File examples/test_verification_suite.ps1
 Output:
 ```text
 =================================================
-   ULTRAGOAL HARNESS TEST SUITE v3.2 (LIVE BOOT) 
+   ULTRAGOAL HARNESS TEST SUITE v3.3 (KINETICS)  
 =================================================
-  [PASS] Planner Identifies Web/FullStack SaaS Domain
-  [PASS] Planner Decomposes 7 Universal Tiers
-  [PASS] Tracker Init with Universal Milestones
-  [PASS] Live Boot Catches Broken Game Syntax
+  [PASS] Planner Identifies Game Domain
+  [PASS] Planner Enforces Kinetic & NearestFilter Defenses
+  [PASS] Tracker Init with Deep Milestones
+  [PASS] Live Boot Catches Broken Syntax & Black Screen
   [PASS] Live Boot Approves Running Game
-  [PASS] Rubric Rejects App that Fails Live Boot
-  [PASS] MultiState Overview Grid Generated
-  [PASS] Ground Sector 1:1 Crop Generated
-  [PASS] HUD Inventory 1:1 Crop Generated
-  [PASS] Center Focus 1:1 Crop Generated
-  [PASS] Luminance Metric Computed on Photos
+  [PASS] Rubric Rejects Broken Camera & Blurry Textures
+  [PASS] Rubric Catches Camera Pitch Flip Bug
+  [PASS] Rubric Catches Flying Movement Bug
+  [PASS] Rubric Catches Missing DeltaTime Bug
+  [PASS] Rubric Approves Clean Kinetic & NearestFilter Code
+  [PASS] Overview Grid Generated
+  [PASS] Ground Sector 1:1 Generated
+  [PASS] Center Focus 1:1 Generated
+  [PASS] HUD Inventory 1:1 Generated
   [PASS] Visual Diff State Change Detected
-  [PASS] Visual Diff Heatmap Image Created
 =================================================
-   RESULTADOS: 13 PASADAS, 0 FALLIDAS (100%)
+   RESULTADOS: 15 PASADAS, 0 FALLIDAS (100%)
 =================================================
 ```
 

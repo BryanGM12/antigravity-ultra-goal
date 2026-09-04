@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal Universal Deep Domain Planner v3.1 (First-Principles Software Architecture)
 .DESCRIPTION
@@ -70,11 +70,13 @@ $universalTiers = [ordered]@{
         Name = "Capa 3: Interacción Fluida, Eventos & Transiciones de Estado"
         Mandatory_Requirements = @(
             "Gestión reactiva de eventos (arrastrar y soltar / drag-and-drop, selección interactiva, filtrado en tiempo real, atajos de teclado)",
+            "Cinética y Controles Robustos: En entornos 3D/juegos, limitación estricta de cabeceo de cámara (Pitch Clamp entre -1.5 y 1.5 rad para evitar volteos), avance horizontal neutralizado (dir.y = 0 para no volar al mirar arriba) y desplazamiento escalado con DeltaTime (clock.getDelta())",
             "Sincronización bidireccional perfecta: cuando un elemento se mueve o edita, todos los observadores y componentes visuales reflejan el cambio instantáneamente",
             "Micro-interacciones pulidas: hover states, animaciones de transición suaves y prevención de desalineaciones"
         )
         Anti_Toy_Defenses = @(
-            "Defensa contra la trampa de la maqueta: Cada acción de usuario (clic, arrastre, tecla) debe disparar una mutación visible verificable mediante diffs."
+            "Defensa contra la trampa de la maqueta: Cada acción de usuario debe disparar una mutación visible verificable mediante diffs.",
+            "Defensa contra cámara/movimiento roto: Prohibido movimiento dependiente de FPS sin DeltaTime o cámaras que se invierten boca abajo al mover el ratón."
         )
     }
 
@@ -82,11 +84,13 @@ $universalTiers = [ordered]@{
         Name = "Capa 4: Amplitud de Contenido & Catálogo (Zero-Paucity Invariant)"
         Mandatory_Requirements = @(
             "Diversidad sustancial de datos, materiales o componentes: mínimo 8 a 15 variantes reales con propiedades diferenciadas",
+            "Fidelidad Visual y Filtrado de Texturas: En motores 3D/vóxel, las texturas deben usar NearestFilter (magFilter y minFilter = THREE.NearestFilter) para máxima nitidez de píxel art (prohibido texturas borrosas o cubos de un solo color plástico sin caras diferenciadas)",
             "Generación o carga de datos sintéticos realistas para verificar escalabilidad",
             "Sistemas auxiliares activos (ej. agentes de fondo, mobs con IA, tablas paginadas, procesamiento en lotes)"
         )
         Anti_Toy_Defenses = @(
-            "Defensa contra la trampa de la maqueta: Queda prohibido entregar proyectos con solo 2 o 3 ítems de ejemplo. Debe incluirse un catálogo rico y representativo."
+            "Defensa contra la trampa de la maqueta: Queda prohibido entregar proyectos con solo 2 o 3 ítems de ejemplo. Debe incluirse un catálogo rico y representativo.",
+            "Defensa contra texturas horribles: Prohibido usar filtros lineales difusos en juegos vóxel o bloques sin distinción de caras (arriba, abajo, laterales)."
         )
     }
 
@@ -152,7 +156,7 @@ $specObj = [PSCustomObject]@{
     tiers                   = $universalTiers
     anti_toy_defenses       = $defenses
     recommended_milestones  = ($milestonesList -join "; ")
-    autonomous_rule         = "AUTODETERMINACIÓN TOTAL: El agente NO debe pedir feedback al usuario para corregir defectos. Debe ejecutar el bucle Constructor-Auditor internamente hasta superar el umbral de 95/100 en todas las dimensiones."
+    autonomous_rule         = "AUTODETERMINACION TOTAL: El agente NO debe pedir feedback al usuario para corregir defectos. Debe ejecutar el bucle Constructor-Auditor internamente hasta superar el umbral de 95/100 en todas las dimensiones."
 }
 
 $json = $specObj | ConvertTo-Json -Depth 10
