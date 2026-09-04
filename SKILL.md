@@ -1,110 +1,100 @@
 ﻿---
 name: goal
-description: "Motor Autónomo Perfeccionista Universal v3.3 (UltraGoal Engine - Kinetic, Texture & Boot Integrity). Erradica los proyectos que no inician, cámaras rotas que se dan vuelta, movimientos con bugs que vuelan al mirar arriba y texturas borrosas o plásticas. Incorpora Barrera Cinética & Texturas (Kinetic_Asset_Integrity), Verificación de Arranque en Vivo (verify_runtime_boot.ps1), Detección de Pantalla Negra (BSOD Gate), Galería Multi-Foto (MultiStateAudit) y Rúbrica >= 95/100."
+description: "Motor Autónomo Perfeccionista Universal v4.0 (UltraGoal Engine - OmniThink Hyper-Cognition & 5-Phase Rigorous Test Harness). Obliga a la IA a 'pensar en todo pero absolutamente todo' mediante Razonamiento por Primeros Principios (omnithink_analyzer.ps1), 4 Perspectivas Críticas (Arquitecto, Red Team, Cinética, Rendimiento), Verificación de Arranque en Vivo, Barrera de Pantallazo Negro, Estabilidad de Cámara y Rúbrica >= 95/100."
 author: BryanGM12 & Antigravity Autonomous Systems
-version: 3.3.0
+version: 4.0.0
 metadata:
   category: orchestration
-  skills: ["goal", "kinetic-integrity", "texture-filtering", "live-runtime-boot", "dead-screen-gate", "multi-photo-vision", "quality-gate"]
+  skills: ["goal", "omnithink-hypercognition", "system2-thinking", "rigorous-test-harness", "kinetic-integrity", "live-boot-verifier", "multi-photo-vision", "quality-gate"]
 ---
 
-# ⚡ UltraGoal Universal Engine v3.3
-### Kinetic & Camera Stability • Pixel-Art Texture Integrity • Live Boot & Multi-Photo Scrutiny
+# ⚡ UltraGoal Universal Engine v4.0
+### OmniThink System 2 Hyper-Cognition • 5-Phase Rigorous Test Harness • Zero-Broken-Delivery
 
-Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v3.3**. Esta versión erradica de forma definitiva los dos fallos más comunes reportados en simulaciones y juegos 3D:
-1. **Cámara y Movimiento Rotos:** Cámaras que se dan vuelta boca abajo al mover el ratón, personajes que vuelan al mirar hacia arriba o se hunden al mirar al suelo, y velocidad errática sin `DeltaTime`.
-2. **Texturas Horribles / Plásticas:** Bloques de un solo color plano o texturas borrosas tipo smudge causadas por la falta de filtrado `NearestFilter`.
-
----
-
-## 🕹️ EL INVARIANTE CINÉTICO Y DE TEXTURAS (ZERO-BROKEN-CONTROLS)
-
-> 🛑 **REGLAS NO NEGOCIABLES DE MOVIMIENTO, CÁMARA Y TEXTURAS:**
-> En todo proyecto interactivo, el Constructor DEBE cumplir obligatoriamente con los siguientes estándares de ingeniería. La rúbrica [evaluate_rubric.ps1](file:///C:/Users/Administrator/.gemini/config/skills/goal/scripts/evaluate_rubric.ps1) audita y **VETA AUTOMÁTICAMENTE** cualquier código que viole estas reglas:
-
-### 1. Bloqueo de Cabeceo de Cámara (Anti-Flip Clamping)
-- **El Bug:** Al mover el ratón hacia arriba o abajo, la cámara sobrepasa los 90° e invierte la vista del mundo de cabeza.
-- **La Solución Obligatoria:** Limitar el cabeceo vertical con `Math.max(-1.5, Math.min(1.5, pitch))` o `THREE.MathUtils.clamp(camera.rotation.x, -Math.PI / 2.05, Math.PI / 2.05)`.
-
-### 2. Neutralización del Eje Y en Avance (Anti-Flying Bug)
-- **El Bug:** Al presionar W mirando hacia el cielo, el vector de avance apunta hacia arriba y el personaje "vuela" sin control; o al mirar al suelo, se hunde en la tierra.
-- **La Solución Obligatoria:** Extraer el vector de vista del jugador, pero **neutralizar el componente Y a cero** antes de normalizar y aplicar velocidad:
-  ```javascript
-  camera.getWorldDirection(moveDirection);
-  moveDirection.y = 0;
-  moveDirection.normalize();
-  camera.position.addScaledVector(moveDirection, speed * dt);
-  ```
-
-### 3. Físicas con DeltaTime (Anti-Framerate Stutter)
-- **El Bug:** Desplazamientos fijos (`pos.x += speed`) que hacen que el juego vaya 3 veces más rápido en pantallas de 144Hz que en 60Hz.
-- **La Solución Obligatoria:** Integrar siempre el delta de tiempo: `const dt = clock.getDelta();` y escalar cada traslación y salto por `dt`.
-
-### 4. Texturas Vóxel Nítidas (Anti-Blurry Textures)
-- **El Bug:** Texturas de 16x16 generadas en canvas o cargadas que se ven como manchas borrosas porque Three.js usa por defecto filtrado bilineal (`LinearFilter`).
-- **La Solución Obligatoria:** Forzar filtrado de vecino más cercano en todas las texturas de vóxel:
-  ```javascript
-  texture.magFilter = THREE.NearestFilter;
-  texture.minFilter = THREE.NearestFilter;
-  texture.generateMipmaps = false;
-  ```
-- **Mapeo por Caras Diferenciadas:** Prohibido usar el mismo color para todo el cubo. El césped debe tener cara superior verde con ruido procedural, laterales de tierra con capa de hierba y cara inferior de tierra pura.
+Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v4.0**. Esta versión incorpora la máxima exigencia de razonamiento autónomo: **obliga a la IA a pensar en todo pero absolutamente todo antes de programar, anticipando cada posible fallo mediante 4 perspectivas analíticas y ejecutando una batería de pruebas de 5 fases sumamente rigurosa**.
 
 ---
 
-## 🚫 EL INVARIANTE DE ARRANQUE EN VIVO (ZERO-BROKEN-BOOT)
+## 🧠 FASE 0: OMNITHINK HYPER-COGNITION (PENSAR EN TODO POR PRIMEROS PRINCIPIOS)
 
-Queda **TERMINANTEMENTE PROHIBIDO** entregar una meta sin antes verificar que arranque en un entorno real con:
+> 🛑 **PROHIBICIÓN ABSOLUTA DE PROGRAMACIÓN IMPULSIVA:**
+> Queda **TERMINANTEMENTE PROHIBIDO** saltar a programar sin haber ejecutado primero el motor de hiper-cognición:
+> ```powershell
+> powershell -ExecutionPolicy Bypass -File scripts/omnithink_analyzer.ps1 -GoalObjective "<Objetivo del Usuario>" -OutputPath "HYPER_COGNITION_SPEC.json"
+> ```
+> 
+> El Orquestador analiza la meta de forma obligatoria desde **4 Perspectivas Críticas**:
+> 1. **Arquitecto de Sistemas:** Define máquinas de estados finitos (Init, Loading, Ready, Active, Paused, Error), separación estricta de la vista y contratos de datos inmutables.
+> 2. **Red Team Adversarial:** ¿Dónde fallará si tomamos atajos? Anticipa scripts rotos sin `type="module"`, pantallazos negros (BSOD), caídas por 404 de assets, teclas pegadas en `window.blur` y fugas de memoria.
+> 3. **Especialista en Ergonomía Visual & Cinética:** Exige limitación de cabeceo de cámara (-1.5 a 1.5 rad), avance horizontal neutralizado (`dir.y = 0`), física escalada con `DeltaTime`, texturas con `NearestFilter` y mapeo por caras.
+> 4. **Perfilador de Rendimiento:** Fija un presupuesto de 60 FPS estables sin pausas de GC, CERO allocations en bucles `animate()` y tiempos de respuesta < 100ms.
+
+---
+
+## 🧪 LA BATERÍA DE PRUEBAS RIGUROSA DE 5 FASES (`rigorous_test_harness.ps1`)
+
+Antes de entregar cualquier hito o meta final, el agente **DEBE ejecutar obligatoriamente**:
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/verify_runtime_boot.ps1 -TargetDirectory "<Ruta_del_Proyecto>"
+powershell -ExecutionPolicy Bypass -File scripts/rigorous_test_harness.ps1 -TargetDirectory "<Ruta_del_Proyecto>"
 ```
-- **Detección de Pantallazo Negro:** Si el 98%+ de la pantalla es negra (`#000000`) o la desviación estándar de luminancia es menor a 3.0, **la entrega queda vetada de inmediato**.
-- **Inspección Pre-Vuelo:** Veta scripts con `import` sin `type="module"` y archivos referenciados inexistentes.
+
+El arnés somete al proyecto a **5 Fases Inquebrantables de Prueba**:
+
+| Fase de Prueba | Qué Audita Empíricamente | Criterio de Rechazo Inmediato |
+| :--- | :--- | :--- |
+| **Fase 1: Estático & AST** | Sintaxis, compatibilidad ES modules y ausencia total de stubs | Declaraciones `import` sin `type="module"`, TODOs, FIXMEs o catch vacíos. |
+| **Fase 2: Arranque en Vivo** | Ejecución real en Chrome Headless (`verify_runtime_boot.ps1`) | Si la app no arranca, crashea o genera errores de consola. |
+| **Fase 3: Escrutinio Visual** | Varianza de luminancia de píxeles y filtrado de texturas | Desviación estándar < 3.0 (pantallazo negro/blanco) o texturas vóxel sin `NearestFilter`. |
+| **Fase 4: Estabilidad Cinética** | Cámara de 360°, vector de avance y escala temporal | Cámara sin pitch clamp (se da vuelta), vector de avance volador o falta de `DeltaTime`. |
+| **Fase 5: Pruebas Automatizadas** | Ejecución de suite de tests con aserciones formales | Exit code distinto de 0 o menos de 3 aserciones verificadas. |
+
+> 🛑 **Veto Inapelable:** Si cualquiera de las 5 fases reporta un fallo, el veredicto es **`RIGOROUS_TEST_FAILED`** y el proyecto queda bloqueado. El Constructor debe resolver el defecto internamente sin molestar al usuario.
 
 ---
 
-## 📸 PROTOCOLO DE AUDITORÍA MULTI-FOTO (MULTI-STATE VISUAL SCRUTINY)
+## 📸 PROTOCOLO DE AUDITORÍA MULTI-FOTO CON `view_file`
 
 El Auditor debe ejecutar:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/capture_vision.ps1 -Mode MultiStateAudit
 ```
-Esto genera una **Galería de 4 Fotos Críticas**:
-1. **`1_overview_grid.png`:** Panorama general con cuadrícula de coordenadas `[A1]..[C3]`.
+Genera la **Galería de 4 Fotos Críticas**:
+1. **`1_overview_grid.png`:** Panorama general con cuadrícula `[A1]..[C3]`.
 2. **`2_sector_center.png`:** Recorte 1:1 del centro (mira, wireframe del bloque seleccionado y horizonte).
-3. **`3_sector_ground.png`:** Recorte 1:1 del suelo para **verificar empíricamente que los bloques toquen el piso Y=0 y que las texturas sean nítidas**.
+3. **`3_sector_ground.png`:** Recorte 1:1 del suelo (para verificar que los bloques toquen el piso Y=0 y que las texturas sean nítidas).
 4. **`4_sector_hud.png`:** Recorte 1:1 del inventario y números de ítems.
 
-El Auditor **DEBE abrir cada imagen con `view_file`** para verificar la calidad visual a nivel microscópico.
+El Auditor **DEBE examinar cada imagen con la herramienta `view_file`** para certificar la excelencia visual.
 
 ---
 
-## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v3.3
+## 🏛️ ARQUITECTURA DE LA TRÍADA MULTI-AGENTE v4.0
 
 ```mermaid
 graph TD
     User([Usuario: /goal <objetivo>]) --> Master[Gemini Master Orchestrator]
     
-    subgraph "Fase 0: Mapeo de 7 Niveles"
-        Master --> UniversalPlanner["deep_planner.ps1 (Cinética, Cámara & Texturas)"]
-        UniversalPlanner --> Spec["SPECIFICATION.json & Contrato"]
+    subgraph "Fase 0: OmniThink Hyper-Cognition (Pensar en TODO)"
+        Master --> OmniThink["omnithink_analyzer.ps1 (4 Perspectivas: Architect, Red Team, UX, Perf)"]
+        OmniThink --> DeepPlan["deep_planner.ps1 (7 Niveles Universales)"]
+        DeepPlan --> Spec["HYPER_COGNITION_SPEC.json & Contrato"]
     end
     
-    subgraph "Bucle Autónomo de Construcción & Verificación"
+    subgraph "Bucle Autónomo de Construcción & Batería de Pruebas"
         Spec --> StateInit[milestone_tracker.ps1 -Action init]
         StateInit --> Builder[Constructor: Cámara Clamp, DeltaTime & NearestFilter]
         
-        Builder --> LiveBoot["verify_runtime_boot.ps1 (Arranque en Vivo & BSOD)"]
-        LiveBoot -- "Pantalla Negra o Error de Sintaxis" --> AutoFix[Corrección Autónoma Inmediata]
+        Builder --> Harness["rigorous_test_harness.ps1 (Las 5 Fases de Prueba)"]
+        Harness -- "RIGOROUS_TEST_FAILED (Defectos detectados)" --> AutoFix[Corrección Autónoma Inmediata]
         AutoFix --> Builder
         
-        LiveBoot -- "BOOT_SUCCESS" --> MultiVision["capture_vision.ps1 -Mode MultiStateAudit"]
-        MultiVision --> PhotoGallery["Galería 1:1: Overview, Center, Ground, HUD"]
-        PhotoGallery --> VisualInspection["Auditoría Visual con view_file"]
+        Harness -- "RIGOROUS_TEST_PASSED (0 Defectos)" --> MultiVision["capture_vision.ps1 -Mode MultiStateAudit"]
+        MultiVision --> PhotoGallery["Galería de 4 Fotos 1:1"]
+        PhotoGallery --> VisualAudit["Inspección Visual con view_file"]
         
-        VisualInspection --> Rubric["evaluate_rubric.ps1 (Kinetic_Asset_Integrity >= 95)"]
-        Rubric -- "Falta Clamp / DeltaTime / Texturas Borrosas" --> AutoFix
-        Rubric -- "Aprobado >= 95" --> Advance[Aprobación de Hito]
+        VisualAudit --> RubricGate["evaluate_rubric.ps1 (Score >= 95/100)"]
+        RubricGate -- "Score < 95" --> AutoFix
+        RubricGate -- "Aprobado >= 95" --> Advance[Firma y Avance de Hito]
         
         Advance --> Next{¿Quedan más hitos?}
         Next -- Sí --> Builder
@@ -116,22 +106,16 @@ graph TD
 
 ---
 
-## 📋 PROTOCOLO DE EJECUCIÓN OBLIGATORIO
+## 📋 PROTOCOLO DE EJECUCIÓN AUTÓNOMA
 
-1. **Paso 1: Planificación con Defensas Cinéticas y de Texturas:**
-   - Ejecuta `deep_planner.ps1`.
+1. **Paso 1: OmniThink (Hiper-Cognición):**
+   - Corre `omnithink_analyzer.ps1` y `deep_planner.ps1`.
    - Inicializa el estado con `milestone_tracker.ps1 -Action init`.
-2. **Paso 2: Construcción Blindada:**
-   - El Constructor implementa:
-     - Pitch clamp en la cámara ($-1.5$ a $1.5$ rad).
-     - Desplazamiento horizontal neutro (`dir.y = 0`).
-     - Física escalada con `dt = clock.getDelta()`.
-     - Texturas con `NearestFilter` y caras diferenciadas.
-     - Etiquetas `<script type="module">`.
-3. **Paso 3: Verificación de Arranque en Vivo & Auditoría Multi-Foto:**
-   - Ejecuta `verify_runtime_boot.ps1`.
-   - Ejecuta `capture_vision.ps1 -Mode MultiStateAudit`.
-   - El Auditor inspecciona cada recorte con `view_file`.
-   - Ejecuta `evaluate_rubric.ps1 -LiveBootCheck`.
-4. **Paso 4: Entrega:**
-   - Solo cuando el juego arranca, los controles responden sin volteos de cámara, las texturas son nítidas y la rúbrica alcanza >= 95/100, se emite `<!-- GOAL_COMPLETE -->`.
+2. **Paso 2: Construcción Defensiva:**
+   - El Constructor implementa resolviendo los vectores de fallo identificados por el Red Team.
+3. **Paso 3: Batería Rigurosa de 5 Fases & Multi-Foto:**
+   - Corre `rigorous_test_harness.ps1`. Si falla cualquier fase, auto-repara en el mismo ciclo.
+   - Corre `capture_vision.ps1 -Mode MultiStateAudit` e inspecciona con `view_file`.
+   - Corre `evaluate_rubric.ps1 -LiveBootCheck`.
+4. **Paso 4: Certificación:**
+   - Solo cuando el arnés de 5 fases obtiene `RIGOROUS_TEST_PASSED` y la rúbrica alcanza >= 95/100, se emite `<!-- GOAL_COMPLETE -->`.

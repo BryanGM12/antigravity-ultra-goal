@@ -1,4 +1,4 @@
-﻿# OS files
+# OS files
 Thumbs.db
 Desktop.ini
 .DS_Store
@@ -6,6 +6,7 @@ Desktop.ini
 # Temporary outputs & caches
 *.tmp
 *.log
+*REPORT.json
 test_state.json
 temp/
 coverage/

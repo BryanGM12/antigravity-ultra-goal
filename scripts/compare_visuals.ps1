@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal Multi-Frame Visual Differencing Engine (compare_visuals.ps1)
 .DESCRIPTION
@@ -56,6 +56,10 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 }
 
 try {
+    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Drawing.Common -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Drawing.Primitives -ErrorAction SilentlyContinue
+    $refAssemblies = @([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.Location } | Select-Object -ExpandProperty Location)
     Add-Type -TypeDefinition @"
 using System;
 using System.Drawing;
@@ -168,7 +172,7 @@ public class UltraImageDiff {
         }
     }
 }
-"@ -ReferencedAssemblies System.Drawing -ErrorAction SilentlyContinue
+"@ -ReferencedAssemblies $refAssemblies -ErrorAction SilentlyContinue
 
     $rawJson = [UltraImageDiff]::AnalyzeDiff($ImageA, $ImageB, $OutputPath, $Tolerance, $MinExpectedDelta)
     $obj = $rawJson | ConvertFrom-Json

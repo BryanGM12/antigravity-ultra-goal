@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal Vision Capture Engine v3.2 (Multi-State Audit & Dead-Screen Gate)
 .DESCRIPTION
@@ -43,6 +43,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 try {
+    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Drawing.Common -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Drawing.Primitives -ErrorAction SilentlyContinue
+    Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+    $refAssemblies = @([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.Location } | Select-Object -ExpandProperty Location)
     Add-Type -TypeDefinition @"
 using System;
 using System.Drawing;
@@ -135,7 +140,7 @@ public class UltraVisionCaptureV3 {
         return crop;
     }
 }
-"@ -ReferencedAssemblies "System.Drawing"
+"@ -ReferencedAssemblies $refAssemblies
 } catch {
     # El tipo ya puede estar cargado en la sesión
 }
@@ -225,9 +230,25 @@ if (-not [string]::IsNullOrWhiteSpace($ProcessName)) {
 }
 
 if ($targetHWnd -eq [IntPtr]::Zero -or $targetWidth -le 0 -or $targetHeight -le 0) {
-    $screen = [System.Windows.Forms.Screen]::PrimaryScreen
-    $targetWidth = $screen.Bounds.Width
-    $targetHeight = $screen.Bounds.Height
+    try {
+        Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+        $screen = [System.Windows.Forms.Screen]::PrimaryScreen
+        if ($screen) {
+            $targetWidth = $screen.Bounds.Width
+            $targetHeight = $screen.Bounds.Height
+        }
+    } catch {}
+
+    if ($targetWidth -le 0 -or $targetHeight -le 0) {
+        try {
+            Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern int GetSystemMetrics(int nIndex);' -Name "User32Metrics" -Namespace "Win32" -ErrorAction SilentlyContinue
+            $targetWidth = [Win32.User32Metrics]::GetSystemMetrics(0)
+            $targetHeight = [Win32.User32Metrics]::GetSystemMetrics(1)
+        } catch {}
+    }
+
+    if ($targetWidth -le 0) { $targetWidth = 1920 }
+    if ($targetHeight -le 0) { $targetHeight = 1080 }
 }
 
 function Get-RawFrame {
