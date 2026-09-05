@@ -215,27 +215,54 @@ if ($isUIOrWebOrGame) {
         })
     }
 
-    # Comprobación de Reporte de Inspección Visual por la IA
+    # Comprobación de Reporte de Inspección Visual por la IA (Hiper-Estrictez V-HEX7)
     $visualReportFile = Join-Path $TargetPath "VISUAL_INSPECTION_REPORT.md"
     $hasVisualReport = (Test-Path $visualReportFile)
-    if (-not $hasVisualReport -and ($targetItem.PSIsContainer)) {
+    $repText = ""
+    if ($hasVisualReport) {
+        $repText = Get-Content -LiteralPath $visualReportFile -Raw -ErrorAction SilentlyContinue
+    } elseif ($targetItem.PSIsContainer) {
         $walkthrough = Join-Path $TargetPath "walkthrough.md"
         if (Test-Path $walkthrough) {
             $wtContent = Get-Content -LiteralPath $walkthrough -Raw -ErrorAction SilentlyContinue
-            if ($wtContent -match '(?i)(inspecci[oó]n visual|captura|screenshot|an[aá]lisis visual)') {
+            if ($wtContent -match '(?i)(inspecci[oó]n visual|an[aá]lisis visual|V-HEX7)') {
                 $hasVisualReport = $true
+                $repText = $wtContent
             }
         }
     }
+
     if (-not $hasVisualReport) {
         $violations.Add([PSCustomObject]@{
             Category    = "Presentation_Shell_UX"
-            Penalty     = 6
+            Penalty     = 12
             File        = $TargetPath
             Line        = 0
             Snippet     = "Sin análisis visual multimodal"
-            Issue       = "Fallo de Auditoría Visual: La IA no analizó visualmente el proyecto. Debe llamar a view_file sobre las capturas generadas y registrar su análisis visual en VISUAL_INSPECTION_REPORT.md."
+            Issue       = "Fallo Fatal de Auditoría Visual: La IA no analizó visualmente el proyecto. Debe llamar a view_file sobre las capturas generadas y registrar su análisis visual en VISUAL_INSPECTION_REPORT.md bajo el protocolo V-HEX7."
         })
+    } else {
+        # Validar rigor del reporte existente
+        $vCount = 0
+        if ($repText -match '(?i)(geometr[ií]a|malla|mesh|primitiv|tobera|pieza|v[oó]xel)') { $vCount++ }
+        if ($repText -match '(?i)(material|pbr|ilumina|luz|luces|sombra|shading|specular)') { $vCount++ }
+        if ($repText -match '(?i)(textur|filtr|nearest|albedo|pixel)') { $vCount++ }
+        if ($repText -match '(?i)(suelo|ground|y\s*=\s*0|contacto|apoyo|colisi[oó]n)') { $vCount++ }
+        if ($repText -match '(?i)(fondo|skybox|cielo|estrell|atm[oó]sfer|espacio)') { $vCount++ }
+        if ($repText -match '(?i)(hud|ui|interfaz|legibil|tipograf|fuente|contraste)') { $vCount++ }
+        if ($repText -match '(?i)(part[ií]cul|vfx|humo|fuego|chispa|polvo|din[aá]mic)') { $vCount++ }
+
+        $hasQuad = ($repText -match '(?i)(\[[A-C][1-3]\]|cuadrante|sector_center|sector_ground)')
+        if ($vCount -lt 4 -or -not $hasQuad) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Presentation_Shell_UX"
+                Penalty     = 8
+                File        = $visualReportFile
+                Line        = 0
+                Snippet     = "Reporte visual superficial (V-HEX7 insuficiente)"
+                Issue       = "Auditoría Visual Débil: El reporte no cumple el protocolo V-HEX7. Cubrió solo $vCount vectores o carece de referencias a cuadrantes taxonómicos ([A1]..[C3])."
+            })
+        }
     }
 }
 

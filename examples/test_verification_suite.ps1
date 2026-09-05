@@ -120,14 +120,50 @@ Set-Content (Join-Path $harnessCleanDir "game.test.js") -Value "test('engine', (
 $harnessNoVision = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
 Assert-Test -TestName "Harness Rejects Visual Project Lacking VISUAL_INSPECTION_REPORT.md" -Condition ($harnessNoVision.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessNoVision.fatal_defects | Where-Object { $_ -match "Auditoría Visual Incompleta" }).Count -gt 0))
 
-# Ahora agregar el reporte de inspección visual realizado por la IA
+# Probar que el arnés rechaza reporte superficial sin cuadrantes ni vectores V-HEX7
 Set-Content (Join-Path $harnessCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
-# Visual Inspection Report
-- Geometria y modelos 3D: Terreno voxel con bloques correctamente alineados en Y=0.
-- Iluminacion y materiales: Luz direccional con sombreado y contraste adecuado.
-- Nitidez de texturas: NearestFilter verificado, cero difuminado bilineal.
-- Interfaz y HUD: Menu principal de inicio y rutas de navegacion visibles.
-- Veredicto visual: Aprobado al 100% sin defectos graficos.
+# Visual Report
+- Todo se ve bien y no hay errores graficos.
+- Funciona correctamente en pantalla.
+"@
+$harnessSuperficial = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Superficial Visual Report Lacking V-HEX7 Vectors & Quadrants" -Condition ($harnessSuperficial.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessSuperficial.fatal_defects | Where-Object { $_ -match "V-HEX7" }).Count -gt 0))
+
+# Probar que el arnés rechaza reporte con puntuación insuficiente (< 90/100)
+Set-Content (Join-Path $harnessCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
+# Reporte V-HEX7 con Calificacion Baja por Defectos Visuales
+En el cuadrante [B2] se observa la geometria voxel con algunos bloques que presentan aristas irregulares y caras mal orientadas.
+En el sector [B1] la iluminacion direccional genera sombras difusas que no alcanzan el contraste deseado para una experiencia inmersiva.
+En el sector [B2] las texturas emplean nearest filter pero se detectan desalineaciones menores en los bordes de los bloques.
+En el sector [C2] el contacto en el suelo Y=0 y las colisiones presentan ligeras discrepancias de altura.
+En el sector [A1] el fondo skybox con horizonte carece de gradiente atmosferico detallado.
+En el sector [C3] el hud de la interfaz y la tipografia muestran bajo contraste con el fondo.
+Puntuacion de Fidelidad Visual: 75/100
+"@
+$harnessLowScore = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Visual Report with Score Below 90" -Condition ($harnessLowScore.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessLowScore.fatal_defects | Where-Object { $_ -match "insuficiente" }).Count -gt 0))
+
+# Ahora agregar el reporte de inspección visual exhaustivo V-HEX7
+Set-Content (Join-Path $harnessCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
+# Reporte de Inspeccion Visual Hiper-Estricto V-HEX7
+
+## 1. Capturas Inspeccionadas con view_file
+- Vista general con cuadricula taxonomica [A1]..[C3]
+- Recortes 1:1 de sector_center y sector_ground
+
+## 2. Auditoria Detallada por Vectores V-HEX7
+- [GEOMETRIA Y MALLA]: En el cuadrante [B2] se observa la estructura de bloques voxel perfectamente alineada, sin colisiones deformadas ni primitivas rotas.
+- [MATERIALES E ILUMINACION PBR]: En los sectores [B1] y [B2] la luz direccional proyecta sombras claras sobre el terreno, generando un gradiente especular nitido con rango dinamico de contraste superior.
+- [NITIDEZ DE TEXTURAS]: En el sector [B2] las texturas presentan magFilter y minFilter configurados con THREE.NearestFilter, eliminando por completo el difuminado bilineal y garantizando nitidez pixelada.
+- [CONTACTO CON SUELO Y COLISIONES]: En el sector [C2] los bloques y entidades hacen contacto exacto sobre el plano base en el eje Y=0, sin clipeo con el suelo ni flotacion anomala.
+- [FONDO Y SKYBOX]: En el sector [A1] y [A3] el horizonte muestra un gradiente atmosferico limpio con cielo celeste azul continuo.
+- [HUD Y LEGIBILIDAD]: En el cuadrante [C3] la barra de interfaz y el menu de inicio exhiben tipografia limpia con alto contraste sobre el fondo.
+- [PARTICULAS Y DINAMISMO]: En el sector [C2] se aprecian efectos visuales reactivos sin pausas de renderizado.
+
+## 3. Veredicto Final
+- Vectores evaluados: 7 de 7 cumplidos con rigor.
+- Puntuacion de Fidelidad Visual: 98/100
+- Dictamen: APROBADO_ESTRICTO
 "@
 
 $harnessResClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
@@ -146,6 +182,7 @@ Assert-Test -TestName "Overview Grid Generated" -Condition (Test-Path $capPath)
 Assert-Test -TestName "Ground Sector 1:1 Generated" -Condition (Test-Path $auditOutput.photo_gallery."3_sector_ground".path)
 Assert-Test -TestName "Center Focus 1:1 Generated" -Condition (Test-Path $auditOutput.photo_gallery."2_sector_center".path)
 Assert-Test -TestName "HUD Inventory 1:1 Generated" -Condition (Test-Path $auditOutput.photo_gallery."4_sector_hud".path)
+Assert-Test -TestName "MultiStateAudit Produces Strict Quantitative Metrics" -Condition ($null -ne $auditOutput.strict_vision_metrics -and $auditOutput.strict_vision_metrics.color_entropy_clusters -ge 1)
 
 # --- TEST 8: Visual Differencing & State Tracking ---
 Write-Host "`n[Test 8] Evaluando Visual Differencing Engine..." -ForegroundColor Yellow
@@ -232,12 +269,24 @@ Set-Content (Join-Path $rocketCleanDir "main.js") -Value $cleanRocketCode
 Set-Content (Join-Path $rocketCleanDir "index.html") -Value "<html><body style='margin:0;background:#050510;'><h1 style='color:white;'>Apollo Mission Simulation</h1><div style='height:300px;background:linear-gradient(to top, #ff6600, #000);'></div></body></html>"
 Set-Content (Join-Path $rocketCleanDir "rocket.test.js") -Value "test('mission', () => { expect(1).toBe(1); expect(2).toBe(2); expect(3).toBe(3); });"
 Set-Content (Join-Path $rocketCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
-# Visual Inspection Report
-- Geometria y modelos 3D: Cohete Saturn V multi-etapa con toberas y capsula dorada PBR.
-- Iluminacion y materiales: Fondo espacial con estrellas y fulgor de motor emissive.
-- Audio: ProceduralAudioEngine inicializado con Web Audio API.
-- Camara: CinematicFlightDirector con suavizado lerp verificado.
-- Veredicto visual: Aprobado al 100% sin defectos graficos.
+# Reporte de Inspeccion Visual Hiper-Estricto V-HEX7 (Mision Lunar)
+
+## 1. Capturas Inspeccionadas con view_file
+- Vista general con cuadricula taxonomica [A1]..[C3]
+- Recortes 1:1 de sector_center (cohete) y sector_ground (plataforma)
+
+## 2. Auditoria Detallada por Vectores V-HEX7
+- [GEOMETRIA Y JERARQUIA DE MALLA]: En el cuadrante [B2] se observa el cohete Saturn V modelado como una jerarquia compuesta con primera etapa cilíndrica de fuselaje, anillo interetapas y toberas detalladas.
+- [MATERIALES, SHADERS E ILUMINACION PBR]: En los sectores [B1] y [B2] los materiales PBR reflejan la iluminacion direccional solar con roughness calibrado y fulgor emissive en los motores.
+- [NITIDEZ DE TEXTURAS Y SHADERS]: En el sector [B2] las lineas y marcas de fuselaje presentan nitidez sin distorsion de texturas.
+- [INTEGRACION Y APOYO]: En el sector [C2] la tobera de escape reposa con precision sobre la base de lanzamiento en Y=0 con sombra arrojada visible.
+- [COMPOSICION DE FONDO Y SKYBOX]: En [A1] y [A3] el fondo espacial negro integra gradientes cosmicos y campo estelar.
+- [HUD Y TELEMETRIA]: En el cuadrante [C3] los indicadores de estado y velocidad son legibles con buen contraste.
+- [PARTICULAS Y DINAMISMO VFX]: En el sector [C2] se proyecta fulgor continuo de empuje con dinamismo.
+
+## 3. Veredicto Final
+- Puntuacion de Fidelidad Visual: 96/100
+- Dictamen: APROBADO_ESTRICTO
 "@
 
 $harnessRocketClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $rocketCleanDir | ConvertFrom-Json

@@ -69,21 +69,37 @@ El arnés somete al proyecto a **5 Fases Inquebrantables de Prueba**:
 
 ---
 
-## 👁️ EL MANDATO INNEGOCIABLE DE ANÁLISIS VISUAL MULTIMODAL (PROHIBIDO ENTREGAR A CIEGAS)
+## 👁️ PROTOCOLO DE HIPER-ESTRICTEZ VISUAL V-HEX7 (PROHIBIDO APROBAR A LA LIGERA)
 
-> 🛑 **PROHIBIDO ASUMIR QUE ALGO FUNCIONA SIN HABERLO VISTO:**
-> La IA cuenta con capacidades de visión multimodal de última generación. Queda **TERMINANTEMENTE PROHIBIDO** entregar o declarar completado cualquier proyecto con interfaz visual, 3D, juego, simulación, animación o dashboard sin haber inspeccionado visualmente el renderizado real con sus propios ojos a través de `view_file`.
+> 🛑 **MANDATO DE HIPER-ESTRICTEZ ADVERSARIAL (PROHIBIDO ENTREGAR A CIEGAS):**
+> La complacencia visual está terminantemente prohibida. La IA cuenta con capacidades de visión multimodal de última generación. Queda **ESTRICTAMENTE PROHIBIDO** entregar o declarar completado cualquier proyecto con interfaz visual, canvas 3D, juego, simulación, animación o dashboard sin haber inspeccionado visualmente el renderizado real con sus propios ojos a través de `view_file` bajo el **Protocolo V-HEX7**.
+>
+> ⚠️ **El Arnés (`rigorous_test_harness.ps1` Fase 3) vetará y reprobará automáticamente el proyecto si:**
+> - El reporte visual carece de análisis técnico en al menos 4 de los 7 vectores V-HEX7.
+> - No cita cuadrantes espaciales de la cuadrícula taxonómica (`[A1]`..`[C3]`).
+> - Contiene frases complacientes ("todo se ve bien", "funciona correctamente", "se ve bien") sin justificación técnica.
+> - La escena presenta pantalla muerta, monocromo plano (>92% del mismo color) o iluminación plana unlit (<15 niveles dinámicos).
+> - La puntuación final otorgada es inferior a **90/100**.
 
-### Los 4 Pasos Obligatorios de Visión:
-1. **Paso 1 (Captura Automática):** Ejecutar `capture_vision.ps1 -TargetDirectory "<Ruta_del_Proyecto>"` o `rigorous_test_harness.ps1`. El motor renderiza la aplicación en Chrome Headless a 1280x720 y genera la galería de 4 sectores.
-2. **Paso 2 (Invocación Innegociable de `view_file`):** La IA **DEBE LLAMAR OBLIGATORIAMENTE A LA HERRAMIENTA `view_file`** con la ruta absoluta de `boot_rendered_screenshot.png` o `1_overview_grid.png` y `2_sector_center.png`.
-3. **Paso 3 (Análisis Visual Crítico):** La IA debe examinar la imagen recibida en su contexto multimodal y evaluar:
-   - ¿Qué modelos 3D o figuras geométricas se observan? (¿Son mallas compuestas detalladas o cilindros planos?).
-   - ¿Los materiales PBR y la iluminación tienen contraste, sombras y fulgor de motor o se ven apagados?
-   - ¿Las texturas se ven nítidas (NearestFilter) o borrosas?
-   - ¿El HUD o interfaz de usuario está centrado, con botones y texto legible?
-   - ¿Se observa algún glitch, z-fighting, pantalla negra o elemento flotando fuera de lugar?
-4. **Paso 4 (Documentación en `VISUAL_INSPECTION_REPORT.md`):** Guardar el reporte de inspección visual en `<Ruta_del_Proyecto>\VISUAL_INSPECTION_REPORT.md`. Tanto `rigorous_test_harness.ps1` (Fase 3) como `evaluate_rubric.ps1` **VETARÁN DE INMEDIATO** cualquier proyecto que no contenga este reporte con al menos 3 observaciones críticas.
+### Los 4 Pasos Obligatorios de Visión Hiper-Estricta:
+1. **Paso 1 (Captura Automática y Métricas Cuantitativas):** Ejecutar `capture_vision.ps1 -TargetDirectory "<Ruta_del_Proyecto>"`. El motor renderiza en Chrome Headless a 1280x720, calcula varianza de luminancia, entropía cromática, densidad de gradientes de bordes y genera la galería de 4 sectores:
+   - `1_overview_grid`: Fotograma completo con cuadrícula taxonómica `[A1]`..`[C3]`.
+   - `2_sector_center`: Recorte 1:1 nativo del foco central (mira, cohete, avatar o bloque principal).
+   - `3_sector_ground`: Recorte 1:1 del apoyo en suelo (física Y=0, sombras y colisiones).
+   - `4_sector_hud`: Recorte 1:1 del HUD/inventario (hotbars, barras de estado y contadores).
+2. **Paso 2 (Invocación Innegociable de `view_file`):** La IA **DEBE LLAMAR OBLIGATORIAMENTE A LA HERRAMIENTA `view_file`** con la ruta absoluta de `1_overview_grid` y `2_sector_center` (o `boot_rendered_screenshot.png`).
+3. **Paso 3 (Escrutinio Adversarial bajo los 7 Vectores V-HEX7):**
+   - **V1 - Geometría y Jerarquía de Malla:** ¿Es una primitiva básica simple (cubo o cilindro plano) o un modelo jerárquico compuesto de alta fidelidad? Detalla componentes visibles (toque de toberas, aletas, alerones, articulaciones, biseles).
+   - **V2 - Materiales, Shaders e Iluminación PBR:** ¿Hay fuentes de luz direccionales, brillos especulares, gradientes de luz y sombras proyectadas, o se aprecia un sombreado plano (MeshBasicMaterial/unlit)?
+   - **V3 - Nitidez de Texturas y Filtrado:** ¿Las texturas son nítidas (NearestFilter en voxel, mapas de normales/albedo en modelos realistas)? ¿Hay texturas borrosas, UVs deformadas o texturas magenta faltantes (`#ff00ff`)?
+   - **V4 - Integración con Suelo (Y=0) y Sombras de Contacto:** ¿El avatar, vehículo o bloques se apoyan con precisión sobre el plano Y=0 o flotan en el aire / se clipean contra el suelo? ¿Se proyecta sombra de contacto (ambient occlusion)?
+   - **V5 - Composición de Fondo y Skybox:** ¿El fondo es un color plano estático o cuenta con skybox, domo celeste, estrellas, niebla volumétrica o gradiente atmosférico?
+   - **V6 - HUD, Tipografía y Legibilidad:** ¿El texto de la interfaz y contadores tienen suficiente contraste y nitidez frente al fondo dinámico? ¿Los iconos de hotbar/inventario están alineados y definidos?
+   - **V7 - Efectos Visuales Dinámicos y Partículas (VFX):** ¿Existen partículas dinámicas (humo, fuego de propulsión, chispas, polvo o estelas) o la escena carece de dinamismo visual?
+4. **Paso 4 (Documentación Rigurosa en `VISUAL_INSPECTION_REPORT.md`):** Redactar `<Ruta_del_Proyecto>\VISUAL_INSPECTION_REPORT.md` basándose en la plantilla oficial `templates/STRICT_VISUAL_INSPECTION_TEMPLATE.md`. Debe incluir citas a cuadrantes taxonómicos (`[A1]`..`[C3]`), análisis técnico profundo (mínimo 100 palabras) y la declaración obligatoria:
+   ```text
+   Puntuación de Fidelidad Visual: 95/100
+   ```
 
 ---
 

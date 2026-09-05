@@ -153,37 +153,92 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
     $stepX = [Math]::Max(1, [int]($w / 32))
     $stepY = [Math]::Max(1, [int]($h / 32))
     $samples = [System.Collections.Generic.List[double]]::new()
+    $colorBuckets = @{}
+    $edgeDeltas = [System.Collections.Generic.List[double]]::new()
     $blackCount = 0
     $whiteCount = 0
+    $minLum = 255.0
+    $maxLum = 0.0
 
-    for ($x = 0; $x -lt $w; $x += $stepX) {
-        for ($y = 0; $y -lt $h; $y += $stepY) {
+    $limitX = [Math]::Max(1, $w - $stepX)
+    $limitY = [Math]::Max(1, $h - $stepY)
+
+    for ($x = 0; $x -lt $limitX; $x += $stepX) {
+        for ($y = 0; $y -lt $limitY; $y += $stepY) {
             $pixel = $bmp.GetPixel($x, $y)
             $lum = 0.299 * $pixel.R + 0.587 * $pixel.G + 0.114 * $pixel.B
             $samples.Add($lum)
             if ($lum -lt 5) { $blackCount++ }
             if ($lum -gt 250) { $whiteCount++ }
+            if ($lum -lt $minLum) { $minLum = $lum }
+            if ($lum -gt $maxLum) { $maxLum = $lum }
+
+            # Cubeta de color cuantizada (4 bits por canal, escala 0..15)
+            $bucketKey = "$([int]($pixel.R / 16))_$([int]($pixel.G / 16))_$([int]($pixel.B / 16))"
+            if ($colorBuckets.ContainsKey($bucketKey)) {
+                $colorBuckets[$bucketKey]++
+            } else {
+                $colorBuckets[$bucketKey] = 1
+            }
+
+            # Magnitud de gradiente de bordes en alta frecuencia con vecinos adyacentes
+            $pRight = $bmp.GetPixel($x + $stepX, $y)
+            $pDown = $bmp.GetPixel($x, $y + $stepY)
+            $lumRight = 0.299 * $pRight.R + 0.587 * $pRight.G + 0.114 * $pRight.B
+            $lumDown = 0.299 * $pDown.R + 0.587 * $pDown.G + 0.114 * $pDown.B
+            $grad = [Math]::Abs($lumRight - $lum) + [Math]::Abs($lumDown - $lum)
+            $edgeDeltas.Add($grad)
         }
     }
 
-    $sum = 0
+    $count = $samples.Count
+    if ($count -eq 0) { $count = 1 }
+    $sum = 0.0
     foreach ($s in $samples) { $sum += $s }
-    $mean = if ($samples.Count -gt 0) { $sum / $samples.Count } else { 0 }
+    $mean = $sum / $count
     
-    $varSum = 0
+    $varSum = 0.0
     foreach ($s in $samples) { $varSum += [Math]::Pow($s - $mean, 2) }
-    $stdDev = if ($samples.Count -gt 0) { [Math]::Sqrt($varSum / $samples.Count) } else { 0 }
-    $blackPct = if ($samples.Count -gt 0) { ($blackCount / $samples.Count) * 100 } else { 0 }
-    $whitePct = if ($samples.Count -gt 0) { ($whiteCount / $samples.Count) * 100 } else { 0 }
+    $stdDev = [Math]::Sqrt($varSum / $count)
+    
+    $gradSum = 0.0
+    foreach ($g in $edgeDeltas) { $gradSum += $g }
+    $avgEdgeGrad = if ($edgeDeltas.Count -gt 0) { $gradSum / $edgeDeltas.Count } else { 0.0 }
+
+    $blackPct = ($blackCount / $count) * 100.0
+    $whitePct = ($whiteCount / $count) * 100.0
+    $dynRange = [Math]::Max(0.0, $maxLum - $minLum)
+
+    $uniqueColors = $colorBuckets.Keys.Count
+    $maxBucketCount = 0
+    foreach ($k in $colorBuckets.Keys) {
+        if ($colorBuckets[$k] -gt $maxBucketCount) {
+            $maxBucketCount = $colorBuckets[$k]
+        }
+    }
+    $maxColorDominancePct = ($maxBucketCount / $count) * 100.0
 
     $isDead = ($stdDev -lt 3.0) -or ($blackPct -gt 98.0) -or ($whitePct -gt 98.0)
+    # Si la escena no está muerta pero tiene <= 2 colores y >90% de dominio, es un monocromo plano sin textura
+    $isFlatMonochrome = ($uniqueColors -le 2) -and ($maxColorDominancePct -gt 92.0) -and (-not $isDead)
+    # Si el rango dinámico de luz es mínimo, no hay luces ni sombras
+    $isUnlit = ($dynRange -lt 15.0) -and (-not $isDead)
+    # Si la variación de bordes es casi nula, falta detalle o textura
+    $lacksDetail = ($avgEdgeGrad -lt 1.0) -and (-not $isDead)
 
     return [PSCustomObject]@{
-        mean_luminance   = [Math]::Round($mean, 2)
-        std_deviation    = [Math]::Round($stdDev, 2)
-        black_percentage = [Math]::Round($blackPct, 1)
-        white_percentage = [Math]::Round($whitePct, 1)
-        is_dead_or_blank = $isDead
+        mean_luminance          = [Math]::Round($mean, 2)
+        std_deviation           = [Math]::Round($stdDev, 2)
+        black_percentage        = [Math]::Round($blackPct, 1)
+        white_percentage        = [Math]::Round($whitePct, 1)
+        dynamic_range           = [Math]::Round($dynRange, 1)
+        unique_color_clusters   = $uniqueColors
+        max_color_dominance_pct = [Math]::Round($maxColorDominancePct, 1)
+        avg_edge_gradient       = [Math]::Round($avgEdgeGrad, 2)
+        is_dead_or_blank        = $isDead
+        is_flat_monochrome      = $isFlatMonochrome
+        is_unlit_scene          = $isUnlit
+        lacks_texture_detail    = $lacksDetail
     }
 }
 
@@ -391,23 +446,49 @@ $deadWarning = if ($hasDeadScreen) {
     "PANTALLA ACTIVA: Graficos vivos detectados con varianza de luminancia normal ($($mainLum.std_deviation))."
 }
 
+# Auditoría de Hiper-Estrictez Visual Cuantitativa
+$strictDefects = [System.Collections.Generic.List[string]]::new()
+if ($mainLum.is_dead_or_blank) {
+    $strictDefects.Add("PANTALLA_MUERTA: Varianza de luminancia nula o pantalla negra/blanca en su totalidad.")
+}
+if ($mainLum.is_flat_monochrome) {
+    $strictDefects.Add("MONOCROMO_PLANO: Escena dominada por un solo color plano sin texturas, degradados ni variedad cromatica.")
+}
+if ($mainLum.is_unlit_scene) {
+    $strictDefects.Add("ESCENA_SIN_ILUMINACION: Rango dinamico menor a 15 niveles. Falta modelo de luces direccionales, brillos especulares o sombras.")
+}
+$centerStat = $gallery["2_sector_center"].luminance_stat
+if ($centerStat -and $centerStat.lacks_texture_detail) {
+    $strictDefects.Add("SECTOR_CENTRAL_SIN_DETALLE: Variacion de bordes en alta frecuencia casi nula. Posible figura geometrica plana o primitiva sin biseles ni textura.")
+}
+
+$strictVerdict = if ($strictDefects.Count -eq 0) { "STRICT_METRICS_PASSED" } else { "STRICT_METRICS_FAILED" }
+
 $result = [PSCustomObject]@{
-    status              = "ok"
-    mode                = $Mode
-    primary_screenshot  = $OutputPath
-    width               = $targetWidth
-    height              = $targetHeight
-    dead_screen_detected= $hasDeadScreen
-    visual_verdict      = $deadWarning
-    photo_gallery       = $gallery
-    instructions        = "La IA DEBE abrir las imagenes de la galeria con la herramienta view_file para inspeccionar visualmente la interfaz y los graficos."
+    status                 = "ok"
+    mode                   = $Mode
+    primary_screenshot     = $OutputPath
+    width                  = $targetWidth
+    height                 = $targetHeight
+    dead_screen_detected   = $hasDeadScreen
+    visual_verdict         = $deadWarning
+    photo_gallery          = $gallery
+    strict_vision_metrics  = [PSCustomObject]@{
+        verdict                 = $strictVerdict
+        defects_detected        = $strictDefects
+        color_entropy_clusters  = $mainLum.unique_color_clusters
+        max_color_dominance_pct = $mainLum.max_color_dominance_pct
+        dynamic_range           = $mainLum.dynamic_range
+        avg_edge_gradient       = $mainLum.avg_edge_gradient
+    }
+    instructions           = "La IA DEBE abrir las imagenes de la galeria con la herramienta view_file para inspeccionar visualmente la interfaz y los graficos bajo el Protocolo V-HEX7."
     action_required_for_ai = @(
-        "PASO 1 OBLIGATORIO: Invoca view_file con AbsolutePath = '$OutputPath' para ver la captura general con cuadricula [A1]..[C3].",
-        "PASO 2 OBLIGATORIO: Invoca view_file con AbsolutePath = '$pathCenter' para examinar el modelo 3D o contenido central 1:1.",
-        "PASO 3 OBLIGATORIO: Realiza el analisis visual multimodal detallando modelos, iluminacion, texturas e interfaz.",
-        "PASO 4 OBLIGATORIO: Registra tus observaciones en 'VISUAL_INSPECTION_REPORT.md' para certificar la meta."
+        "PASO 1 OBLIGATORIO: Invoca view_file con AbsolutePath = '$OutputPath' para ver la captura general con cuadricula taxonómica [A1]..[C3].",
+        "PASO 2 OBLIGATORIO: Invoca view_file con AbsolutePath = '$pathCenter' para auditar el modelo 3D o foco central 1:1 (mallas compuestas, shaders PBR y biseles).",
+        "PASO 3 OBLIGATORIO: Invoca view_file con AbsolutePath = '$pathGround' para auditar el sector suelo 1:1 (apoyo en Y=0, sombras de contacto y colisiones).",
+        "PASO 4 OBLIGATORIO: Redacta 'VISUAL_INSPECTION_REPORT.md' aplicando el PROTOCOLO HIPER-ESTRICTO V-HEX7 (7 vectores obligatorios, citas a cuadrantes [A1]..[C3], sin frases complacientes y puntuacion >= 90/100)."
     )
-    captured_at         = (Get-Date -Format "o")
+    captured_at            = (Get-Date -Format "o")
 }
 
 Write-Output ($result | ConvertTo-Json -Depth 5)
