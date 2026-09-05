@@ -171,7 +171,13 @@ public class UltraImageDiff {
     }
 }
 "@
-        Add-Type -TypeDefinition $typeDefinition -ReferencedAssemblies "System.Drawing"
+        $refs = @("System.Drawing")
+        if ($PSVersionTable.PSEdition -eq 'Core') {
+            $refs = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { 
+                -not [string]::IsNullOrWhiteSpace($_.Location) 
+            } | ForEach-Object { $_.Location } | Select-Object -Unique
+        }
+        Add-Type -TypeDefinition $typeDefinition -ReferencedAssemblies $refs
     }
 
     $rawJson = [UltraImageDiff]::AnalyzeDiff($ImageA, $ImageB, $OutputPath, $Tolerance, $MinExpectedDelta)

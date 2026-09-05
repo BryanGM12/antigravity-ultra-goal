@@ -1,17 +1,17 @@
 ---
 name: goal
-description: "Motor Autónomo Perfeccionista Universal v5.0 (UltraGoal Engine - OmniThink 5-Perspective Hyper-Cognition, Asset & Web Resource Orchestrator, Procedural Web Audio Synthesis, Cinematic Flight Director & 5-Phase Rigorous Test Harness). Obliga a la IA a 'pensar en todo pero absolutamente todo' mediante Razonamiento por Primeros Principios (omnithink_analyzer.ps1), búsqueda y aprovisionamiento de assets de alta fidelidad (asset_orchestrator.ps1), síntesis de sonido Web Audio API sin enlaces rotos, transiciones cinemáticas suaves, Verificación de Arranque en Vivo y Rúbrica >= 95/100."
+description: "Motor Autónomo Perfeccionista Universal v5.3.0 (UltraGoal Engine - OmniThink 5-Perspective Hyper-Cognition, Escrutinio Empírico de Imágenes Sintéticas & V-HEX7, Detección de Congelamiento, Asset & Web Resource Orchestrator, Procedural Web Audio Synthesis, Cinematic Flight Director & 5-Phase Rigorous Test Harness). Obliga a la IA a 'pensar en todo pero absolutamente todo' mediante Razonamiento por Primeros Principios (omnithink_analyzer.ps1), búsqueda y aprovisionamiento de assets de alta fidelidad (asset_orchestrator.ps1), síntesis de sonido Web Audio API sin enlaces rotos, transiciones cinemáticas suaves, Verificación de Arranque en Vivo, Escrutinio Visual Hiper-Estricto y Rúbrica >= 95/100."
 author: BryanGM12 & Antigravity Autonomous Systems
-version: 5.0.0
+version: 5.3.0
 metadata:
   category: orchestration
-  skills: ["goal", "omnithink-hypercognition", "asset-orchestrator", "procedural-audio", "cinematic-flight-director", "rigorous-test-harness", "kinetic-integrity", "live-boot-verifier", "multi-photo-vision", "quality-gate"]
+  skills: ["goal", "omnithink-hypercognition", "asset-orchestrator", "procedural-audio", "cinematic-flight-director", "rigorous-test-harness", "kinetic-integrity", "live-boot-verifier", "multi-photo-vision", "synthetic-vision-scrutiny", "quality-gate"]
 ---
 
-# ⚡ UltraGoal Universal Engine v5.0
-### OmniThink System 2 Hyper-Cognition • Asset & Sensory Orchestrator • Procedural Web Audio • Cinematic Director • 5-Phase Rigorous Test Harness
+# ⚡ UltraGoal Universal Engine v5.3.0
+### OmniThink System 2 Hyper-Cognition • Synthetic Image Scrutiny & V-HEX7 • Asset & Sensory Orchestrator • Procedural Web Audio • Cinematic Director • 5-Phase Rigorous Test Harness
 
-Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v5.0**. Esta versión incorpora la máxima exigencia de razonamiento autónomo y producción multimedia: **obliga a la IA a pensar en todo pero absolutamente todo antes de programar, obtener recursos visuales/sonoros de alta fidelidad, erradicar modelos 3D primitivos y ejecutar una batería de pruebas de 5 fases sumamente rigurosa**.
+Cuando el usuario invoca `/goal <objetivo>`, se activa **UltraGoal Universal v5.3.0**. Esta versión incorpora la máxima exigencia de razonamiento autónomo y producción multimedia: **obliga a la IA a pensar en todo pero absolutamente todo antes de programar, auditar empíricamente las imágenes descartando pantallas negras, monocromos planos, escenas unlit o congelamientos, obtener recursos visuales/sonoros de alta fidelidad, erradicar modelos 3D primitivos y ejecutar una batería de pruebas de 5 fases sumamente rigurosa**.
 
 ---
 

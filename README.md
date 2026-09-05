@@ -1,35 +1,39 @@
 <div align="center">
 
-# ⚡ UltraGoal Universal Engine v5.2.0
+# ⚡ UltraGoal Universal Engine v5.3.0
 ### The Autonomous Software Engineering Triad for Google Antigravity & OpenClaw
-**OmniThink 5-Perspective Hyper-Cognition • V-HEX7 Hyper-Strict Visual Audit • Asset & Sensory Orchestrator • Procedural Web Audio • 5-Phase Test Harness**
+**OmniThink 5-Perspective Hyper-Cognition • Synthetic Image Scrutiny & V-HEX7 • Asset & Sensory Orchestrator • Procedural Web Audio • 5-Phase Test Harness**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Antigravity](https://img.shields.io/badge/Antigravity-2.0%20Ready-blue.svg)](https://deepmind.google/technologies/gemini/)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-Compatible-purple.svg)](https://github.com/openclaw)
 [![Cognition](https://img.shields.io/badge/Hyper--Cognition-OmniThink%205--Perspective-red.svg)](#-fase-0-omnithink-hyper-cognition-5-perspectivas)
-[![Vision](https://img.shields.io/badge/Vision-V--HEX7%20Hyper--Strict-purple.svg)](#-protocolo-de-hiper-estrictez-visual-v-hex7-v520)
+[![Vision](https://img.shields.io/badge/Vision-Synthetic%20Image%20Scrutiny%20%26%20V--HEX7-purple.svg)](#-escrutinio-empírico-de-imágenes-sintéticas-y-protocolo-v-hex7-v530)
 [![Assets](https://img.shields.io/badge/Assets-NASA%20%26%20Procedural%20PBR-blueviolet.svg)](#-orquestador-de-assets-y-paisaje-sonoro)
 [![Audio](https://img.shields.io/badge/Audio-Procedural%20Web%20Audio-orange.svg)](#-motor-de-audio-procedural)
 [![Harness](https://img.shields.io/badge/Test%20Harness-5--Phase%20Rigorous-brightgreen.svg)](#-la-batería-de-pruebas-rigurosa-de-5-fases)
-[![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passing-brightgreen.svg)](#-verification-suite-2727-passing)
+[![Tests](https://img.shields.io/badge/Tests-61%2F61%20Passing-brightgreen.svg)](#-verification-suite-6161-passing)
 
-**Autonomous engineering harness that "thinks through absolutely everything" before coding, enforces hyper-strict multimodal visual inspection via V-HEX7 & computer vision metrics, sources high-fidelity assets, synthesizes procedural audio, and tests through 5 relentless phases.**
+**Autonomous engineering harness that "thinks through absolutely everything" before coding, enforces empirical synthetic image testing, multimodal visual inspection via V-HEX7, sources high-fidelity assets, synthesizes procedural audio, and tests through 5 relentless phases.**
 
-[Español](#-visión-general-en-español-v520) • [English](#-english-overview-v520) • [V-HEX7 Visión Estricta](#-protocolo-de-hiper-estrictez-visual-v-hex7-v520) • [OmniThink](#-fase-0-omnithink-hyper-cognition-5-perspectivas) • [5-Phase Harness](#-la-batería-de-pruebas-rigurosa-de-5-fases) • [Verification Suite](#-verification-suite-2727-passing)
+[Español](#-visión-general-en-español-v530) • [English](#-english-overview-v530) • [Escrutinio de Imágenes](#-escrutinio-empírico-de-imágenes-sintéticas-y-protocolo-v-hex7-v530) • [OmniThink](#-fase-0-omnithink-hyper-cognition-5-perspectivas) • [5-Phase Harness](#-la-batería-de-pruebas-rigurosa-de-5-fases) • [Verification Suite](#-verification-suite-6161-passing)
 
 ---
 
 </div>
 
-## 🇪🇸 Visión General en Español (v5.2.0)
+## 🇪🇸 Visión General en Español (v5.3.0)
 
-**UltraGoal Universal v5.2.0** introduce **Hiper-Estrictez Visual Inapelable** al momento de analizar imágenes, erradicando tanto la entrega a ciegas como los reportes visuales complacientes o superficiales:
-1. **Métricas Cuantitativas de Visión por Computadora (`capture_vision.ps1`):** Detección empírica de pantallas muertas, escenas monocromáticas planas sin variedad cromática (`is_flat_monochrome`), escenas sin iluminación dinámica (`is_unlit_scene` con rango dinámico < 15) y ausencia de micro-bordes o texturas en el foco central.
-2. **Protocolo de Auditoría V-HEX7:** La IA tiene la obligación estricta de evaluar al menos 4 de los 7 vectores visuales (Geometría/Malla, Materiales PBR, Texturas, Contacto en Suelo Y=0, Fondo/Skybox, HUD/Legibilidad y VFX Dinámicos) y citar cuadrantes taxonómicos exactos (`[A1]`..`[C3]`).
-3. **Filtro Anti-Complacencia (Anti-Fluff):** Se prohíben y vetan frases vacías ("todo se ve bien", "funciona correctamente") sin análisis técnico exhaustivo.
-4. **Puntuación Numérica Obligatoria:** El reporte debe concluir con `Puntuación de Fidelidad Visual: X/100` con umbral mínimo de pase de **90/100**.
-5. **Modelos 3D jerárquicos compuestos y Audio Procedural:** Mallas PBR detalladas, sonido Web Audio API sin enlaces caídos y director multicámara suave (`lerp`/`slerp`).
+**UltraGoal Universal v5.3.0** lleva la rigurosidad al nivel absoluto ("que no quede nada suelto"), implementando un escrutinio visual exhaustivo con pruebas sintéticas deterministas y validación integral de todos los subsistemas:
+1. **Escrutinio Empírico de Imágenes Sintéticas (`rigorous_test_harness.ps1` & `capture_vision.ps1`):** Pruebas matemáticas deterministas que auditan y rechazan:
+   - *Pantallazo Negro o Blanco*: 100% de píxeles sin luminancia (`black_percentage > 98%` o `white_percentage > 98%`).
+   - *Escena Monocromática Plana*: fondos de un solo color sólido sin sombras ni texturas (`unique_color_clusters <= 2`, dominancia > 90%).
+   - *Escena Sin Iluminación (Unlit)*: rango dinámico comprimido sin contraste de luces direccionales ni brillos especulares (`dynamic_range < 12`).
+   - *Escena Texturizada de Alta Fidelidad*: gradientes, bordes nítidos y variedad cromática aprobados con 0 defectos.
+2. **Motor de Captura Multi-Modo Robusto:** Soporte nativo y cross-version (.NET Framework y .NET Core) para modos `Full`, `GridOverlay` (cuadrícula `[A1]`..`[C3]`), `MultiSector` (recortes 1:1 de foco, suelo y HUD), `Burst` (ráfaga secuencial con timestamps) y `MultiStateAudit` con parámetro `-InputImage`.
+3. **Análisis Visual Diferencial y Detección de Congelamiento (`compare_visuals.ps1`):** Detección inquebrantable de congelamientos de pantalla (`FROZEN_OR_NO_CHANGE`), mapa de calor diferencial y bounding box de cambios activos (`STATE_CHANGED`).
+4. **Ciclo de Vida Completo de Hitos (`milestone_tracker.ps1`):** Máquina de estados auditable (`init` -> `status` -> `submit` -> `audit` -> `complete` -> `reset`) con veto a completado si existen hitos no aprobados con score < 95/100.
+5. **Integridad de Plantillas y Recursos:** Verificación estricta de las 5 plantillas formales de ingeniería y del motor de síntesis de audio procedural Web Audio API sin dependencias externas.
 
 ---
 
@@ -165,16 +169,23 @@ powershell -ExecutionPolicy Bypass -File examples/test_verification_suite.ps1
 ```
 Output:
 ```text
-=================================================
-   ULTRAGOAL HARNESS TEST SUITE v5.0 (ASSETS & AUDIO) 
-=================================================
+=================================================================
+   ULTRAGOAL EXHAUSTIVE SYSTEM-WIDE VERIFICATION SUITE v5.3.0   
+=================================================================
   [PASS] OmniThink Analyzes 5 Perspectives
-  [PASS] OmniThink Red Team Identifies Critical Vectors
+  [PASS] OmniThink Red Team Identifies Critical Failure Vectors
   [PASS] OmniThink Visual/Kinetic Mandates Exist
   [PASS] OmniThink Sensory & Asset Orchestrator Rules Exist
   [PASS] Planner Identifies Game Domain
   [PASS] Planner Enforces Kinetic & NearestFilter Defenses
-  [PASS] Tracker Init with Deep Milestones
+  [PASS] Planner Supplies Recommended Deep Milestones
+  [PASS] Tracker Init with 3 Milestones
+  [PASS] Tracker Status Returns Active State
+  [PASS] Tracker Rejects Milestone Below 95 Score
+  [PASS] Tracker Blocks Complete When Milestones Not Approved
+  [PASS] Tracker Approves Milestone 1 and Advances Index
+  [PASS] Tracker Successfully Completes Goal
+  [PASS] Tracker Resets and Removes State File
   [PASS] Live Boot Catches Broken Syntax & Black Screen
   [PASS] Live Boot Approves Running Game
   [PASS] Harness Rejects Broken Code (Defects >= 5)
@@ -182,22 +193,49 @@ Output:
   [PASS] Harness Rejects Superficial Visual Report Lacking V-HEX7 Vectors & Quadrants
   [PASS] Harness Rejects Visual Report with Score Below 90
   [PASS] Harness Approves Clean Code with Visual Report (0 Defects)
-  [PASS] Rubric Approves Clean Kinetic & NearestFilter Code
-  [PASS] Overview Grid Generated
-  [PASS] Ground Sector 1:1 Generated
-  [PASS] Center Focus 1:1 Generated
-  [PASS] HUD Inventory 1:1 Generated
-  [PASS] MultiStateAudit Produces Strict Quantitative Metrics
-  [PASS] Visual Diff State Change Detected
+  [PASS] Harness Rejects Synthetic Black Screen via Phase 3 Scrutiny
+  [PASS] Harness Rejects Synthetic Flat Monochrome via Phase 3 Scrutiny
+  [PASS] Harness Rejects Synthetic Unlit Scene via Phase 3 Scrutiny
+  [PASS] Harness Approves Synthetic Rich Textured Scene (0 Defects)
+  [PASS] Capture Engine Full Mode Generates Screenshot
+  [PASS] Capture Engine Full Mode Detects Non-Dead Screen
+  [PASS] Capture Engine GridOverlay Inscribes Taxonomic Grid
+  [PASS] Capture Engine MultiSector Extracts 1:1 Center Sector
+  [PASS] Capture Engine MultiSector Extracts 1:1 Ground Sector
+  [PASS] Capture Engine MultiSector Extracts 1:1 HUD Sector
+  [PASS] Capture Engine Burst Mode Captures 3 Sequential Frames
+  [PASS] Capture Engine MultiStateAudit Produces Complete Gallery
+  [PASS] Capture Engine MultiStateAudit Passes Strict Quantitative Metrics
+  [PASS] Visual Diff Detects Active State Change
+  [PASS] Visual Diff Detects Frozen Screen on Identical Frames
+  [PASS] Visual Diff Declares Frozen When Delta Below MinExpectedDelta
   [PASS] Orchestrator Supplies Space Texture Catalog
   [PASS] Orchestrator Exports Composite Rocket Mesh Code
   [PASS] Orchestrator Exports Procedural Web Audio Engine
   [PASS] Orchestrator Exports Cinematic Flight Director
   [PASS] Harness Rejects Silent & Flat-Cylinder Rocket Simulation
   [PASS] Harness Approves High-Fidelity Rocket with Web Audio & Smooth Camera
-=================================================
-   RESULTADOS: 27 PASADAS, 0 FALLIDAS (100%)
-=================================================
+  [PASS] Rubric Approves Clean Code (Score >= 95)
+  [PASS] Rubric Deducts Points for Missing Visual Report (-12 Pts)
+  [PASS] Procedural Audio Engine Resource Exists
+  [PASS] Audio Engine Defines ProceduralAudioEngine Class
+  [PASS] Audio Engine Implements Unlock for Autoplay Policy
+  [PASS] Audio Engine Implements Pink Noise Rocket Roar
+  [PASS] Audio Engine Has Zero External File Dependencies
+  [PASS] Template Exists: SPECIFICATION_TEMPLATE.md
+  [PASS] Template Non-Empty & Has Structure: SPECIFICATION_TEMPLATE.md
+  [PASS] Template Exists: CONTRACT_TEMPLATE.md
+  [PASS] Template Non-Empty & Has Structure: CONTRACT_TEMPLATE.md
+  [PASS] Template Exists: AUDIT_REPORT_TEMPLATE.md
+  [PASS] Template Non-Empty & Has Structure: AUDIT_REPORT_TEMPLATE.md
+  [PASS] Template Exists: VISION_AUDIT_TEMPLATE.md
+  [PASS] Template Non-Empty & Has Structure: VISION_AUDIT_TEMPLATE.md
+  [PASS] Template Exists: STRICT_VISUAL_INSPECTION_TEMPLATE.md
+  [PASS] Template Non-Empty & Has Structure: STRICT_VISUAL_INSPECTION_TEMPLATE.md
+  [PASS] Strict Visual Template Enforces V-HEX7 & Taxonomic Grid
+=================================================================
+   RESULTADOS DE VERIFICACIÓN TOTAL: 61 PASADAS, 0 FALLIDAS (100%)
+=================================================================
 ```
 
 ---

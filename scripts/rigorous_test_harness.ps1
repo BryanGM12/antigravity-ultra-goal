@@ -20,6 +20,9 @@ param(
     [string]$TestCommand = "",
 
     [Parameter(Mandatory = $false)]
+    [string]$ScreenshotPath = "",
+
+    [Parameter(Mandatory = $false)]
     [string]$OutputPath = "RIGOROUS_TEST_REPORT.json"
 )
 
@@ -137,6 +140,16 @@ $allCodeText = ($codeFiles | ForEach-Object { Get-Content -LiteralPath $_.FullNa
 # A. Análisis de luminancia si hay captura de pantalla
 $isDeadScreen = $false
 $luminanceStdDev = 0
+
+if (-not [string]::IsNullOrWhiteSpace($ScreenshotPath) -and (Test-Path $ScreenshotPath)) {
+    $liveBootScreenshot = $ScreenshotPath
+} elseif ([string]::IsNullOrWhiteSpace($liveBootScreenshot) -or -not (Test-Path $liveBootScreenshot)) {
+    $candScreens = Get-ChildItem -Path $TargetDirectory -Filter "*.png" -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '(?i)(screenshot|capture|boot|render|vision|overview)' }
+    if ($candScreens.Count -gt 0) {
+        $liveBootScreenshot = $candScreens[0].FullName
+    }
+}
+
 if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $liveBootScreenshot)) {
     Add-Type -AssemblyName System.Drawing
     $bmp = [System.Drawing.Bitmap]::FromFile($liveBootScreenshot)
@@ -191,13 +204,17 @@ if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $live
     }
     $maxColorDominance = [Math]::Round(($maxBucket / $cnt) * 100, 1)
 
-    if ($luminanceStdDev -lt 3.0 -or $blackPct -gt 98.0) {
+    if ($blackPct -gt 98.0 -or $whitePct -gt 98.0) {
         $isDeadScreen = $true
         $visualPassed = $false
         $fatalDefects.Add("Fase 3 (Visual): Pantallazo Negro o lienzo vacio detectado (StdDev: $luminanceStdDev, Black: $blackPct%).")
-    } elseif ($uniqueColors -le 2 -and $maxColorDominance -gt 95.0) {
+    } elseif ($uniqueColors -le 2 -and $maxColorDominance -gt 90.0) {
         $visualPassed = $false
         $fatalDefects.Add("Fase 3 (Visual): Escena Monocromatica Plana detectada ($maxColorDominance% del mismo color). Falta variedad cromatica, texturas y shaders PBR.")
+    } elseif ($luminanceStdDev -lt 3.0) {
+        $isDeadScreen = $true
+        $visualPassed = $false
+        $fatalDefects.Add("Fase 3 (Visual): Lienzo Vacio o sin contraste detectado (StdDev: $luminanceStdDev).")
     } elseif ($dynRange -lt 12.0) {
         $visualPassed = $false
         $fatalDefects.Add("Fase 3 (Visual): Escena Sin Iluminacion (Unlit). Rango dinamico de $dynRange < 15. Faltan fuentes de luz direccionales, brillos especulares y sombras.")
@@ -413,6 +430,7 @@ $report = [PSCustomObject]@{
     fatal_defects_count  = $fatalDefects.Count
     fatal_defects        = $fatalDefects
     phases               = $phaseResults
+    phase_results        = $phaseResults
     timestamp            = (Get-Date -Format "o")
 }
 

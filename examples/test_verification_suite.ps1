@@ -1,21 +1,36 @@
 <#
 .SYNOPSIS
-    UltraGoal Autonomous Verification Suite v4.0 (OmniThink & Rigorous Harness Edition)
+    UltraGoal Exhaustive System-Wide Verification Suite v5.3.0
 .DESCRIPTION
-    Ejecuta una batería completa de 18 pruebas automatizadas sobre todos los componentes
-    de UltraGoal Engine (OmniThink Hyper-Cognition, Rigorous 5-Phase Test Harness, Kinetic Clamping, NearestFilter, Live Boot).
+    Batería de pruebas automatizadas hiper-rigurosa que audita el 100% de los componentes
+    de UltraGoal Engine:
+    1. OmniThink System 2 Hyper-Cognition (5 Perspectivas, Red Team, Mandatos Sensoriales)
+    2. Universal Deep Domain Planner (Detección de Dominio, Defensas Anti-Toy)
+    3. Milestone Tracker Full Lifecycle (init -> status -> submit -> reject -> approve -> complete -> reset)
+    4. Live Runtime Boot Verifier (Chrome Headless, Detección de Sintaxis y Lienzo Muerto)
+    5. Rigorous 5-Phase Test Harness Core (Defectos Fatales, Reporte V-HEX7, Umbral >= 90)
+    6. Escrutinio Empírico de Imágenes Sintéticas (Pantallazo Negro, Monocromo Plano, Unlit, Texturizado)
+    7. Visual Capture Engine Multi-Mode (Full, GridOverlay, MultiSector, Burst, MultiStateAudit con InputImage)
+    8. Differential Visual Analysis & Detección de Congelamiento (STATE_CHANGED vs FROZEN_OR_NO_CHANGE)
+    9. Asset, Shaders & Sensory Resource Orchestrator (Catálogos, Mallas Compuestas, Audio Web, Director de Cámara)
+    10. Space Flight Simulation Sensory & Composite Mesh Gates (Rechazo de Simulaciones Mudas / Cilindros Planos)
+    11. Universal Quality & Anti-Toy Rubric Gatekeeper (Evaluación de 100 Puntos, Deducciones Estrictas)
+    12. Procedural Web Audio Engine File Integrity (Web Audio API nativo, Cero Enlaces Rotos)
+    13. Architectural Templates & Formal Contracts Integrity (5 Plantillas Estructurales)
 #>
 
 $baseDir = Split-Path -Parent $PSScriptRoot
 if (-not $baseDir) { $baseDir = $PSScriptRoot }
 
 $scriptsDir = Join-Path $baseDir "scripts"
-$tempDir = Join-Path $env:TEMP "ultragoal_suite_$(Get-Random)"
+$templatesDir = Join-Path $baseDir "templates"
+$resourcesDir = Join-Path $baseDir "resources"
+$tempDir = Join-Path $env:TEMP "ultragoal_exhaustive_suite_$(Get-Random)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
-Write-Host "=================================================" -ForegroundColor Cyan
-Write-Host "   ULTRAGOAL HARNESS TEST SUITE v5.0 (ASSETS & AUDIO) " -ForegroundColor Cyan
-Write-Host "=================================================" -ForegroundColor Cyan
+Write-Host "=================================================================" -ForegroundColor Cyan
+Write-Host "   ULTRAGOAL EXHAUSTIVE SYSTEM-WIDE VERIFICATION SUITE v5.3.0   " -ForegroundColor Cyan
+Write-Host "=================================================================" -ForegroundColor Cyan
 
 $passed = 0
 $failed = 0
@@ -38,7 +53,7 @@ $specOmni = Join-Path $tempDir "omni_spec.json"
 $omniObj = Get-Content $specOmni | ConvertFrom-Json
 $propsCount = @($omniObj.perspectives.PSObject.Properties).Count
 Assert-Test -TestName "OmniThink Analyzes 5 Perspectives" -Condition ([bool]($propsCount -ge 5))
-Assert-Test -TestName "OmniThink Red Team Identifies Critical Vectors" -Condition ($omniObj.perspectives.'2_RedTeam_Adversary'.critical_failure_vectors.Count -ge 5)
+Assert-Test -TestName "OmniThink Red Team Identifies Critical Failure Vectors" -Condition ($omniObj.perspectives.'2_RedTeam_Adversary'.critical_failure_vectors.Count -ge 5)
 Assert-Test -TestName "OmniThink Visual/Kinetic Mandates Exist" -Condition ($omniObj.perspectives.'3_Visual_Kinetic'.sensory_requirements.Count -ge 5)
 Assert-Test -TestName "OmniThink Sensory & Asset Orchestrator Rules Exist" -Condition ($omniObj.perspectives.'5_Sensory_Assets'.mandatory_asset_rules.Count -ge 4)
 
@@ -49,12 +64,52 @@ $specFileGame = Join-Path $tempDir "spec_game.json"
 $specGame = Get-Content $specFileGame | ConvertFrom-Json
 Assert-Test -TestName "Planner Identifies Game Domain" -Condition ($specGame.detected_category -eq "Interactive_Simulation_or_Game")
 Assert-Test -TestName "Planner Enforces Kinetic & NearestFilter Defenses" -Condition ($specGame.anti_toy_defenses.Count -ge 8)
+Assert-Test -TestName "Planner Supplies Recommended Deep Milestones" -Condition ($specGame.recommended_milestones.Split(';').Count -ge 4)
 
-# --- TEST 3: Milestone Tracker Lifecycle ---
-Write-Host "`n[Test 3] Evaluando Milestone Tracker..." -ForegroundColor Yellow
-$stateFile = Join-Path $tempDir "goal_state.json"
-& "$scriptsDir\milestone_tracker.ps1" -Action init -StateFilePath $stateFile -GoalTitle "Kinetic Voxel Game" -Milestones $specGame.recommended_milestones | Out-Null
-Assert-Test -TestName "Tracker Init with Deep Milestones" -Condition (Test-Path $stateFile)
+# --- TEST 3: Milestone Tracker Full State Lifecycle ---
+Write-Host "`n[Test 3] Evaluando Milestone Tracker Ciclo de Vida Completo..." -ForegroundColor Yellow
+$stateFile = Join-Path $tempDir "goal_state_lifecycle.json"
+& "$scriptsDir\milestone_tracker.ps1" -Action init -StateFilePath $stateFile -GoalTitle "Full Lifecycle Test" -Milestones "M1;M2;M3" | Out-Null
+Assert-Test -TestName "Tracker Init with 3 Milestones" -Condition (Test-Path $stateFile)
+
+$stObj = & "$scriptsDir\milestone_tracker.ps1" -Action status -StateFilePath $stateFile | ConvertFrom-Json
+Assert-Test -TestName "Tracker Status Returns Active State" -Condition ($stObj.status -eq "ACTIVE" -and $stObj.current_index -eq 1)
+
+# Enviar hito 1 a auditoría
+& "$scriptsDir\milestone_tracker.ps1" -Action submit -StateFilePath $stateFile -MilestoneIndex 1 -Notes "Builder draft ready" | Out-Null
+
+# Rechazar hito 1 con score 80 (< 95)
+& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 1 -Score 80 -Verdict "REJECTED" -Notes "Faltan pruebas rigurosas" | Out-Null
+$stRejected = & "$scriptsDir\milestone_tracker.ps1" -Action status -StateFilePath $stateFile | ConvertFrom-Json
+Assert-Test -TestName "Tracker Rejects Milestone Below 95 Score" -Condition ($stRejected.milestones[0].status -eq "REJECTED")
+
+# Intentar completar con hitos no aprobados (debe fallar)
+$completeFailed = $false
+try {
+    & "$scriptsDir\milestone_tracker.ps1" -Action complete -StateFilePath $stateFile 2>&1 | Out-Null
+} catch {
+    $completeFailed = $true
+}
+if ($LASTEXITCODE -ne 0) { $completeFailed = $true }
+Assert-Test -TestName "Tracker Blocks Complete When Milestones Not Approved" -Condition ($completeFailed)
+
+# Aprobar hito 1 con score 98 (>= 95)
+& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 1 -Score 98 -Verdict "APPROVED" -Notes "Superó compuertas" | Out-Null
+$stApp1 = & "$scriptsDir\milestone_tracker.ps1" -Action status -StateFilePath $stateFile | ConvertFrom-Json
+Assert-Test -TestName "Tracker Approves Milestone 1 and Advances Index" -Condition ($stApp1.milestones[0].status -eq "APPROVED" -and $stApp1.current_index -eq 2)
+
+# Aprobar hitos 2 y 3
+& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 2 -Score 97 -Verdict "APPROVED" -Notes "M2 Clean" | Out-Null
+& "$scriptsDir\milestone_tracker.ps1" -Action audit -StateFilePath $stateFile -MilestoneIndex 3 -Score 99 -Verdict "APPROVED" -Notes "M3 Clean" | Out-Null
+
+# Completar meta exitosamente
+& "$scriptsDir\milestone_tracker.ps1" -Action complete -StateFilePath $stateFile | Out-Null
+$stCompleted = & "$scriptsDir\milestone_tracker.ps1" -Action status -StateFilePath $stateFile | ConvertFrom-Json
+Assert-Test -TestName "Tracker Successfully Completes Goal" -Condition ($stCompleted.status -eq "COMPLETED" -and -not [string]::IsNullOrWhiteSpace($stCompleted.completed_at))
+
+# Reiniciar (reset) estado
+& "$scriptsDir\milestone_tracker.ps1" -Action reset -StateFilePath $stateFile | Out-Null
+Assert-Test -TestName "Tracker Resets and Removes State File" -Condition (-not (Test-Path $stateFile))
 
 # --- TEST 4: Live Runtime Boot Verifier & Dead Screen Gate ---
 Write-Host "`n[Test 4] Evaluando Live Runtime Boot Verifier..." -ForegroundColor Yellow
@@ -71,8 +126,8 @@ Set-Content (Join-Path $bootTestDir "index.html") -Value $workingGameHtml
 $bootResWorking = & "$scriptsDir\verify_runtime_boot.ps1" -TargetDirectory $bootTestDir | ConvertFrom-Json
 Assert-Test -TestName "Live Boot Approves Running Game" -Condition ($bootResWorking.verdict -eq "BOOT_SUCCESS")
 
-# --- TEST 5: Rigorous 5-Phase Test Harness (rigorous_test_harness) ---
-Write-Host "`n[Test 5] Evaluando Rigorous 5-Phase Test Harness..." -ForegroundColor Yellow
+# --- TEST 5: Rigorous 5-Phase Test Harness Core Verification ---
+Write-Host "`n[Test 5] Evaluando Rigorous 5-Phase Test Harness Core..." -ForegroundColor Yellow
 $harnessBrokenDir = Join-Path $tempDir "harness_broken"
 New-Item -ItemType Directory -Path $harnessBrokenDir -Force | Out-Null
 Set-Content (Join-Path $harnessBrokenDir "index.html") -Value $brokenGameHtml
@@ -169,46 +224,137 @@ Set-Content (Join-Path $harnessCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
 $harnessResClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir | ConvertFrom-Json
 Assert-Test -TestName "Harness Approves Clean Code with Visual Report (0 Defects)" -Condition ($harnessResClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessResClean.fatal_defects_count -eq 0)
 
-# --- TEST 6: Kinetic, Camera & Texture Integrity Gate in Rubric ---
-Write-Host "`n[Test 6] Evaluando Kinetic, Camera & Texture Integrity Gate en Rubrica..." -ForegroundColor Yellow
-$rubricClean = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $harnessCleanDir | ConvertFrom-Json
-Assert-Test -TestName "Rubric Approves Clean Kinetic & NearestFilter Code" -Condition ($rubricClean.verdict -eq "APPROVED" -and $rubricClean.score -ge 95)
-
-# --- TEST 7: Multi-State Audit Vision Engine (Galería de 4 Fotos) ---
-Write-Host "`n[Test 7] Evaluando MultiStateAudit Vision Engine..." -ForegroundColor Yellow
-$capPath = Join-Path $tempDir "overview_grid.png"
-$auditOutput = & "$scriptsDir\capture_vision.ps1" -OutputPath $capPath -Mode "MultiStateAudit" | ConvertFrom-Json
-Assert-Test -TestName "Overview Grid Generated" -Condition (Test-Path $capPath)
-Assert-Test -TestName "Ground Sector 1:1 Generated" -Condition (Test-Path $auditOutput.photo_gallery."3_sector_ground".path)
-Assert-Test -TestName "Center Focus 1:1 Generated" -Condition (Test-Path $auditOutput.photo_gallery."2_sector_center".path)
-Assert-Test -TestName "HUD Inventory 1:1 Generated" -Condition (Test-Path $auditOutput.photo_gallery."4_sector_hud".path)
-Assert-Test -TestName "MultiStateAudit Produces Strict Quantitative Metrics" -Condition ($null -ne $auditOutput.strict_vision_metrics -and $auditOutput.strict_vision_metrics.color_entropy_clusters -ge 1)
-
-# --- TEST 8: Visual Differencing & State Tracking ---
-Write-Host "`n[Test 8] Evaluando Visual Differencing Engine..." -ForegroundColor Yellow
-$img1 = Join-Path $tempDir "state1.png"
-$img2 = Join-Path $tempDir "state2.png"
-$diffOut = Join-Path $tempDir "diff_out.png"
-
+# --- TEST 6: Escrutinio Empírico de Imágenes Sintéticas en el Arnés ---
+Write-Host "`n[Test 6] Evaluando Escrutinio Empírico de Imágenes Sintéticas en el Arnés..." -ForegroundColor Yellow
 Add-Type -AssemblyName System.Drawing
-$b1 = New-Object System.Drawing.Bitmap 400, 300
-$g1 = [System.Drawing.Graphics]::FromImage($b1)
-$g1.Clear([System.Drawing.Color]::Black)
-$g1.FillRectangle([System.Drawing.Brushes]::Blue, 20, 20, 50, 50)
-$b1.Save($img1)
+$synthImgDir = Join-Path $tempDir "synthetic_images"
+New-Item -ItemType Directory -Path $synthImgDir -Force | Out-Null
 
-$b2 = New-Object System.Drawing.Bitmap 400, 300
-$g2 = [System.Drawing.Graphics]::FromImage($b2)
-$g2.Clear([System.Drawing.Color]::Black)
-$g2.FillRectangle([System.Drawing.Brushes]::Blue, 200, 150, 50, 50)
-$b2.Save($img2)
+# 1. Imagen Sintética: Pantalla Negra 100%
+$bmpBlack = New-Object System.Drawing.Bitmap 400, 300
+$gBlack = [System.Drawing.Graphics]::FromImage($bmpBlack)
+$gBlack.Clear([System.Drawing.Color]::Black)
+$pathBlack = Join-Path $synthImgDir "black_screen.png"
+$bmpBlack.Save($pathBlack, [System.Drawing.Imaging.ImageFormat]::Png)
+$gBlack.Dispose(); $bmpBlack.Dispose()
 
-$g1.Dispose(); $b1.Dispose(); $g2.Dispose(); $b2.Dispose()
+# Probar que el arnés detecta y rechaza la pantalla negra
+$harnessBlack = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir -ScreenshotPath $pathBlack | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Synthetic Black Screen via Phase 3 Scrutiny" -Condition ($harnessBlack.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessBlack.fatal_defects | Where-Object { $_ -match "Pantallazo Negro" }).Count -gt 0))
 
-$diffOutput = & "$scriptsDir\compare_visuals.ps1" -ImageA $img1 -ImageB $img2 -OutputPath $diffOut | ConvertFrom-Json
-Assert-Test -TestName "Visual Diff State Change Detected" -Condition ($diffOutput.verdict -eq "STATE_CHANGED" -and $diffOutput.delta_percent -gt 0)
+# 2. Imagen Sintética: Monocromo Plano 100% (Azul sólido sin sombras ni texturas)
+$bmpFlat = New-Object System.Drawing.Bitmap 400, 300
+$gFlat = [System.Drawing.Graphics]::FromImage($bmpFlat)
+$gFlat.Clear([System.Drawing.Color]::FromArgb(30, 80, 220))
+$pathFlat = Join-Path $synthImgDir "flat_monochrome.png"
+$bmpFlat.Save($pathFlat, [System.Drawing.Imaging.ImageFormat]::Png)
+$gFlat.Dispose(); $bmpFlat.Dispose()
 
-# --- TEST 9: Asset & Sensory Resource Orchestrator ---
+# Probar que el arnés detecta y rechaza el monocromo plano
+$harnessFlat = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir -ScreenshotPath $pathFlat | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Synthetic Flat Monochrome via Phase 3 Scrutiny" -Condition ($harnessFlat.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessFlat.fatal_defects | Where-Object { $_ -match "Monocromatica Plana" }).Count -gt 0))
+
+# 3. Imagen Sintética: Escena Unlit (Rango dinámico de luminancia < 12, con 4 cuadrantes para StdDev >= 3.0)
+$bmpUnlit = New-Object System.Drawing.Bitmap 400, 300
+$gUnlit = [System.Drawing.Graphics]::FromImage($bmpUnlit)
+$gUnlit.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(80, 80, 80))), 0, 0, 200, 150)
+$gUnlit.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(82, 82, 82))), 200, 0, 200, 150)
+$gUnlit.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(88, 88, 88))), 0, 150, 200, 150)
+$gUnlit.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(90, 90, 90))), 200, 150, 200, 150)
+$pathUnlit = Join-Path $synthImgDir "unlit_scene.png"
+$bmpUnlit.Save($pathUnlit, [System.Drawing.Imaging.ImageFormat]::Png)
+$gUnlit.Dispose(); $bmpUnlit.Dispose()
+
+# Probar que el arnés detecta y rechaza la escena unlit
+$harnessUnlit = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir -ScreenshotPath $pathUnlit | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Synthetic Unlit Scene via Phase 3 Scrutiny" -Condition ($harnessUnlit.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessUnlit.fatal_defects | Where-Object { $_ -match "Sin Iluminacion" }).Count -gt 0))
+
+# 4. Imagen Sintética: Escena Rica y Texturizada con Gradientes y Bordes
+$bmpRich = New-Object System.Drawing.Bitmap 400, 300
+$gRich = [System.Drawing.Graphics]::FromImage($bmpRich)
+$gRich.Clear([System.Drawing.Color]::DeepSkyBlue)
+$gRich.FillRectangle([System.Drawing.Brushes]::ForestGreen, 0, 150, 400, 150)
+$gRich.FillEllipse([System.Drawing.Brushes]::Gold, 20, 20, 60, 60)
+$pen = New-Object System.Drawing.Pen([System.Drawing.Color]::Black, 2)
+for ($i = 0; $i -lt 400; $i += 40) {
+    $gRich.DrawLine($pen, $i, 150, $i, 300)
+}
+$pen.Dispose()
+$pathRich = Join-Path $synthImgDir "rich_scene.png"
+$bmpRich.Save($pathRich, [System.Drawing.Imaging.ImageFormat]::Png)
+$gRich.Dispose(); $bmpRich.Dispose()
+
+# Probar que el arnés aprueba la imagen rica sin defectos visuales
+$harnessRich = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $harnessCleanDir -ScreenshotPath $pathRich | ConvertFrom-Json
+Assert-Test -TestName "Harness Approves Synthetic Rich Textured Scene (0 Defects)" -Condition ($harnessRich.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessRich.phases.Phase_3_Visual_Textures.status -eq "PASSED")
+
+# --- TEST 7: Visual Capture Engine Multi-Mode & Quantitative Metrics ---
+Write-Host "`n[Test 7] Evaluando Visual Capture Engine Multi-Mode (Full, GridOverlay, MultiSector, Burst, MultiStateAudit)..." -ForegroundColor Yellow
+$visionTestDir = Join-Path $tempDir "vision_tests"
+New-Item -ItemType Directory -Path $visionTestDir -Force | Out-Null
+
+# A. Modo Full con InputImage
+$capFull = Join-Path $visionTestDir "cap_full.png"
+$outFull = & "$scriptsDir\capture_vision.ps1" -Mode "Full" -InputImage $pathRich -OutputPath $capFull | ConvertFrom-Json
+Assert-Test -TestName "Capture Engine Full Mode Generates Screenshot" -Condition (Test-Path $capFull)
+Assert-Test -TestName "Capture Engine Full Mode Detects Non-Dead Screen" -Condition ($outFull.dead_screen_detected -eq $false)
+
+# B. Modo GridOverlay con InputImage
+$capGrid = Join-Path $visionTestDir "cap_grid.png"
+$outGrid = & "$scriptsDir\capture_vision.ps1" -Mode "GridOverlay" -InputImage $pathRich -OutputPath $capGrid | ConvertFrom-Json
+Assert-Test -TestName "Capture Engine GridOverlay Inscribes Taxonomic Grid" -Condition ((Test-Path $capGrid) -and ($outGrid.grid_sectors.Count -eq 9))
+
+# C. Modo MultiSector con InputImage
+$outSectors = & "$scriptsDir\capture_vision.ps1" -Mode "MultiSector" -InputImage $pathRich | ConvertFrom-Json
+Assert-Test -TestName "Capture Engine MultiSector Extracts 1:1 Center Sector" -Condition (Test-Path $outSectors.sectors.sector_center.path)
+Assert-Test -TestName "Capture Engine MultiSector Extracts 1:1 Ground Sector" -Condition (Test-Path $outSectors.sectors.sector_ground.path)
+Assert-Test -TestName "Capture Engine MultiSector Extracts 1:1 HUD Sector" -Condition (Test-Path $outSectors.sectors.sector_hud.path)
+
+# D. Modo Burst
+$outBurst = & "$scriptsDir\capture_vision.ps1" -Mode "Burst" -BurstCount 3 -BurstIntervalMs 50 | ConvertFrom-Json
+Assert-Test -TestName "Capture Engine Burst Mode Captures 3 Sequential Frames" -Condition ($outBurst.frame_count -eq 3 -and $outBurst.frames.Count -eq 3)
+
+# E. Modo MultiStateAudit con InputImage (Galería completa + métricas cuantitativas estrictas)
+$capAudit = Join-Path $visionTestDir "cap_audit.png"
+$outAudit = & "$scriptsDir\capture_vision.ps1" -Mode "MultiStateAudit" -InputImage $pathRich -OutputPath $capAudit | ConvertFrom-Json
+Assert-Test -TestName "Capture Engine MultiStateAudit Produces Complete Gallery" -Condition ([bool](@($outAudit.photo_gallery.PSObject.Properties).Count -ge 4))
+Assert-Test -TestName "Capture Engine MultiStateAudit Passes Strict Quantitative Metrics" -Condition ($outAudit.strict_vision_metrics.verdict -eq "STRICT_METRICS_PASSED")
+
+# --- TEST 8: Differential Visual Analysis & Freezing Detection ---
+Write-Host "`n[Test 8] Evaluando Differential Visual Analysis & Detección de Congelamiento..." -ForegroundColor Yellow
+$diffDir = Join-Path $tempDir "diff_tests"
+New-Item -ItemType Directory -Path $diffDir -Force | Out-Null
+
+$imgA = Join-Path $diffDir "state_a.png"
+$imgB = Join-Path $diffDir "state_b.png"
+$diffOut = Join-Path $diffDir "diff_output.png"
+
+$bA = New-Object System.Drawing.Bitmap 400, 300
+$gA = [System.Drawing.Graphics]::FromImage($bA)
+$gA.Clear([System.Drawing.Color]::Black)
+$gA.FillRectangle([System.Drawing.Brushes]::Red, 30, 30, 60, 60)
+$bA.Save($imgA, [System.Drawing.Imaging.ImageFormat]::Png)
+
+$bB = New-Object System.Drawing.Bitmap 400, 300
+$gB = [System.Drawing.Graphics]::FromImage($bB)
+$gB.Clear([System.Drawing.Color]::Black)
+$gB.FillRectangle([System.Drawing.Brushes]::Red, 180, 120, 60, 60)
+$bB.Save($imgB, [System.Drawing.Imaging.ImageFormat]::Png)
+$gA.Dispose(); $bA.Dispose(); $gB.Dispose(); $bB.Dispose()
+
+# A. Cambio Dinámico Claro
+$diffChange = & "$scriptsDir\compare_visuals.ps1" -ImageA $imgA -ImageB $imgB -OutputPath $diffOut | ConvertFrom-Json
+Assert-Test -TestName "Visual Diff Detects Active State Change" -Condition ($diffChange.verdict -eq "STATE_CHANGED" -and $diffChange.delta_percent -gt 0.5)
+
+# B. Detección de Pantalla Congelada (Imágenes Idénticas)
+$diffFrozen = & "$scriptsDir\compare_visuals.ps1" -ImageA $imgA -ImageB $imgA | ConvertFrom-Json
+Assert-Test -TestName "Visual Diff Detects Frozen Screen on Identical Frames" -Condition ($diffFrozen.verdict -eq "FROZEN_OR_NO_CHANGE" -and $diffFrozen.diff_pixels -eq 0)
+
+# C. Detección de Micro-Cambio bajo Umbral
+$diffSubThreshold = & "$scriptsDir\compare_visuals.ps1" -ImageA $imgA -ImageB $imgB -MinExpectedDelta 90.0 | ConvertFrom-Json
+Assert-Test -TestName "Visual Diff Declares Frozen When Delta Below MinExpectedDelta" -Condition ($diffSubThreshold.verdict -eq "FROZEN_OR_NO_CHANGE")
+
+# --- TEST 9: Asset, Shaders & Sensory Resource Orchestrator ---
 Write-Host "`n[Test 9] Evaluando Asset & Sensory Resource Orchestrator..." -ForegroundColor Yellow
 $orchestratorOut = & "$scriptsDir\asset_orchestrator.ps1" -Domain "Space_Rocket" | ConvertFrom-Json
 Assert-Test -TestName "Orchestrator Supplies Space Texture Catalog" -Condition ($orchestratorOut.catalog.Space_Solar_System.Earth_Day_Texture -match 'http')
@@ -217,7 +363,7 @@ Assert-Test -TestName "Orchestrator Exports Procedural Web Audio Engine" -Condit
 Assert-Test -TestName "Orchestrator Exports Cinematic Flight Director" -Condition ($orchestratorOut.camera_director_js -match 'CinematicFlightDirector')
 
 # --- TEST 10: Space Flight Simulation Sensory & Composite Mesh Gates ---
-Write-Host "`n[Test 10] Evaluando Space Flight Sensory & Composite Mesh Gates..." -ForegroundColor Yellow
+Write-Host "`n[Test 10] Evaluando Space Flight Sensory & Composite Mesh Gates en el Arnés..." -ForegroundColor Yellow
 $rocketBrokenDir = Join-Path $tempDir "rocket_broken"
 New-Item -ItemType Directory -Path $rocketBrokenDir -Force | Out-Null
 $brokenRocketCode = @"
@@ -292,11 +438,58 @@ Set-Content (Join-Path $rocketCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
 $harnessRocketClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $rocketCleanDir | ConvertFrom-Json
 Assert-Test -TestName "Harness Approves High-Fidelity Rocket with Web Audio & Smooth Camera" -Condition ($harnessRocketClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessRocketClean.fatal_defects_count -eq 0)
 
-# Limpieza
+# --- TEST 11: Universal Quality & Anti-Toy Rubric Gatekeeper ---
+Write-Host "`n[Test 11] Evaluando Universal Quality & Anti-Toy Rubric Gatekeeper..." -ForegroundColor Yellow
+$rubricClean = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $harnessCleanDir | ConvertFrom-Json
+Assert-Test -TestName "Rubric Approves Clean Code (Score >= 95)" -Condition ($rubricClean.verdict -eq "APPROVED" -and $rubricClean.score -ge 95)
+
+# Probar deducción por falta de reporte visual en rúbrica
+$rubricNoVisionDir = Join-Path $tempDir "rubric_no_vision"
+New-Item -ItemType Directory -Path $rubricNoVisionDir -Force | Out-Null
+Copy-Item (Join-Path $harnessCleanDir "*") -Destination $rubricNoVisionDir -Recurse
+Remove-Item (Join-Path $rubricNoVisionDir "VISUAL_INSPECTION_REPORT.md") -Force
+$rubricNoVision = & "$scriptsDir\evaluate_rubric.ps1" -TargetPath $rubricNoVisionDir | ConvertFrom-Json
+Assert-Test -TestName "Rubric Deducts Points for Missing Visual Report (-12 Pts)" -Condition ($rubricNoVision.score -lt 95 -and (@($rubricNoVision.violations | Where-Object { $_.Issue -match "Auditoría Visual" }).Count -gt 0))
+
+# --- TEST 12: Procedural Web Audio Engine File Integrity ---
+Write-Host "`n[Test 12] Evaluando Procedural Web Audio Engine File Integrity..." -ForegroundColor Yellow
+$audioEnginePath = Join-Path $resourcesDir "procedural_audio_engine.js"
+Assert-Test -TestName "Procedural Audio Engine Resource Exists" -Condition (Test-Path $audioEnginePath)
+
+$audioJs = Get-Content -LiteralPath $audioEnginePath -Raw -ErrorAction SilentlyContinue
+Assert-Test -TestName "Audio Engine Defines ProceduralAudioEngine Class" -Condition ($audioJs -match 'class ProceduralAudioEngine')
+Assert-Test -TestName "Audio Engine Implements Unlock for Autoplay Policy" -Condition ($audioJs -match 'unlock\(\)' -and $audioJs -match 'AudioContext')
+Assert-Test -TestName "Audio Engine Implements Pink Noise Rocket Roar" -Condition ($audioJs -match 'startRocketRoar' -and $audioJs -match 'createBuffer')
+Assert-Test -TestName "Audio Engine Has Zero External File Dependencies" -Condition (-not ($audioJs -match '["''`][^"''`]+\.(mp3|wav|ogg|flac)["''`]'))
+
+# --- TEST 13: Architectural Templates & Formal Contracts Integrity ---
+Write-Host "`n[Test 13] Evaluando Architectural Templates & Formal Contracts Integrity..." -ForegroundColor Yellow
+$templateList = @(
+    "SPECIFICATION_TEMPLATE.md",
+    "CONTRACT_TEMPLATE.md",
+    "AUDIT_REPORT_TEMPLATE.md",
+    "VISION_AUDIT_TEMPLATE.md",
+    "STRICT_VISUAL_INSPECTION_TEMPLATE.md"
+)
+
+foreach ($tpl in $templateList) {
+    $tPath = Join-Path $templatesDir $tpl
+    $exists = Test-Path $tPath
+    Assert-Test -TestName "Template Exists: $tpl" -Condition ($exists)
+    if ($exists) {
+        $content = Get-Content -LiteralPath $tPath -Raw
+        Assert-Test -TestName "Template Non-Empty & Has Structure: $tpl" -Condition ($content.Length -gt 200)
+    }
+}
+
+$strictTpl = Get-Content (Join-Path $templatesDir "STRICT_VISUAL_INSPECTION_TEMPLATE.md") -Raw
+Assert-Test -TestName "Strict Visual Template Enforces V-HEX7 & Taxonomic Grid" -Condition ($strictTpl -match 'V-HEX7' -and $strictTpl -match '\[B2\]')
+
+# Limpieza segura
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-Write-Host "`n=================================================" -ForegroundColor Cyan
-Write-Host "   RESULTADOS: $passed PASADAS, $failed FALLIDAS" -ForegroundColor $(if ($failed -eq 0) { "Green" } else { "Red" })
-Write-Host "=================================================" -ForegroundColor Cyan
+Write-Host "`n=================================================================" -ForegroundColor Cyan
+Write-Host "   RESULTADOS DE VERIFICACIÓN TOTAL: $passed PASADAS, $failed FALLIDAS" -ForegroundColor $(if ($failed -eq 0) { "Green" } else { "Red" })
+Write-Host "=================================================================" -ForegroundColor Cyan
 
 if ($failed -gt 0) { exit 1 } else { exit 0 }

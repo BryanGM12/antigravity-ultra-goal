@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     UltraGoal Milestone & Multi-Agent State Machine
 .DESCRIPTION
@@ -210,5 +210,18 @@ switch ($Action) {
         $state.history = @($state.history) + $historyEntry
         Save-State -State $state -Path $StateFilePath
         Write-Host "VERIFICACIÓN TOTAL EXITOSA: Meta completamente completada."
+    }
+
+    "reset" {
+        if (Test-Path $StateFilePath) {
+            Remove-Item -Force $StateFilePath -ErrorAction SilentlyContinue
+            Write-Host "UltraGoal State reset: removed $StateFilePath"
+        }
+        $resetObj = [PSCustomObject]@{
+            status  = "RESET"
+            path    = $StateFilePath
+            message = "Estado reiniciado exitosamente."
+        }
+        Write-Output ($resetObj | ConvertTo-Json -Depth 3)
     }
 }

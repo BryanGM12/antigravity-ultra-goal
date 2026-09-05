@@ -18,6 +18,9 @@ param(
     [string]$OutputPath = "",
 
     [Parameter(Mandatory = $false)]
+    [string]$InputImage = "",
+
+    [Parameter(Mandatory = $false)]
     [string]$ConversationId = "",
 
     [Parameter(Mandatory = $false)]
@@ -144,7 +147,13 @@ public class UltraVisionCaptureV3 {
     }
 }
 "@
-    Add-Type -TypeDefinition $typeDefinition -ReferencedAssemblies "System.Drawing", "System.Windows.Forms"
+    $refs = @("System.Drawing", "System.Windows.Forms")
+    if ($PSVersionTable.PSEdition -eq 'Core') {
+        $refs = [AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { 
+            -not [string]::IsNullOrWhiteSpace($_.Location) 
+        } | ForEach-Object { $_.Location } | Select-Object -Unique
+    }
+    Add-Type -TypeDefinition $typeDefinition -ReferencedAssemblies $refs
 }
 
 function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
@@ -286,6 +295,15 @@ if (-not [string]::IsNullOrWhiteSpace($ProcessName)) {
     }
 }
 
+if (-not [string]::IsNullOrWhiteSpace($InputImage) -and (Test-Path $InputImage)) {
+    try {
+        $imgProbe = [System.Drawing.Bitmap]::FromFile((Resolve-Path $InputImage).Path)
+        $targetWidth = $imgProbe.Width
+        $targetHeight = $imgProbe.Height
+        $imgProbe.Dispose()
+    } catch {}
+}
+
 if ($targetHWnd -eq [IntPtr]::Zero -or $targetWidth -le 0 -or $targetHeight -le 0) {
     try {
         Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
@@ -309,6 +327,14 @@ if ($targetHWnd -eq [IntPtr]::Zero -or $targetWidth -le 0 -or $targetHeight -le 
 }
 
 function Get-RawFrame {
+    # 0. Si se especificó una imagen directa existente
+    if (-not [string]::IsNullOrWhiteSpace($InputImage) -and (Test-Path $InputImage)) {
+        $rawImg = [System.Drawing.Bitmap]::FromFile((Resolve-Path $InputImage).Path)
+        $cloned = New-Object System.Drawing.Bitmap($rawImg)
+        $rawImg.Dispose()
+        return $cloned
+    }
+
     # 1. Si se especificó un archivo HTML o un directorio con index.html, renderizar con Chrome Headless
     $renderTarget = $HtmlPath
     if ([string]::IsNullOrWhiteSpace($renderTarget) -and -not [string]::IsNullOrWhiteSpace($TargetDirectory)) {
@@ -380,7 +406,91 @@ if ($Mode -eq "Burst") {
     exit 0
 }
 
-# 2. MODO MULTI-STATE AUDIT (Galería Completa con Análisis de Pantalla Negra)
+# 2. MODO FULL (Captura directa sin cuadrícula)
+if ($Mode -eq "Full") {
+    $rawBmp = Get-RawFrame
+    $rawBmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+    $lum = Test-DeadOrBlankBitmap $rawBmp
+    $rawBmp.Dispose()
+    $result = [PSCustomObject]@{
+        status               = "ok"
+        mode                 = "Full"
+        screenshot_path      = $OutputPath
+        width                = $targetWidth
+        height               = $targetHeight
+        dead_screen_detected = $lum.is_dead_or_blank
+        luminance_stat       = $lum
+        captured_at          = (Get-Date -Format "o")
+    }
+    Write-Output ($result | ConvertTo-Json -Depth 5)
+    exit 0
+}
+
+# 3. MODO GRIDOVERLAY (Cuadrícula taxonómica [A1]..[C3])
+if ($Mode -eq "GridOverlay") {
+    $rawBmp = Get-RawFrame
+    $gridBmp = [UltraVisionCaptureV3]::ApplyInspectionGrid($rawBmp)
+    $gridBmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
+    $lum = Test-DeadOrBlankBitmap $gridBmp
+    $gridBmp.Dispose()
+    $rawBmp.Dispose()
+    $result = [PSCustomObject]@{
+        status               = "ok"
+        mode                 = "GridOverlay"
+        grid_screenshot_path = $OutputPath
+        grid_sectors         = @("[A1]","[A2]","[A3]","[B1]","[B2]","[B3]","[C1]","[C2]","[C3]")
+        dead_screen_detected = $lum.is_dead_or_blank
+        luminance_stat       = $lum
+        captured_at          = (Get-Date -Format "o")
+    }
+    Write-Output ($result | ConvertTo-Json -Depth 5)
+    exit 0
+}
+
+# 4. MODO MULTISECTOR (Recortes 1:1 nativos)
+if ($Mode -eq "MultiSector") {
+    $rawBmp = Get-RawFrame
+    $w = $rawBmp.Width
+    $h = $rawBmp.Height
+
+    $rectCenter = New-Object System.Drawing.Rectangle([int]($w * 0.3), [int]($h * 0.25), [int]($w * 0.4), [int]($h * 0.4))
+    $bmpCenter = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectCenter)
+    $pathCenter = Join-Path $baseDir "sector_center_$timestamp.png"
+    $bmpCenter.Save($pathCenter, [System.Drawing.Imaging.ImageFormat]::Png)
+    $statCenter = Test-DeadOrBlankBitmap $bmpCenter
+    $bmpCenter.Dispose()
+
+    $rectGround = New-Object System.Drawing.Rectangle([int]($w * 0.2), [int]($h * 0.55), [int]($w * 0.6), [int]($h * 0.35))
+    $bmpGround = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectGround)
+    $pathGround = Join-Path $baseDir "sector_ground_$timestamp.png"
+    $bmpGround.Save($pathGround, [System.Drawing.Imaging.ImageFormat]::Png)
+    $statGround = Test-DeadOrBlankBitmap $bmpGround
+    $bmpGround.Dispose()
+
+    $rectHUD = New-Object System.Drawing.Rectangle([int]($w * 0.15), [int]($h * 0.78), [int]($w * 0.7), [int]($h * 0.22))
+    $bmpHUD = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectHUD)
+    $pathHUD = Join-Path $baseDir "sector_hud_$timestamp.png"
+    $bmpHUD.Save($pathHUD, [System.Drawing.Imaging.ImageFormat]::Png)
+    $statHUD = Test-DeadOrBlankBitmap $bmpHUD
+    $bmpHUD.Dispose()
+
+    $rawBmp.Dispose()
+
+    $result = [PSCustomObject]@{
+        status          = "ok"
+        mode            = "MultiSector"
+        sectors         = [PSCustomObject]@{
+            sector_center = [PSCustomObject]@{ path = $pathCenter; luminance_stat = $statCenter }
+            sector_ground = [PSCustomObject]@{ path = $pathGround; luminance_stat = $statGround }
+            sector_hud    = [PSCustomObject]@{ path = $pathHUD; luminance_stat = $statHUD }
+        }
+        captured_at     = (Get-Date -Format "o")
+    }
+    Write-Output ($result | ConvertTo-Json -Depth 5)
+    exit 0
+}
+
+# 5. MODO MULTI-STATE AUDIT (Galería Completa con Análisis de Pantalla Negra)
 $rawBmp = Get-RawFrame
 $mainLum = Test-DeadOrBlankBitmap $rawBmp
 
