@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    UltraGoal Exhaustive System-Wide Verification Suite v5.3.0
+    UltraGoal Exhaustive System-Wide Verification Suite v5.4.0
 .DESCRIPTION
     Batería de pruebas automatizadas hiper-rigurosa que audita el 100% de los componentes
     de UltraGoal Engine:
@@ -17,6 +17,9 @@
     11. Universal Quality & Anti-Toy Rubric Gatekeeper (Evaluación de 100 Puntos, Deducciones Estrictas)
     12. Procedural Web Audio Engine File Integrity (Web Audio API nativo, Cero Enlaces Rotos)
     13. Architectural Templates & Formal Contracts Integrity (5 Plantillas Estructurales)
+    14. Universal Tech Stack Selector & Anti-HTML Monoculture (Juegos, CLI, API, Desktop)
+    15. Multi-Runtime Boot Verifier (Python, .NET, Rust, Web Cross-Runtime)
+    16. Advanced Computer Vision Metrics & DWM Native Engine (Laplaciano, Shannon, HUD WCAG)
 #>
 
 $baseDir = Split-Path -Parent $PSScriptRoot
@@ -29,7 +32,7 @@ $tempDir = Join-Path $env:TEMP "ultragoal_exhaustive_suite_$(Get-Random)"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "   ULTRAGOAL EXHAUSTIVE SYSTEM-WIDE VERIFICATION SUITE v5.3.0   " -ForegroundColor Cyan
+Write-Host "   ULTRAGOAL EXHAUSTIVE SYSTEM-WIDE VERIFICATION SUITE v5.4.0   " -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 
 $passed = 0
@@ -484,6 +487,99 @@ foreach ($tpl in $templateList) {
 
 $strictTpl = Get-Content (Join-Path $templatesDir "STRICT_VISUAL_INSPECTION_TEMPLATE.md") -Raw
 Assert-Test -TestName "Strict Visual Template Enforces V-HEX7 & Taxonomic Grid" -Condition ($strictTpl -match 'V-HEX7' -and $strictTpl -match '\[B2\]')
+
+# --- TEST 14: Universal Tech Stack Selector & Anti-HTML Monoculture ---
+Write-Host "`n[Test 14] Evaluando Universal Tech Stack Selector & Anti-HTML Monoculture..." -ForegroundColor Yellow
+$gameStackJson = & "$scriptsDir\tech_stack_selector.ps1" -GoalObjective "Haz un clon de voxel/minecraft 3D nativo"
+$gameStack = $gameStackJson | ConvertFrom-Json
+Assert-Test -TestName "Stack Selector Categorizes Game Domain" -Condition ($gameStack.detected_category -eq "Interactive_Simulation_or_Game")
+Assert-Test -TestName "Stack Selector Recommends Native GPU Runtime for 3D Game" -Condition ($gameStack.selected_stack.native_gpu_access -eq $true)
+Assert-Test -TestName "Stack Selector Forbids HTML Monoculture" -Condition (@($gameStack.prohibited_anti_patterns | Where-Object { $_ -match "monocultivo de HTML/Canvas" }).Count -gt 0)
+
+$cliStackJson = & "$scriptsDir\tech_stack_selector.ps1" -GoalObjective "crear una herramienta cli para optimizar imagenes"
+$cliStack = $cliStackJson | ConvertFrom-Json
+Assert-Test -TestName "Stack Selector Categorizes CLI Systems Tool" -Condition ($cliStack.detected_category -eq "CLI_or_Systems_Tool")
+Assert-Test -TestName "Stack Selector Recommends Compiled CLI (Rust/Go/PowerShell)" -Condition ($cliStack.selected_stack.language -match '(?i)(Rust|Go|PowerShell)')
+
+$apiStackJson = & "$scriptsDir\tech_stack_selector.ps1" -GoalObjective "crear un microservicio rest con base de datos postgres"
+$apiStack = $apiStackJson | ConvertFrom-Json
+Assert-Test -TestName "Stack Selector Categorizes Backend API" -Condition ($apiStack.detected_category -eq "Backend_Service_or_API")
+Assert-Test -TestName "Stack Selector Recommends FastAPI or .NET 9 for API" -Condition ($apiStack.selected_stack.framework -match '(?i)(FastAPI|Minimal APIs)')
+
+# --- TEST 15: Multi-Runtime Boot Verifier (Python & Cross-Language) ---
+Write-Host "`n[Test 15] Evaluando Multi-Runtime Boot Verifier..." -ForegroundColor Yellow
+$pyTestDir = Join-Path $tempDir "python_test_runtime"
+New-Item -ItemType Directory -Path $pyTestDir -Force | Out-Null
+
+# A. Python con sintaxis correcta
+Set-Content (Join-Path $pyTestDir "main.py") -Value "import sys`ndef run(): print('engine online')`nif __name__ == '__main__': run()"
+$pyResClean = & "$scriptsDir\verify_runtime_boot.ps1" -TargetDirectory $pyTestDir | ConvertFrom-Json
+Assert-Test -TestName "Multi-Runtime Boot Detects & Approves Clean Python Project" -Condition ($pyResClean.verdict -eq "BOOT_SUCCESS" -and $pyResClean.runtime_type -eq "Python")
+
+# B. Python con error fatal de sintaxis
+Set-Content (Join-Path $pyTestDir "main.py") -Value "def broken_syntax(: print('error')"
+$pyResBroken = & "$scriptsDir\verify_runtime_boot.ps1" -TargetDirectory $pyTestDir | ConvertFrom-Json
+Assert-Test -TestName "Multi-Runtime Boot Catches Python Syntax Error" -Condition ($pyResBroken.verdict -eq "BOOT_FAILED" -and (@($pyResBroken.diagnostics | Where-Object { $_ -match "SINTAXIS" }).Count -gt 0))
+
+# --- TEST 16: Advanced Computer Vision Metrics (Laplacian, Shannon & HUD) ---
+Write-Host "`n[Test 16] Evaluando Advanced Computer Vision Metrics & DWM Engine..." -ForegroundColor Yellow
+$cvTestDir = Join-Path $tempDir "cv_metrics_tests"
+New-Item -ItemType Directory -Path $cvTestDir -Force | Out-Null
+
+# 1. Imagen con alta nitidez (bordes fuertes de alto contraste)
+$bmpSharp = New-Object System.Drawing.Bitmap 400, 300
+$gSharp = [System.Drawing.Graphics]::FromImage($bmpSharp)
+$gSharp.Clear([System.Drawing.Color]::White)
+$penB = New-Object System.Drawing.Pen([System.Drawing.Color]::Black, 3)
+for ($x = 0; $x -lt 400; $x += 20) { $gSharp.DrawLine($penB, $x, 0, $x, 300) }
+$penB.Dispose()
+$pathSharp = Join-Path $cvTestDir "sharp_image.png"
+$bmpSharp.Save($pathSharp, [System.Drawing.Imaging.ImageFormat]::Png)
+$gSharp.Dispose(); $bmpSharp.Dispose()
+
+$outSharp = & "$scriptsDir\capture_vision.ps1" -Mode "Full" -InputImage $pathSharp | ConvertFrom-Json
+Assert-Test -TestName "Laplacian Variance Computes High Sharpness Score (> 100)" -Condition ($outSharp.luminance_stat.sharpness_score -gt 100.0)
+Assert-Test -TestName "Laplacian Variance Declares Non-Blurred Image" -Condition ($outSharp.luminance_stat.is_excessively_blurred -eq $false)
+
+# 2. Imagen con interfaz HUD de alto contraste WCAG (Texto negro sobre fondo blanco en sector HUD)
+$bmpHudHigh = New-Object System.Drawing.Bitmap 400, 300
+$gHud = [System.Drawing.Graphics]::FromImage($bmpHudHigh)
+$gHud.Clear([System.Drawing.Color]::SteelBlue)
+$gHud.FillRectangle([System.Drawing.Brushes]::White, 0, 220, 400, 80)
+$fontH = New-Object System.Drawing.Font("Arial", 16, [System.Drawing.FontStyle]::Bold)
+$gHud.DrawString("HEALTH: 100% | AMMO: 50", $fontH, [System.Drawing.Brushes]::Black, 20, 240)
+$fontH.Dispose()
+$pathHudHigh = Join-Path $cvTestDir "hud_high_contrast.png"
+$bmpHudHigh.Save($pathHudHigh, [System.Drawing.Imaging.ImageFormat]::Png)
+$gHud.Dispose(); $bmpHudHigh.Dispose()
+
+$outHudHigh = & "$scriptsDir\capture_vision.ps1" -Mode "Full" -InputImage $pathHudHigh | ConvertFrom-Json
+Assert-Test -TestName "HUD Contrast Metric Complies with WCAG AA (Ratio >= 3.0:1)" -Condition ($outHudHigh.luminance_stat.hud_contrast_ratio -ge 3.0 -and $outHudHigh.luminance_stat.is_hud_illegible -eq $false)
+
+# 3. Imagen con HUD ilegible (Gris oscuro sobre gris oscuro)
+$bmpHudLow = New-Object System.Drawing.Bitmap 400, 300
+$gHudLow = [System.Drawing.Graphics]::FromImage($bmpHudLow)
+$gHudLow.Clear([System.Drawing.Color]::SteelBlue)
+$brushDarkGray = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(40, 40, 40))
+$gHudLow.FillRectangle($brushDarkGray, 0, 220, 400, 80)
+$brushLowText = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(45, 45, 45))
+$fontLow = New-Object System.Drawing.Font("Arial", 14)
+$gHudLow.DrawString("ILLEGIBLE HUD TEXT", $fontLow, $brushLowText, 20, 240)
+$fontLow.Dispose(); $brushLowText.Dispose(); $brushDarkGray.Dispose()
+$pathHudLow = Join-Path $cvTestDir "hud_low_contrast.png"
+$bmpHudLow.Save($pathHudLow, [System.Drawing.Imaging.ImageFormat]::Png)
+$gHudLow.Dispose(); $bmpHudLow.Dispose()
+
+$outHudLow = & "$scriptsDir\capture_vision.ps1" -Mode "Full" -InputImage $pathHudLow | ConvertFrom-Json
+Assert-Test -TestName "HUD Contrast Metric Detects Illegible UI (Ratio < 3.0:1)" -Condition ($outHudLow.luminance_stat.is_hud_illegible -eq $true)
+
+# 4. Verificación de Métodos Win32 DWM en UltraVisionCaptureV4
+$typeLoaded = ([System.Management.Automation.PSTypeName]'UltraVisionCaptureV4').Type
+Assert-Test -TestName "UltraVisionCaptureV4 Type Successfully Exported with DWM P/Invoke" -Condition ($null -ne $typeLoaded)
+$findMethod = $typeLoaded.GetMethod("FindWindowByTitle")
+Assert-Test -TestName "FindWindowByTitle Static Method Exists" -Condition ($null -ne $findMethod)
+$dwmMethod = $typeLoaded.GetMethod("GetAccurateWindowBounds")
+Assert-Test -TestName "GetAccurateWindowBounds Static Method Exists" -Condition ($null -ne $dwmMethod)
 
 # Limpieza segura
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue

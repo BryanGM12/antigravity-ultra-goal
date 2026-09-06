@@ -40,6 +40,18 @@ if ($Category -eq "Auto") {
     }
 }
 
+# Invocación del Selector de Stack Tecnológico Óptimo (Anti-HTML Monoculture)
+$scriptsDir = $PSScriptRoot
+if (-not $scriptsDir) { $scriptsDir = "." }
+$stackSelectorPath = Join-Path $scriptsDir "tech_stack_selector.ps1"
+$techStackResult = $null
+if (Test-Path $stackSelectorPath) {
+    try {
+        $stackRaw = & $stackSelectorPath -GoalObjective $GoalObjective -Category $Category
+        $techStackResult = $stackRaw | ConvertFrom-Json
+    } catch {}
+}
+
 # Definición de los 7 Niveles Universales de Ingeniería de Software
 $universalTiers = [ordered]@{
     "Tier_1_Entry_And_Presentation_Shell" = [PSCustomObject]@{
@@ -150,11 +162,16 @@ $defenses = @()
 foreach ($tier in $universalTiers.Values) {
     $defenses += $tier.Anti_Toy_Defenses
 }
+if ($techStackResult -and $techStackResult.prohibited_anti_patterns) {
+    $defenses += $techStackResult.prohibited_anti_patterns
+}
 
 $specObj = [PSCustomObject]@{
     goal_objective          = $GoalObjective
     detected_category       = $Category
-    architecture_framework  = "UltraGoal 7-Tier Universal Engineering Framework"
+    architecture_framework  = "UltraGoal 7-Tier Universal Engineering Framework v5.4.0"
+    tech_stack              = if ($techStackResult) { $techStackResult.selected_stack } else { $null }
+    evaluated_tech_stacks   = if ($techStackResult) { $techStackResult.evaluated_candidates } else { @() }
     created_at              = (Get-Date -Format "o")
     total_tiers             = $universalTiers.Count
     tiers                   = $universalTiers

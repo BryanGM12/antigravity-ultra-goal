@@ -39,11 +39,26 @@ if ($Category -eq "Auto") {
     }
 }
 
+# Invocación del Selector de Stack Tecnológico Óptimo
+$scriptsDir = $PSScriptRoot
+if (-not $scriptsDir) { $scriptsDir = "." }
+$stackSelectorPath = Join-Path $scriptsDir "tech_stack_selector.ps1"
+$techStackResult = $null
+if (Test-Path $stackSelectorPath) {
+    try {
+        $stackRaw = & $stackSelectorPath -GoalObjective $GoalObjective -Category $Category
+        $techStackResult = $stackRaw | ConvertFrom-Json
+    } catch {}
+}
+
+$selectedStackName = if ($techStackResult) { $techStackResult.selected_stack.name } else { "Stack Específico de Alto Rendimiento" }
+
 # 1. Perspectiva 1: Arquitectura de Sistemas & Flujo de Datos
 $archAnalysis = [ordered]@{
     perspective = "System_Architect"
     core_responsibilities = @(
         "Desacoplamiento estricto: la vista no debe contener lógica de negocio ni estado de simulación directo",
+        "Selección de stack óptimo ($selectedStackName): erradicar el monocultivo de maquetas HTML y aprovechar el hardware nativo",
         "Máquina de estados finitos (FSM) exhaustiva: definir explícitamente estados (Init, Loading, Ready, Active, Paused, Error, Destroyed)",
         "Contrato de tipos inmutable y esquemas de datos validados antes de cualquier procesamiento"
     )
@@ -57,6 +72,7 @@ $archAnalysis = [ordered]@{
 $redTeamAnalysis = [ordered]@{
     perspective = "Adversarial_Red_Team"
     critical_failure_vectors = @(
+        "Degradación por monocultivo HTML: forzar una simulación física, juego 3D o herramienta en una maqueta web rudimentaria con caídas de FPS",
         "Fallo de arranque inicial: scripts con imports sin type='module', rutas relativas 404, o llamadas a DOM antes de DOMContentLoaded",
         "Pantallazo Negro (BSOD): canvas 3D sin iluminación, cámara apuntando al vacío infinito o bucle de render no iniciado",
         "Degradación de memoria: event listeners acumulados en cada reinicio o arrays/objetos instanciados en requestAnimationFrame",
@@ -118,6 +134,7 @@ $hyperSpec = [ordered]@{
         "4_Performance"       = $perfAnalysis
         "5_Sensory_Assets"    = $sensoryAssetAnalysis
     }
+    tech_stack              = if ($techStackResult) { $techStackResult.selected_stack } else { $null }
     omnithink_mandate       = "Queda terminantemente prohibido escribir una sola línea de código sin haber diseñado previamente las defensas para cada uno de los vectores de fallo identificados por el Red Team, el Especialista Cinético y el Arquitecto Sensorial de Assets."
 }
 

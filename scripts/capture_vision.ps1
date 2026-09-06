@@ -1,15 +1,20 @@
 <#
 .SYNOPSIS
-    UltraGoal Vision Capture Engine v3.2 (Multi-State Audit & Dead-Screen Gate)
+    UltraGoal Vision Capture Engine v5.4.0 (DWM Native Window & Advanced CV Metrics)
 .DESCRIPTION
     Motor de captura e inspección visual de alta fidelidad para agentes Gemini en Antigravity.
-    Incluye:
-    - Captura GDI nativa ultra-resiliente (pantalla completa o ventana por proceso).
-    - Modo MultiStateAudit: Genera una galería completa de fotos (General con cuadrícula, recortes 1:1 de Suelo, HUD y Centro)
-      con análisis de varianza de luminancia para detectar de inmediato pantallas negras o vacías.
-    - Modo GridOverlay: Inscribe cuadrícula de coordenadas [A1]..[C3] para ubicar sectores exactos.
-    - Modo MultiSector: Extrae recortes 1:1 sin reescalado (Ground/Baseline, Viewport Center, HUD/Inventory).
-    - Modo Burst: Ráfaga secuencial de N fotogramas para auditar animaciones en tiempo real.
+    Capacidades v5.4.0:
+    - Captura DWM nativa ultra-precisa de ventanas por Proceso o Título (DWMWA_EXTENDED_FRAME_BOUNDS)
+      eliminando sombras y bordes falsos de Windows.
+    - Métricas Avanzadas de Visión por Computadora:
+      * Varianza Laplaciana de nitidez (sharpness_score >= 15.0, anti-borrosidad).
+      * Ratio de contraste en HUD bajo WCAG 2.1 (hud_contrast_ratio >= 3.0:1).
+      * Entropía cromática de Shannon (chromatic_entropy >= 2.5).
+      * Detección de distorsión de relación de aspecto anamórfico.
+    - Modo MultiStateAudit: Galería completa de fotos (General con cuadrícula, recortes 1:1 de Suelo, HUD y Centro).
+    - Modo GridOverlay: Inscribe cuadrícula de coordenadas taxonómicas [A1]..[C3].
+    - Modo MultiSector: Extrae recortes 1:1 sin reescalado.
+    - Modo Burst: Ráfaga secuencial de N fotogramas para auditar dinámicas en tiempo real.
 #>
 
 [CmdletBinding()]
@@ -25,6 +30,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$ProcessName = "",
+
+    [Parameter(Mandatory = $false)]
+    [string]$WindowTitle = "",
 
     [Parameter(Mandatory = $false)]
     [int]$DelaySeconds = 0,
@@ -51,7 +59,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-if (-not ([System.Management.Automation.PSTypeName]'UltraVisionCaptureV3').Type) {
+if (-not ([System.Management.Automation.PSTypeName]'UltraVisionCaptureV4').Type) {
     Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
     $typeDefinition = @"
@@ -59,8 +67,16 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Text;
 
-public class UltraVisionCaptureV3 {
+public struct RECT_V4 {
+    public int Left;
+    public int Top;
+    public int Right;
+    public int Bottom;
+}
+
+public class UltraVisionCaptureV4 {
     [DllImport("user32.dll")]
     public static extern IntPtr GetDesktopWindow();
     [DllImport("user32.dll")]
@@ -71,8 +87,53 @@ public class UltraVisionCaptureV3 {
     public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
     [DllImport("gdi32.dll")]
     public static extern bool BitBlt(IntPtr hObject, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hObjectSource, int nXSrc, int nYSrc, int dwRop);
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT_V4 lpRect);
+    [DllImport("dwmapi.dll")]
+    public static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT_V4 pvAttribute, int cbAttribute);
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+    public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
+
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
 
     public const int SRCCOPY = 0x00CC0020;
+    public const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+
+    public static IntPtr FindWindowByTitle(string titleSubstring) {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows(delegate (IntPtr hWnd, IntPtr lParam) {
+            if (IsWindowVisible(hWnd)) {
+                StringBuilder sb = new StringBuilder(512);
+                GetWindowText(hWnd, sb, 512);
+                string t = sb.ToString();
+                if (!string.IsNullOrEmpty(t) && t.IndexOf(titleSubstring, StringComparison.OrdinalIgnoreCase) >= 0) {
+                    found = hWnd;
+                    return false;
+                }
+            }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+
+    public static Rectangle GetAccurateWindowBounds(IntPtr hWnd) {
+        RECT_V4 rect;
+        try {
+            int res = DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, out rect, Marshal.SizeOf(typeof(RECT_V4)));
+            if (res == 0 && (rect.Right - rect.Left > 0) && (rect.Bottom - rect.Top > 0)) {
+                return new Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
+            }
+        } catch {}
+        RECT_V4 gRect;
+        GetWindowRect(hWnd, out gRect);
+        return new Rectangle(gRect.Left, gRect.Top, Math.Max(10, gRect.Right - gRect.Left), Math.Max(10, gRect.Bottom - gRect.Top));
+    }
 
     public static Bitmap CaptureDesktopGDI(int width, int height) {
         IntPtr hDesk = GetDesktopWindow();
@@ -164,6 +225,9 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
     $samples = [System.Collections.Generic.List[double]]::new()
     $colorBuckets = @{}
     $edgeDeltas = [System.Collections.Generic.List[double]]::new()
+    $laplacianSamples = [System.Collections.Generic.List[double]]::new()
+    $hudLuminanceList = [System.Collections.Generic.List[double]]::new()
+    $hist256 = New-Object int[] 256
     $blackCount = 0
     $whiteCount = 0
     $minLum = 255.0
@@ -171,9 +235,10 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
 
     $limitX = [Math]::Max(1, $w - $stepX)
     $limitY = [Math]::Max(1, $h - $stepY)
+    $hudStartY = [int]($h * 0.75)
 
-    for ($x = 0; $x -lt $limitX; $x += $stepX) {
-        for ($y = 0; $y -lt $limitY; $y += $stepY) {
+    for ($x = $stepX; $x -lt $limitX; $x += $stepX) {
+        for ($y = $stepY; $y -lt $limitY; $y += $stepY) {
             $pixel = $bmp.GetPixel($x, $y)
             $lum = 0.299 * $pixel.R + 0.587 * $pixel.G + 0.114 * $pixel.B
             $samples.Add($lum)
@@ -182,7 +247,18 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
             if ($lum -lt $minLum) { $minLum = $lum }
             if ($lum -gt $maxLum) { $maxLum = $lum }
 
-            # Cubeta de color cuantizada (4 bits por canal, escala 0..15)
+            # Histograma de luminancia para entropía de Shannon
+            $binIdx = [Math]::Max(0, [Math]::Min(255, [int]$lum))
+            $hist256[$binIdx]++
+
+            # Muestra HUD si está en la franja inferior
+            if ($y -ge $hudStartY) {
+                # Luminancia relativa normalizada WCAG
+                $relLum = 0.2126 * ($pixel.R / 255.0) + 0.7152 * ($pixel.G / 255.0) + 0.0722 * ($pixel.B / 255.0)
+                $hudLuminanceList.Add($relLum)
+            }
+
+            # Cubeta de color cuantizada (4 bits por canal)
             $bucketKey = "$([int]($pixel.R / 16))_$([int]($pixel.G / 16))_$([int]($pixel.B / 16))"
             if ($colorBuckets.ContainsKey($bucketKey)) {
                 $colorBuckets[$bucketKey]++
@@ -190,13 +266,21 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
                 $colorBuckets[$bucketKey] = 1
             }
 
-            # Magnitud de gradiente de bordes en alta frecuencia con vecinos adyacentes
+            # Magnitud de gradiente simple con vecinos
             $pRight = $bmp.GetPixel($x + $stepX, $y)
-            $pDown = $bmp.GetPixel($x, $y + $stepY)
+            $pDown  = $bmp.GetPixel($x, $y + $stepY)
             $lumRight = 0.299 * $pRight.R + 0.587 * $pRight.G + 0.114 * $pRight.B
-            $lumDown = 0.299 * $pDown.R + 0.587 * $pDown.G + 0.114 * $pDown.B
+            $lumDown  = 0.299 * $pDown.R  + 0.587 * $pDown.G  + 0.114 * $pDown.B
             $grad = [Math]::Abs($lumRight - $lum) + [Math]::Abs($lumDown - $lum)
             $edgeDeltas.Add($grad)
+
+            # Varianza Laplaciana (Convolución de kernel 3x3 en muestra de paso)
+            $pLeft = $bmp.GetPixel($x - $stepX, $y)
+            $pUp   = $bmp.GetPixel($x, $y - $stepY)
+            $lumLeft = 0.299 * $pLeft.R + 0.587 * $pLeft.G + 0.114 * $pLeft.B
+            $lumUp   = 0.299 * $pUp.R   + 0.587 * $pUp.G   + 0.114 * $pUp.B
+            $lapVal = ($lumRight + $lumLeft + $lumUp + $lumDown) - (4.0 * $lum)
+            $laplacianSamples.Add($lapVal)
         }
     }
 
@@ -214,6 +298,50 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
     foreach ($g in $edgeDeltas) { $gradSum += $g }
     $avgEdgeGrad = if ($edgeDeltas.Count -gt 0) { $gradSum / $edgeDeltas.Count } else { 0.0 }
 
+    # Cálculo de Varianza Laplaciana (Sharpness Score)
+    $lapSum = 0.0
+    foreach ($lp in $laplacianSamples) { $lapSum += $lp }
+    $lapMean = if ($laplacianSamples.Count -gt 0) { $lapSum / $laplacianSamples.Count } else { 0.0 }
+    $lapVarSum = 0.0
+    foreach ($lp in $laplacianSamples) { $lapVarSum += [Math]::Pow($lp - $lapMean, 2) }
+    $sharpnessScore = if ($laplacianSamples.Count -gt 0) { [Math]::Round($lapVarSum / $laplacianSamples.Count, 2) } else { 0.0 }
+
+    # Cálculo de Entropía Cromática de Shannon
+    $shannonEntropy = 0.0
+    for ($i = 0; $i -lt 256; $i++) {
+        if ($hist256[$i] -gt 0) {
+            $p = $hist256[$i] / $count
+            $shannonEntropy -= ($p * [Math]::Log($p, 2.0))
+        }
+    }
+    $shannonEntropy = [Math]::Round($shannonEntropy, 2)
+
+    # Cálculo de Contraste en HUD (WCAG 2.1 con muestreo denso en percentiles 99 y 1)
+    $hudContrastRatio = 21.0
+    $hudLuminances = [System.Collections.Generic.List[double]]::new()
+    $hudStepX = [Math]::Max(2, [int]($w / 100))
+    $hudStepY = [Math]::Max(2, [int]($h / 100))
+    for ($hx = 0; $hx -lt $w; $hx += $hudStepX) {
+        for ($hy = $hudStartY; $hy -lt $h; $hy += $hudStepY) {
+            $px = $bmp.GetPixel($hx, $hy)
+            $relLum = 0.2126 * ($px.R / 255.0) + 0.7152 * ($px.G / 255.0) + 0.0722 * ($px.B / 255.0)
+            $hudLuminances.Add($relLum)
+        }
+    }
+
+    if ($hudLuminances.Count -ge 20) {
+        $sortedHud = @($hudLuminances | Sort-Object)
+        $idx99 = [Math]::Min($sortedHud.Count - 1, [int]($sortedHud.Count * 0.99))
+        $idx01 = [Math]::Max(0, [int]($sortedHud.Count * 0.01))
+        $lBright = $sortedHud[$idx99]
+        $lDark   = $sortedHud[$idx01]
+        $hudContrastRatio = [Math]::Round(($lBright + 0.05) / ($lDark + 0.05), 2)
+    }
+
+    # Relación de aspecto
+    $aspectRatio = [Math]::Round($w / [Math]::Max(1.0, $h), 2)
+    $isAspectDistorted = ($aspectRatio -lt 0.5 -or $aspectRatio -gt 3.8)
+
     $blackPct = ($blackCount / $count) * 100.0
     $whitePct = ($whiteCount / $count) * 100.0
     $dynRange = [Math]::Max(0.0, $maxLum - $minLum)
@@ -228,12 +356,12 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
     $maxColorDominancePct = ($maxBucketCount / $count) * 100.0
 
     $isDead = ($stdDev -lt 3.0) -or ($blackPct -gt 98.0) -or ($whitePct -gt 98.0)
-    # Si la escena no está muerta pero tiene <= 2 colores y >90% de dominio, es un monocromo plano sin textura
     $isFlatMonochrome = ($uniqueColors -le 2) -and ($maxColorDominancePct -gt 92.0) -and (-not $isDead)
-    # Si el rango dinámico de luz es mínimo, no hay luces ni sombras
     $isUnlit = ($dynRange -lt 15.0) -and (-not $isDead)
-    # Si la variación de bordes es casi nula, falta detalle o textura
     $lacksDetail = ($avgEdgeGrad -lt 1.0) -and (-not $isDead)
+    $isBlurred = ($sharpnessScore -lt 15.0) -and (-not $isDead) -and (-not $isFlatMonochrome)
+    $isHudIllegible = ($hudContrastRatio -lt 3.0) -and (-not $isDead)
+    $isFlatEntropy = ($shannonEntropy -lt 0.70) -and (-not $isDead)
 
     return [PSCustomObject]@{
         mean_luminance          = [Math]::Round($mean, 2)
@@ -244,10 +372,18 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
         unique_color_clusters   = $uniqueColors
         max_color_dominance_pct = [Math]::Round($maxColorDominancePct, 1)
         avg_edge_gradient       = [Math]::Round($avgEdgeGrad, 2)
+        sharpness_score         = $sharpnessScore
+        shannon_entropy         = $shannonEntropy
+        hud_contrast_ratio      = $hudContrastRatio
+        aspect_ratio            = $aspectRatio
         is_dead_or_blank        = $isDead
         is_flat_monochrome      = $isFlatMonochrome
         is_unlit_scene          = $isUnlit
         lacks_texture_detail    = $lacksDetail
+        is_excessively_blurred  = $isBlurred
+        is_hud_illegible        = $isHudIllegible
+        is_flat_entropy         = $isFlatEntropy
+        is_aspect_distorted     = $isAspectDistorted
     }
 }
 
@@ -272,26 +408,27 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
     }
 }
 
+# Resolución de Ventana por Proceso o Título (DWM Frame Bounds)
 $targetHWnd = [IntPtr]::Zero
 $targetWidth = 0
 $targetHeight = 0
 
-if (-not [string]::IsNullOrWhiteSpace($ProcessName)) {
+if (-not [string]::IsNullOrWhiteSpace($WindowTitle)) {
+    $targetHWnd = [UltraVisionCaptureV4]::FindWindowByTitle($WindowTitle)
+    if ($targetHWnd -ne [IntPtr]::Zero) {
+        $bounds = [UltraVisionCaptureV4]::GetAccurateWindowBounds($targetHWnd)
+        $targetWidth = $bounds.Width
+        $targetHeight = $bounds.Height
+    }
+}
+
+if ($targetHWnd -eq [IntPtr]::Zero -and -not [string]::IsNullOrWhiteSpace($ProcessName)) {
     $proc = Get-Process -Name $ProcessName -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne [IntPtr]::Zero } | Select-Object -First 1
     if ($proc) {
         $targetHWnd = $proc.MainWindowHandle
-        Add-Type -TypeDefinition @"
-        using System;
-        using System.Runtime.InteropServices;
-        public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
-        public class WinPos {
-            [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
-        }
-"@ -ErrorAction SilentlyContinue
-        $rc = New-Object RECT
-        [WinPos]::GetWindowRect($targetHWnd, [ref]$rc) | Out-Null
-        $targetWidth = $rc.Right - $rc.Left
-        $targetHeight = $rc.Bottom - $rc.Top
+        $bounds = [UltraVisionCaptureV4]::GetAccurateWindowBounds($targetHWnd)
+        $targetWidth = $bounds.Width
+        $targetHeight = $bounds.Height
     }
 }
 
@@ -315,19 +452,13 @@ if ($targetHWnd -eq [IntPtr]::Zero -or $targetWidth -le 0 -or $targetHeight -le 
     } catch {}
 
     if ($targetWidth -le 0 -or $targetHeight -le 0) {
-        try {
-            Add-Type -MemberDefinition '[DllImport("user32.dll")] public static extern int GetSystemMetrics(int nIndex);' -Name "User32Metrics" -Namespace "Win32" -ErrorAction SilentlyContinue
-            $targetWidth = [Win32.User32Metrics]::GetSystemMetrics(0)
-            $targetHeight = [Win32.User32Metrics]::GetSystemMetrics(1)
-        } catch {}
+        $targetWidth = 1920
+        $targetHeight = 1080
     }
-
-    if ($targetWidth -le 0) { $targetWidth = 1920 }
-    if ($targetHeight -le 0) { $targetHeight = 1080 }
 }
 
 function Get-RawFrame {
-    # 0. Si se especificó una imagen directa existente
+    # 0. Imagen directa de entrada
     if (-not [string]::IsNullOrWhiteSpace($InputImage) -and (Test-Path $InputImage)) {
         $rawImg = [System.Drawing.Bitmap]::FromFile((Resolve-Path $InputImage).Path)
         $cloned = New-Object System.Drawing.Bitmap($rawImg)
@@ -335,7 +466,7 @@ function Get-RawFrame {
         return $cloned
     }
 
-    # 1. Si se especificó un archivo HTML o un directorio con index.html, renderizar con Chrome Headless
+    # 1. Renderizado HTML con Chrome Headless
     $renderTarget = $HtmlPath
     if ([string]::IsNullOrWhiteSpace($renderTarget) -and -not [string]::IsNullOrWhiteSpace($TargetDirectory)) {
         $cand = Join-Path $TargetDirectory "index.html"
@@ -368,11 +499,11 @@ function Get-RawFrame {
         }
     }
 
-    # 2. Captura de ventana de proceso o escritorio GDI nativo
+    # 2. Captura DWM nativa de ventana o escritorio GDI
     if ($targetHWnd -ne [IntPtr]::Zero) {
-        return [UltraVisionCaptureV3]::CaptureWindowGDI($targetHWnd, $targetWidth, $targetHeight)
+        return [UltraVisionCaptureV4]::CaptureWindowGDI($targetHWnd, $targetWidth, $targetHeight)
     } else {
-        return [UltraVisionCaptureV3]::CaptureDesktopGDI($targetWidth, $targetHeight)
+        return [UltraVisionCaptureV4]::CaptureDesktopGDI($targetWidth, $targetHeight)
     }
 }
 
@@ -429,7 +560,7 @@ if ($Mode -eq "Full") {
 # 3. MODO GRIDOVERLAY (Cuadrícula taxonómica [A1]..[C3])
 if ($Mode -eq "GridOverlay") {
     $rawBmp = Get-RawFrame
-    $gridBmp = [UltraVisionCaptureV3]::ApplyInspectionGrid($rawBmp)
+    $gridBmp = [UltraVisionCaptureV4]::ApplyInspectionGrid($rawBmp)
     $gridBmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
     $lum = Test-DeadOrBlankBitmap $gridBmp
     $gridBmp.Dispose()
@@ -454,21 +585,21 @@ if ($Mode -eq "MultiSector") {
     $h = $rawBmp.Height
 
     $rectCenter = New-Object System.Drawing.Rectangle([int]($w * 0.3), [int]($h * 0.25), [int]($w * 0.4), [int]($h * 0.4))
-    $bmpCenter = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectCenter)
+    $bmpCenter = [UltraVisionCaptureV4]::CropRegion($rawBmp, $rectCenter)
     $pathCenter = Join-Path $baseDir "sector_center_$timestamp.png"
     $bmpCenter.Save($pathCenter, [System.Drawing.Imaging.ImageFormat]::Png)
     $statCenter = Test-DeadOrBlankBitmap $bmpCenter
     $bmpCenter.Dispose()
 
     $rectGround = New-Object System.Drawing.Rectangle([int]($w * 0.2), [int]($h * 0.55), [int]($w * 0.6), [int]($h * 0.35))
-    $bmpGround = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectGround)
+    $bmpGround = [UltraVisionCaptureV4]::CropRegion($rawBmp, $rectGround)
     $pathGround = Join-Path $baseDir "sector_ground_$timestamp.png"
     $bmpGround.Save($pathGround, [System.Drawing.Imaging.ImageFormat]::Png)
     $statGround = Test-DeadOrBlankBitmap $bmpGround
     $bmpGround.Dispose()
 
     $rectHUD = New-Object System.Drawing.Rectangle([int]($w * 0.15), [int]($h * 0.78), [int]($w * 0.7), [int]($h * 0.22))
-    $bmpHUD = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectHUD)
+    $bmpHUD = [UltraVisionCaptureV4]::CropRegion($rawBmp, $rectHUD)
     $pathHUD = Join-Path $baseDir "sector_hud_$timestamp.png"
     $bmpHUD.Save($pathHUD, [System.Drawing.Imaging.ImageFormat]::Png)
     $statHUD = Test-DeadOrBlankBitmap $bmpHUD
@@ -490,12 +621,12 @@ if ($Mode -eq "MultiSector") {
     exit 0
 }
 
-# 5. MODO MULTI-STATE AUDIT (Galería Completa con Análisis de Pantalla Negra)
+# 5. MODO MULTI-STATE AUDIT (Galería Completa con Análisis de Pantalla Negra y Métricas CV)
 $rawBmp = Get-RawFrame
 $mainLum = Test-DeadOrBlankBitmap $rawBmp
 
 # Imagen con Cuadrícula de Coordenadas
-$gridBmp = [UltraVisionCaptureV3]::ApplyInspectionGrid($rawBmp)
+$gridBmp = [UltraVisionCaptureV4]::ApplyInspectionGrid($rawBmp)
 $gridBmp.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)
 $gridBmp.Dispose()
 
@@ -512,7 +643,7 @@ $gallery["1_overview_grid"] = [PSCustomObject]@{
 
 # Sector Centro (30% a 70%)
 $rectCenter = New-Object System.Drawing.Rectangle([int]($w * 0.3), [int]($h * 0.25), [int]($w * 0.4), [int]($h * 0.4))
-$bmpCenter = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectCenter)
+$bmpCenter = [UltraVisionCaptureV4]::CropRegion($rawBmp, $rectCenter)
 $pathCenter = Join-Path $baseDir "sector_center_$timestamp.png"
 $bmpCenter.Save($pathCenter, [System.Drawing.Imaging.ImageFormat]::Png)
 $gallery["2_sector_center"] = [PSCustomObject]@{
@@ -524,7 +655,7 @@ $bmpCenter.Dispose()
 
 # Sector Suelo / Baseline (20% a 80%, inferior)
 $rectGround = New-Object System.Drawing.Rectangle([int]($w * 0.2), [int]($h * 0.55), [int]($w * 0.6), [int]($h * 0.35))
-$bmpGround = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectGround)
+$bmpGround = [UltraVisionCaptureV4]::CropRegion($rawBmp, $rectGround)
 $pathGround = Join-Path $baseDir "sector_ground_$timestamp.png"
 $bmpGround.Save($pathGround, [System.Drawing.Imaging.ImageFormat]::Png)
 $gallery["3_sector_ground"] = [PSCustomObject]@{
@@ -536,7 +667,7 @@ $bmpGround.Dispose()
 
 # Sector HUD / Barra Inferior
 $rectHUD = New-Object System.Drawing.Rectangle([int]($w * 0.15), [int]($h * 0.78), [int]($w * 0.7), [int]($h * 0.22))
-$bmpHUD = [UltraVisionCaptureV3]::CropRegion($rawBmp, $rectHUD)
+$bmpHUD = [UltraVisionCaptureV4]::CropRegion($rawBmp, $rectHUD)
 $pathHUD = Join-Path $baseDir "sector_hud_$timestamp.png"
 $bmpHUD.Save($pathHUD, [System.Drawing.Imaging.ImageFormat]::Png)
 $gallery["4_sector_hud"] = [PSCustomObject]@{
@@ -553,7 +684,7 @@ $hasDeadScreen = $mainLum.is_dead_or_blank
 $deadWarning = if ($hasDeadScreen) {
     "ALERTA CRITICA DE VISION: Se detecto pantalla negra o vacia (Dead Screen). El juego/aplicacion no renderizo graficos activos."
 } else {
-    "PANTALLA ACTIVA: Graficos vivos detectados con varianza de luminancia normal ($($mainLum.std_deviation))."
+    "PANTALLA ACTIVA: Graficos vivos detectados con varianza de luminancia normal ($($mainLum.std_deviation)) y nitidez ($($mainLum.sharpness_score))."
 }
 
 # Auditoría de Hiper-Estrictez Visual Cuantitativa
@@ -566,6 +697,15 @@ if ($mainLum.is_flat_monochrome) {
 }
 if ($mainLum.is_unlit_scene) {
     $strictDefects.Add("ESCENA_SIN_ILUMINACION: Rango dinamico menor a 15 niveles. Falta modelo de luces direccionales, brillos especulares o sombras.")
+}
+if ($mainLum.is_excessively_blurred) {
+    $strictDefects.Add("IMAGEN_EXCESIVAMENTE_BORROSA: Varianza Laplaciana de nitidez ($($mainLum.sharpness_score)) inferior al umbral de 15.0. Texturas o render desenfocado.")
+}
+if ($mainLum.is_flat_entropy) {
+    $strictDefects.Add("ENTROPIA_CROMATICA_PLANA: Entropia de Shannon ($($mainLum.shannon_entropy)) inferior a 1.0. Distribucion tonal pobre.")
+}
+if ($mainLum.is_hud_illegible) {
+    $strictDefects.Add("HUD_ILEGIBLE: Ratio de contraste de interfaz ($($mainLum.hud_contrast_ratio):1) inferior a 3.0:1 (WCAG AA). Texto o iconos poco visibles.")
 }
 $centerStat = $gallery["2_sector_center"].luminance_stat
 if ($centerStat -and $centerStat.lacks_texture_detail) {
@@ -586,6 +726,10 @@ $result = [PSCustomObject]@{
     strict_vision_metrics  = [PSCustomObject]@{
         verdict                 = $strictVerdict
         defects_detected        = $strictDefects
+        sharpness_score         = $mainLum.sharpness_score
+        hud_contrast_ratio      = $mainLum.hud_contrast_ratio
+        shannon_entropy         = $mainLum.shannon_entropy
+        aspect_ratio            = $mainLum.aspect_ratio
         color_entropy_clusters  = $mainLum.unique_color_clusters
         max_color_dominance_pct = $mainLum.max_color_dominance_pct
         dynamic_range           = $mainLum.dynamic_range
@@ -602,3 +746,4 @@ $result = [PSCustomObject]@{
 }
 
 Write-Output ($result | ConvertTo-Json -Depth 5)
+

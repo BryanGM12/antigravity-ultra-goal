@@ -90,41 +90,44 @@ $phaseResults["Phase_1_Static_PreFlight"] = [PSCustomObject]@{
 }
 
 # =========================================================================
-# FASE 2: Verificación de Arranque en Vivo (Live Boot)
 # =========================================================================
-Write-Host ">>> [Fase 2/5] Ejecutando Verificación de Arranque en Vivo en Chrome Headless..." -ForegroundColor Cyan
+# FASE 2: Verificación de Arranque en Vivo (Live Boot Multi-Runtime)
+# =========================================================================
+Write-Host ">>> [Fase 2/5] Ejecutando Verificación de Arranque en Vivo Multi-Runtime..." -ForegroundColor Cyan
 
 $indexHtmlPath = Join-Path $TargetDirectory "index.html"
 $liveBootPassed = $false
 $liveBootDiagnostics = @()
 $liveBootScreenshot = ""
+$testedEntry = "N/A"
 
-if (Test-Path $indexHtmlPath) {
-    $scriptsDir = $PSScriptRoot
-    $bootScript = Join-Path $scriptsDir "verify_runtime_boot.ps1"
-    if (Test-Path $bootScript) {
-        $bootOutJson = & $bootScript -TargetDirectory $TargetDirectory 2>&1
-        try {
-            $bootObj = $bootOutJson | ConvertFrom-Json
-            $liveBootPassed = ($bootObj.verdict -eq "BOOT_SUCCESS")
-            $liveBootDiagnostics = $bootObj.diagnostics
-            $liveBootScreenshot = $bootObj.screenshot_path
-            if (-not $liveBootPassed) {
-                foreach ($d in $bootObj.diagnostics) {
-                    $fatalDefects.Add("Fase 2 (Arranque en Vivo): $d")
-                }
+$scriptsDir = $PSScriptRoot
+if (-not $scriptsDir) { $scriptsDir = "." }
+$bootScript = Join-Path $scriptsDir "verify_runtime_boot.ps1"
+
+if (Test-Path $bootScript) {
+    $bootOutJson = & $bootScript -TargetDirectory $TargetDirectory 2>&1
+    try {
+        $bootObj = $bootOutJson | ConvertFrom-Json
+        $liveBootPassed = ($bootObj.verdict -eq "BOOT_SUCCESS")
+        $liveBootDiagnostics = $bootObj.diagnostics
+        $liveBootScreenshot = $bootObj.screenshot_path
+        $testedEntry = if ($bootObj.entry_file) { $bootObj.entry_file } else { "N/A" }
+        if (-not $liveBootPassed) {
+            foreach ($d in $bootObj.diagnostics) {
+                $fatalDefects.Add("Fase 2 (Arranque en Vivo): $d")
             }
-        } catch {
-            $fatalDefects.Add("Fase 2: Excepción al ejecutar verify_runtime_boot.ps1: $_")
         }
+    } catch {
+        $fatalDefects.Add("Fase 2: Excepción al ejecutar verify_runtime_boot.ps1: $_")
     }
 } else {
-    $liveBootPassed = $true # No es app web con index.html
+    $liveBootPassed = $true
 }
 
 $phaseResults["Phase_2_Live_Boot"] = [PSCustomObject]@{
     status            = if ($liveBootPassed) { "PASSED" } else { "FAILED" }
-    tested_entry      = if (Test-Path $indexHtmlPath) { "index.html" } else { "N/A" }
+    tested_entry      = $testedEntry
     screenshot_saved  = (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $liveBootScreenshot))
     diagnostics       = $liveBootDiagnostics
 }
@@ -137,9 +140,11 @@ Write-Host ">>> [Fase 3/5] Ejecutando Escrutinio Visual, Luminancia & Texturas..
 $visualPassed = $true
 $allCodeText = ($codeFiles | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -ErrorAction SilentlyContinue }) -join "`n"
 
-# A. Análisis de luminancia si hay captura de pantalla
+# A. Análisis de luminancia y visión computacional si hay captura de pantalla
 $isDeadScreen = $false
 $luminanceStdDev = 0
+$sharpnessScore = 0
+$shannonEntropy = 0
 
 if (-not [string]::IsNullOrWhiteSpace($ScreenshotPath) -and (Test-Path $ScreenshotPath)) {
     $liveBootScreenshot = $ScreenshotPath
@@ -151,11 +156,13 @@ if (-not [string]::IsNullOrWhiteSpace($ScreenshotPath) -and (Test-Path $Screensh
 }
 
 if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $liveBootScreenshot)) {
-    Add-Type -AssemblyName System.Drawing
+    Add-Type -AssemblyName System.Drawing -ErrorAction SilentlyContinue
     $bmp = [System.Drawing.Bitmap]::FromFile($liveBootScreenshot)
     $w = $bmp.Width
     $h = $bmp.Height
     $samples = [System.Collections.Generic.List[double]]::new()
+    $laplacianSamples = [System.Collections.Generic.List[double]]::new()
+    $hist256 = New-Object int[] 256
     $colorBuckets = @{}
     $blackCount = 0
     $whiteCount = 0
@@ -167,8 +174,8 @@ if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $live
     $limitX = [Math]::Max(1, $w - $stepX)
     $limitY = [Math]::Max(1, $h - $stepY)
 
-    for ($x = 0; $x -lt $limitX; $x += $stepX) {
-        for ($y = 0; $y -lt $limitY; $y += $stepY) {
+    for ($x = $stepX; $x -lt $limitX; $x += $stepX) {
+        for ($y = $stepY; $y -lt $limitY; $y += $stepY) {
             $p = $bmp.GetPixel($x, $y)
             $lum = 0.299 * $p.R + 0.587 * $p.G + 0.114 * $p.B
             $samples.Add($lum)
@@ -177,12 +184,27 @@ if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $live
             if ($lum -lt $minLum) { $minLum = $lum }
             if ($lum -gt $maxLum) { $maxLum = $lum }
 
+            $binIdx = [Math]::Max(0, [Math]::Min(255, [int]$lum))
+            $hist256[$binIdx]++
+
             $bucketKey = "$([int]($p.R / 16))_$([int]($p.G / 16))_$([int]($p.B / 16))"
             if ($colorBuckets.ContainsKey($bucketKey)) {
                 $colorBuckets[$bucketKey]++
             } else {
                 $colorBuckets[$bucketKey] = 1
             }
+
+            # Kernel Laplaciano 3x3 para medición de nitidez
+            $pRight = $bmp.GetPixel($x + $stepX, $y)
+            $pLeft  = $bmp.GetPixel($x - $stepX, $y)
+            $pDown  = $bmp.GetPixel($x, $y + $stepY)
+            $pUp    = $bmp.GetPixel($x, $y - $stepY)
+            $lumRight = 0.299 * $pRight.R + 0.587 * $pRight.G + 0.114 * $pRight.B
+            $lumLeft  = 0.299 * $pLeft.R  + 0.587 * $pLeft.G  + 0.114 * $pLeft.B
+            $lumDown  = 0.299 * $pDown.R  + 0.587 * $pDown.G  + 0.114 * $pDown.B
+            $lumUp    = 0.299 * $pUp.R    + 0.587 * $pUp.G    + 0.114 * $pUp.B
+            $lapVal = ($lumRight + $lumLeft + $lumDown + $lumUp) - (4.0 * $lum)
+            $laplacianSamples.Add($lapVal)
         }
     }
     $bmp.Dispose()
@@ -196,6 +218,23 @@ if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $live
     $luminanceStdDev = [Math]::Round([Math]::Sqrt($varSum / $cnt), 2)
     $blackPct = [Math]::Round(($blackCount / $cnt) * 100, 1)
     $dynRange = [Math]::Round([Math]::Max(0.0, $maxLum - $minLum), 1)
+
+    # Varianza Laplaciana (Sharpness)
+    $lapSum = 0.0
+    foreach ($lp in $laplacianSamples) { $lapSum += $lp }
+    $lapMean = if ($laplacianSamples.Count -gt 0) { $lapSum / $laplacianSamples.Count } else { 0.0 }
+    $lapVarSum = 0.0
+    foreach ($lp in $laplacianSamples) { $lapVarSum += [Math]::Pow($lp - $lapMean, 2) }
+    $sharpnessScore = if ($laplacianSamples.Count -gt 0) { [Math]::Round($lapVarSum / $laplacianSamples.Count, 2) } else { 0.0 }
+
+    # Entropía de Shannon
+    for ($i = 0; $i -lt 256; $i++) {
+        if ($hist256[$i] -gt 0) {
+            $prob = $hist256[$i] / $cnt
+            $shannonEntropy -= ($prob * [Math]::Log($prob, 2.0))
+        }
+    }
+    $shannonEntropy = [Math]::Round($shannonEntropy, 2)
 
     $uniqueColors = $colorBuckets.Keys.Count
     $maxBucket = 0
@@ -218,6 +257,9 @@ if (-not [string]::IsNullOrWhiteSpace($liveBootScreenshot) -and (Test-Path $live
     } elseif ($dynRange -lt 12.0) {
         $visualPassed = $false
         $fatalDefects.Add("Fase 3 (Visual): Escena Sin Iluminacion (Unlit). Rango dinamico de $dynRange < 15. Faltan fuentes de luz direccionales, brillos especulares y sombras.")
+    } elseif ($shannonEntropy -lt 0.70) {
+        $visualPassed = $false
+        $fatalDefects.Add("Fase 3 (Visual): Entropia cromatica deficiente (Shannon: $shannonEntropy < 0.70). Distribucion tonal excesivamente empobrecida.")
     }
 }
 
