@@ -355,12 +355,31 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
     }
     $maxColorDominancePct = ($maxBucketCount / $count) * 100.0
 
+    # Detección de Polígonos Planos Sin Texturizar (Anti-Flat-Box Geometry)
+    $flatPixelCount = 0
+    $interiorCount = 0
+    for ($y = $stepY; $y -lt ($h - $stepY); $y += $stepY) {
+        for ($x = $stepX; $x -lt ($w - $stepX); $x += $stepX) {
+            $interiorCount++
+            $pCurr  = $bmp.GetPixel($x, $y)
+            $pRight = $bmp.GetPixel($x + $stepX, $y)
+            $pDown  = $bmp.GetPixel($x, $y + $stepY)
+            $dR = [Math]::Abs($pCurr.R - $pRight.R) + [Math]::Abs($pCurr.G - $pRight.G) + [Math]::Abs($pCurr.B - $pRight.B)
+            $dD = [Math]::Abs($pCurr.R - $pDown.R) + [Math]::Abs($pCurr.G - $pDown.G) + [Math]::Abs($pCurr.B - $pDown.B)
+            if ($dR -le 3 -and $dD -le 3) {
+                $flatPixelCount++
+            }
+        }
+    }
+    $flatSurfacePct = if ($interiorCount -gt 0) { [Math]::Round(($flatPixelCount / $interiorCount) * 100.0, 1) } else { 0.0 }
+    $isUntexturedFlatGeometry = ($flatSurfacePct -gt 78.0) -and (-not $isDead)
+
     $isDead = ($stdDev -lt 3.0) -or ($blackPct -gt 98.0) -or ($whitePct -gt 98.0)
     $isFlatMonochrome = ($uniqueColors -le 2) -and ($maxColorDominancePct -gt 92.0) -and (-not $isDead)
     $isUnlit = ($dynRange -lt 15.0) -and (-not $isDead)
     $lacksDetail = ($avgEdgeGrad -lt 1.0) -and (-not $isDead)
     $isBlurred = ($sharpnessScore -lt 15.0) -and (-not $isDead) -and (-not $isFlatMonochrome)
-    $isHudIllegible = ($hudContrastRatio -lt 3.0) -and (-not $isDead)
+    $isHudIllegible = ($hudContrastRatio -lt 3.0) -and (-not $isDead) -and ($w -ge 600 -or $h -le 250)
     $isFlatEntropy = ($shannonEntropy -lt 0.70) -and (-not $isDead)
 
     return [PSCustomObject]@{
@@ -376,6 +395,8 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
         shannon_entropy         = $shannonEntropy
         hud_contrast_ratio      = $hudContrastRatio
         aspect_ratio            = $aspectRatio
+        flat_surface_pct        = $flatSurfacePct
+        is_untextured_geometry  = $isUntexturedFlatGeometry
         is_dead_or_blank        = $isDead
         is_flat_monochrome      = $isFlatMonochrome
         is_unlit_scene          = $isUnlit
@@ -710,6 +731,13 @@ if ($mainLum.is_hud_illegible) {
 $centerStat = $gallery["2_sector_center"].luminance_stat
 if ($centerStat -and $centerStat.lacks_texture_detail) {
     $strictDefects.Add("SECTOR_CENTRAL_SIN_DETALLE: Variacion de bordes en alta frecuencia casi nula. Posible figura geometrica plana o primitiva sin biseles ni textura.")
+}
+if ($centerStat -and $centerStat.is_untextured_geometry) {
+    $strictDefects.Add("SECTOR_CENTRAL_SIN_TEXTURA: Se detectaron poligonos 3D planos sin texturizar ($($centerStat.flat_surface_pct)% plano). Se exige mapeo de texturas UV y materiales ricos.")
+}
+$groundStat = $gallery["3_sector_ground"].luminance_stat
+if ($groundStat -and $groundStat.is_untextured_geometry) {
+    $strictDefects.Add("SECTOR_SUELO_SIN_TEXTURA: El suelo 3D consiste en poligonos planos monocolor sin textura ni detalle superficial ($($groundStat.flat_surface_pct)% plano). Se exigen adoquines, pavimento o hierba texturizada.")
 }
 
 $strictVerdict = if ($strictDefects.Count -eq 0) { "STRICT_METRICS_PASSED" } else { "STRICT_METRICS_FAILED" }

@@ -272,6 +272,15 @@ if ($isVoxelGame -and -not $hasNearestFilter) {
     $fatalDefects.Add("Fase 3 (Texturas): Texturas borrosas o sin nitidez de vóxel. Falta configurar magFilter y minFilter = THREE.NearestFilter.")
 }
 
+# B2. Erradicación Absoluta de Cajas 3D Planas Sin Texturizar (Anti-Flat-Box 3D Games)
+$is3DGame = ($allCodeText -match '(?i)(Camera3D|Raylib\.DrawCube|BoxGeometry|THREE\.PerspectiveCamera|BeginMode3D|glDrawArrays)')
+$hasTexturesOrShaders = ($allCodeText -match '(?i)(Texture2D|LoadTexture|SetTexture|Rlgl\.SetTexture|TextureLoader|map\s*:|albedoMap|materials|shader|PBR)')
+
+if ($is3DGame -and -not $hasTexturesOrShaders) {
+    $visualPassed = $false
+    $fatalDefects.Add("Fase 3 (Texturas 3D Requeridas): El proyecto 3D utiliza poligonos primitivos sin cargar texturas, mapeo UV ni materiales PBR. Todo juego/simulador 3D exige texturas procedurales o bitmaps de alta definicion con sombreado direccional.")
+}
+
 # C. Verificación de Auditoría Visual Realizada por la IA (MANDATO HIPER-ESTRICTO V-HEX7)
 $isVisualApp = (Test-Path $indexHtmlPath) -or ($allCodeText -match '(?i)(THREE\.|canvas|screen|<html|<body|render\(|draw\(|document\.createElement)')
 $visualReportPath = Join-Path $TargetDirectory "VISUAL_INSPECTION_REPORT.md"
