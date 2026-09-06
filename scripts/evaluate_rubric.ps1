@@ -444,6 +444,46 @@ if ($is3DOrGameOrCanvas) {
             })
         }
     }
+
+    # H. Comprobación de Texturizado Universal y Materiales PBR en Juegos y Escenarios 3D
+    $is3DProject = ($totalCodeString -match '(?i)(Camera3D|Raylib\.DrawCube|BoxGeometry|THREE\.PerspectiveCamera|BeginMode3D|glDrawArrays)')
+    $hasTextureOrPBR = ($totalCodeString -match '(?i)(Texture2D|LoadTexture|SetTexture|Rlgl\.SetTexture|TextureLoader|map\s*:|albedoMap|materials|shader|PBR|MeshStandardMaterial|MeshPhysicalMaterial|metalness|roughness|TextureManager|ProceduralTexture|GenImage|GenTexture)')
+    if ($is3DProject -and -not $hasTextureOrPBR) {
+        $violations.Add([PSCustomObject]@{
+            Category    = "Kinetic_Asset_Integrity"
+            Penalty     = 10
+            File        = $TargetPath
+            Line        = 0
+            Snippet     = "Geometría 3D sin texturas ni PBR"
+            Issue       = "Fallo Gráfico Fatal (Anti-Flat-Box 3D): El proyecto 3D dibuja geometría sin cargar texturas, mapear UVs ni generar texturas procedurales en VRAM. Prohibido renderizar cajas monocolor planas en juegos y simulaciones 3D. Se exige TextureManager o materiales PBR."
+        })
+    }
+
+    # I. Comprobación de Viewmodel y Game Feel en Shooters / FPS
+    $isFPSOrShooter = ($totalCodeString -match '(?i)\b(FPS|Counter|Strike|Viewmodel|Gun|Weapon|Pistol|Rifle)\b')
+    if ($isFPSOrShooter -and $is3DProject) {
+        if ($totalCodeString -match 'Raylib\.DrawCylinder\s*\(' -and -not ($totalCodeString -match 'Raylib\.DrawCylinderEx\s*\(')) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 8
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Raylib.DrawCylinder en viewmodel"
+                Issue       = "Bug de Orientación de Cañón: Raylib.DrawCylinder orienta el cilindro verticalmente en Y. Se exige DrawCylinderEx para alinear a lo largo del vector frontal de la cámara."
+            })
+        }
+        $hasDecalsOrParticles = ($totalCodeString -match '(?i)(Decal|BulletHole|MuzzleFlash|Particle|Impact)')
+        if (-not $hasDecalsOrParticles) {
+            $violations.Add([PSCustomObject]@{
+                Category    = "Kinetic_Asset_Integrity"
+                Penalty     = 6
+                File        = $TargetPath
+                Line        = 0
+                Snippet     = "Sin calcomanías de impacto ni destellos"
+                Issue       = "Fallo de Game Feel: Falta sistema de calcomanías de impacto (decals) en superficies o destellos de fogonazo (muzzle flash) en armas."
+            })
+        }
+    }
 }
 
 # Aplicar deducciones

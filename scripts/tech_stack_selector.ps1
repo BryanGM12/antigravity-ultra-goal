@@ -370,6 +370,9 @@ if ($null -eq $selected) {
 # 5. Declaración de Veto y Prohibición de Anti-Patrones
 $prohibitions = @(
     "PROHIBIDO el monocultivo de HTML/Canvas: Queda terminantemente vetado generar un archivo 'index.html' plano solitario para simulaciones, juegos o herramientas cuando la tecnología seleccionada sea nativa ($($selected.name)).",
+    "PROHIBIDO el monocultivo de cajas 3D planas sin textura: Queda terminantemente vetado renderizar figuras primitivas con colores sólidos (DrawCube, MeshBasicMaterial) sin cargar texturas, generar texturas procedurales en GPU VRAM o mapear coordenadas UV con sombreado direccional.",
+    "PROHIBIDO el fondo de vacío monocromático: Toda simulación o juego 3D debe implementar una cúpula celeste o skybox con gradiente cenit-horizonte y cúpula solar/estelar.",
+    "PROHIBIDO en shooters/FPS viewmodels primitivos o desorientados: El arma debe ser un conjunto articulado con cañón orientado por cámara (DrawCylinderEx en Raylib), miras nocturnas de tritio 3-dot y guantes tácticos.",
     "PROHIBIDO rebajar la arquitectura a una maqueta no funcional: El proyecto debe incluir punto de entrada real ($($selected.entry_file)), dependencias declaradas y suite de pruebas ejecutables ($($selected.test_runner)).",
     "PROHIBIDO entregar código que requiera ejecución web si el usuario no pidió explícitamente un navegador: Usar los runtimes locales de alta eficiencia de la máquina (Python, .NET, Rust, PowerShell 7)."
 )

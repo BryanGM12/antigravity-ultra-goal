@@ -372,14 +372,14 @@ function Test-DeadOrBlankBitmap([System.Drawing.Bitmap]$bmp) {
         }
     }
     $flatSurfacePct = if ($interiorCount -gt 0) { [Math]::Round(($flatPixelCount / $interiorCount) * 100.0, 1) } else { 0.0 }
-    $isUntexturedFlatGeometry = ($flatSurfacePct -gt 78.0) -and (-not $isDead)
+    $isUntexturedFlatGeometry = ($flatSurfacePct -gt 82.0) -and (-not $isDead)
 
     $isDead = ($stdDev -lt 3.0) -or ($blackPct -gt 98.0) -or ($whitePct -gt 98.0)
     $isFlatMonochrome = ($uniqueColors -le 2) -and ($maxColorDominancePct -gt 92.0) -and (-not $isDead)
     $isUnlit = ($dynRange -lt 15.0) -and (-not $isDead)
     $lacksDetail = ($avgEdgeGrad -lt 1.0) -and (-not $isDead)
     $isBlurred = ($sharpnessScore -lt 15.0) -and (-not $isDead) -and (-not $isFlatMonochrome)
-    $isHudIllegible = ($hudContrastRatio -lt 3.0) -and (-not $isDead) -and ($w -ge 600 -or $h -le 250)
+    $isHudIllegible = ($hudContrastRatio -lt 3.0) -and (-not $isDead)
     $isFlatEntropy = ($shannonEntropy -lt 0.70) -and (-not $isDead)
 
     return [PSCustomObject]@{

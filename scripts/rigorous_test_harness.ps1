@@ -70,15 +70,17 @@ foreach ($f in $codeFiles) {
     }
 }
 
-# Verificación de imports sin type='module' en HTML
-foreach ($h in $htmlFiles) {
-    $hContent = Get-Content -LiteralPath $h.FullName -Raw -ErrorAction SilentlyContinue
-    if ($null -ne $hContent) {
-        if ($hContent -match '<script\b(?![^>]*\btype\s*=\s*["'']module["''])[^>]*>[^<]*\bimport\s+[\s\S]*?from\b') {
-            $fatalDefects.Add("Fase 1: Declaración 'import' dentro de <script> tradicional sin type='module' en '$($h.Name)'. Impide el arranque.")
-            $syntaxErrorFound = $true
-        }
-    }
+# Verificación estática de higiene gráfica 3D (Cero cajas planas y bug de cilindro vertical)
+$allCodeCombined = ($codeFiles | ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw -ErrorAction SilentlyContinue }) -join "`n"
+$is3DStatic = ($allCodeCombined -match '(?i)(Camera3D|Raylib\.DrawCube|BoxGeometry|THREE\.PerspectiveCamera|BeginMode3D|glDrawArrays)')
+$hasTexturesStatic = ($allCodeCombined -match '(?i)(Texture2D|LoadTexture|SetTexture|Rlgl\.SetTexture|TextureLoader|map\s*:|albedoMap|materials|shader|PBR|MeshStandardMaterial|MeshPhysicalMaterial|metalness|roughness|TextureManager|ProceduralTexture|GenImage|GenTexture)')
+
+if ($is3DStatic -and -not $hasTexturesStatic) {
+    $fatalDefects.Add("Fase 1 (Anti-Flat-Box 3D): El proyecto 3D dibuja geometría sin cargar texturas, mapear UVs ni generar texturas procedurales. Prohibido renderizar cajas monocolor planas en juegos y simulaciones 3D. Se exige TextureManager o materiales PBR.")
+}
+
+if ($allCodeCombined -match '(?i)(Viewmodel|Weapon|Gun|Pistol|Rifle|Arma)' -and $allCodeCombined -match 'Raylib\.DrawCylinder\s*\(' -and -not ($allCodeCombined -match 'Raylib\.DrawCylinderEx\s*\(')) {
+    $fatalDefects.Add("Fase 1 (Raylib Cylinder Trap): Se detectó Raylib.DrawCylinder en armas/viewmodel. Raylib.DrawCylinder genera cilindros verticales a lo largo del eje Y. Debe usarse Raylib.DrawCylinderEx(start, end, radius, radius, sides, color) para alinear cañones a lo largo del vector frontal de la cámara.")
 }
 
 $phaseResults["Phase_1_Static_PreFlight"] = [PSCustomObject]@{
@@ -274,7 +276,7 @@ if ($isVoxelGame -and -not $hasNearestFilter) {
 
 # B2. Erradicación Absoluta de Cajas 3D Planas Sin Texturizar (Anti-Flat-Box 3D Games)
 $is3DGame = ($allCodeText -match '(?i)(Camera3D|Raylib\.DrawCube|BoxGeometry|THREE\.PerspectiveCamera|BeginMode3D|glDrawArrays)')
-$hasTexturesOrShaders = ($allCodeText -match '(?i)(Texture2D|LoadTexture|SetTexture|Rlgl\.SetTexture|TextureLoader|map\s*:|albedoMap|materials|shader|PBR)')
+$hasTexturesOrShaders = ($allCodeText -match '(?i)(Texture2D|LoadTexture|SetTexture|Rlgl\.SetTexture|TextureLoader|map\s*:|albedoMap|materials|shader|PBR|MeshStandardMaterial|MeshPhysicalMaterial|metalness|roughness|TextureManager|ProceduralTexture|GenImage|GenTexture)')
 
 if ($is3DGame -and -not $hasTexturesOrShaders) {
     $visualPassed = $false

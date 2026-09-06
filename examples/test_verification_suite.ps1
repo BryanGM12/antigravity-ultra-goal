@@ -283,6 +283,15 @@ for ($i = 0; $i -lt 400; $i += 40) {
     $gRich.DrawLine($pen, $i, 150, $i, 300)
 }
 $pen.Dispose()
+$penCobble = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(40, 90, 40), 1)
+for ($cy = 160; $cy -lt 300; $cy += 15) {
+    $gRich.DrawLine($penCobble, 0, $cy, 400, $cy)
+}
+$penCobble.Dispose()
+$penCenter = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(240, 240, 240), 2)
+$gRich.DrawArc($penCenter, 160, 90, 80, 40, 0, 180)
+$gRich.DrawArc($penCenter, 180, 110, 60, 30, 0, 180)
+$penCenter.Dispose()
 $pathRich = Join-Path $synthImgDir "rich_scene.png"
 $bmpRich.Save($pathRich, [System.Drawing.Imaging.ImageFormat]::Png)
 $gRich.Dispose(); $bmpRich.Dispose()
@@ -365,6 +374,12 @@ Assert-Test -TestName "Orchestrator Exports Composite Rocket Mesh Code" -Conditi
 Assert-Test -TestName "Orchestrator Exports Procedural Web Audio Engine" -Condition ($orchestratorOut.audio_synth_js -match 'SpaceAudioEngine')
 Assert-Test -TestName "Orchestrator Exports Cinematic Flight Director" -Condition ($orchestratorOut.camera_director_js -match 'CinematicFlightDirector')
 
+# Verificación de nuevo dominio Tactical_FPS (Counter-Strike / Shooters)
+$orchestratorFps = & "$scriptsDir\asset_orchestrator.ps1" -Domain "Tactical_FPS" | ConvertFrom-Json
+Assert-Test -TestName "Orchestrator Supplies Tactical PBR Texture Catalog" -Condition ($orchestratorFps.catalog.Tactical_PBR_Textures.Sandstone_Wall -match 'http')
+Assert-Test -TestName "Orchestrator Exports Tactical Viewmodel & VRAM Texture Pipeline" -Condition ($orchestratorFps.procedural_mesh_js -match 'TextureManager' -and $orchestratorFps.procedural_mesh_js -match 'DrawCylinderEx')
+Assert-Test -TestName "Orchestrator Exports Tactical Combat Audio Engine" -Condition ($orchestratorFps.audio_synth_js -match 'TacticalAudioEngine')
+
 # --- TEST 10: Space Flight Simulation Sensory & Composite Mesh Gates ---
 Write-Host "`n[Test 10] Evaluando Space Flight Sensory & Composite Mesh Gates en el Arnés..." -ForegroundColor Yellow
 $rocketBrokenDir = Join-Path $tempDir "rocket_broken"
@@ -440,6 +455,48 @@ Set-Content (Join-Path $rocketCleanDir "VISUAL_INSPECTION_REPORT.md") -Value @"
 
 $harnessRocketClean = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $rocketCleanDir | ConvertFrom-Json
 Assert-Test -TestName "Harness Approves High-Fidelity Rocket with Web Audio & Smooth Camera" -Condition ($harnessRocketClean.verdict -eq "RIGOROUS_TEST_PASSED" -and $harnessRocketClean.fatal_defects_count -eq 0)
+
+# --- TEST 10B: Anti-Flat-Box 3D Geometry & Raylib DrawCylinder Trap Gates ---
+Write-Host "`n[Test 10B] Evaluando Compuertas Anti-Cajas 3D Planas y Bug de Raylib DrawCylinder..." -ForegroundColor Yellow
+$flat3DDir = Join-Path $tempDir "flat_3d_project"
+New-Item -ItemType Directory -Path $flat3DDir -Force | Out-Null
+Set-Content (Join-Path $flat3DDir "Program.cs") -Value @"
+using Raylib_cs;
+public class Program {
+    public static void Main() {
+        Raylib.InitWindow(800, 600, "Flat Game");
+        Camera3D camera = new Camera3D();
+        while (!Raylib.WindowShouldClose()) {
+            Raylib.BeginDrawing();
+            Raylib.BeginMode3D(camera);
+            Raylib.DrawCube(new System.Numerics.Vector3(0, 0, 0), 2, 2, 2, Color.Beige);
+            Raylib.EndMode3D();
+            Raylib.EndDrawing();
+        }
+    }
+}
+"@
+Set-Content (Join-Path $flat3DDir "Game.csproj") -Value "<Project Sdk='Microsoft.NET.Sdk'></Project>"
+Set-Content (Join-Path $flat3DDir "GameTest.cs") -Value "public class Test { public void Run() { System.Diagnostics.Debug.Assert(true); System.Diagnostics.Debug.Assert(true); System.Diagnostics.Debug.Assert(true); } }"
+
+$harnessFlat3D = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $flat3DDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Untextured 3D Game via Phase 1 PreFlight" -Condition ($harnessFlat3D.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessFlat3D.fatal_defects | Where-Object { $_ -match "Anti-Flat-Box 3D" }).Count -gt 0))
+
+$raylibCylDir = Join-Path $tempDir "raylib_cyl_project"
+New-Item -ItemType Directory -Path $raylibCylDir -Force | Out-Null
+Set-Content (Join-Path $raylibCylDir "Viewmodel.cs") -Value @"
+using Raylib_cs;
+public class ViewmodelWeapon {
+    public Texture2D gunTexture;
+    public void Draw() {
+        Raylib.DrawCylinder(new System.Numerics.Vector3(0, 0, 0), 0.1f, 0.1f, 1.0f, 16, Color.Black);
+    }
+}
+"@
+Set-Content (Join-Path $raylibCylDir "WeaponTest.cs") -Value "public class Test { public void Run() { System.Diagnostics.Debug.Assert(true); System.Diagnostics.Debug.Assert(true); System.Diagnostics.Debug.Assert(true); } }"
+
+$harnessRaylibCyl = & "$scriptsDir\rigorous_test_harness.ps1" -TargetDirectory $raylibCylDir | ConvertFrom-Json
+Assert-Test -TestName "Harness Rejects Raylib Vertical DrawCylinder on Weapon Viewmodel" -Condition ($harnessRaylibCyl.verdict -eq "RIGOROUS_TEST_FAILED" -and (@($harnessRaylibCyl.fatal_defects | Where-Object { $_ -match "Raylib Cylinder Trap" }).Count -gt 0))
 
 # --- TEST 11: Universal Quality & Anti-Toy Rubric Gatekeeper ---
 Write-Host "`n[Test 11] Evaluando Universal Quality & Anti-Toy Rubric Gatekeeper..." -ForegroundColor Yellow
